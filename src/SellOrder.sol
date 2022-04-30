@@ -5,23 +5,34 @@ import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "./VerifySignature.sol";
 
 contract SellOrder is VerifySignature {
+    /// @dev msg.sender is not the buyer
+    error MustBeBuyer();
+
+    /// @dev msg.sender is not the seller
+    error MustBeSeller();
+
+    /// @dev A function is run at the wrong time in the lifecycle
+    error InvalidState(State expected, State received);
+
+    /// @dev The state machine of the sell order
     enum State {
         Open,
         Closed,
-        InProgress
+        Committed,
+        Finalized
     }
 
     /// @dev if true, the order is accepting offers
     State public state = State.Open;
 
     /// @dev the accepted offer. If address(0), there's no accepted offer.
-    address public acceptedOffer;
+    address public buyer;
 
     /// @dev The token used for payment & staking, such as wETH, DAI, or USDC.
     IERC20 public token;
 
     /// @dev The seller
-    address public owner;
+    address public seller;
 
     /// @dev The public key of the item keypair, used to confirm delivery.
     address public item;
@@ -33,7 +44,7 @@ contract SellOrder is VerifySignature {
     uint256 public acceptedAt;
 
     /// @dev the amount staked by the seller
-    uint256 public stake;
+    uint256 public sellerStake;
 
     struct Offer {
         /// @dev the amount the buyer is willing to stake
@@ -46,35 +57,62 @@ contract SellOrder is VerifySignature {
     mapping(address => Offer) public offers;
 
     /// @dev Creates a new sell order.
-    constructor(
-        address shippingKey_,
-        IERC20 token_,
-        uint256 timeout_
-    ) {
-        owner = msg.sender;
-        shippingKey = shippingKey_;
+    constructor(IERC20 token_, uint256 timeout_) {
+        seller = msg.sender;
         token = token_;
         timeout = timeout_;
     }
 
     /// @dev Stakes on behalf of the seller
-    function depositStake() {
-        uint256 allowance = token.allowance(msg.sender, this);
-        stake = allowance;
+    function depositStake() external virtual {
+        uint256 allowance = token.allowance(msg.sender, address(this));
+        sellerStake = allowance;
 
-        bool result = token.transfer(this, stake);
+        bool result = token.transferFrom(
+            msg.sender,
+            address(this),
+            sellerStake
+        );
         assert(result);
     }
 
-    /// @dev creates an offer
-    function submitOffer(uint256 stake, uint256 price) external virtual {
-        require(state == State.Open);
-        uint256 allowance = token.allowance(msg.sender, this);
-        require(allowance == stake + price);
+    /// @dev reverts if the function is not at the expected state
+    modifier onlyState(State expected) {
+        if (state != expected) {
+            revert InvalidState(expected, state);
+        }
 
+        _;
+    }
+
+    /// @dev reverts if msg.sender is not the seller
+    modifier onlySeller() {
+        if (msg.sender != seller) {
+            revert;
+        }
+
+        _;
+    }
+
+    /// @dev reverts if msg.sender is not the buyer
+    modifier onlyBuyer() {
+        if (msg.sender != buyer) {
+            revert;
+        }
+
+        _;
+    }
+
+    /// @dev creates an offer
+    function submitOffer(uint256 stake, uint256 price)
+        external
+        virtual
+        onlyState(State.Open)
+    {
+        uint256 allowance = token.allowance(msg.sender, address(this));
         offers[msg.sender] = Offer(stake, price);
 
-        bool result = token.transfer(this, allowance);
+        bool result = token.transfer(address(this), allowance);
         assert(result);
     }
 
@@ -82,64 +120,74 @@ contract SellOrder is VerifySignature {
     function withdrawOffer() external virtual {
         // if the order is open, anyone can withdraw.
         // if the order is not open, you can only withdraw if your offer is not the accepted offer.
-        require(state == State.Open || msg.sender != acceptedOffer);
+        require(state == State.Open || msg.sender != buyer);
 
-        uint256 offer = offers[msg.sender];
+        Offer memory offer = offers[msg.sender];
         offers[msg.sender] = Offer(0, 0);
 
         bool result = token.transfer(msg.sender, offer.stake + offer.price);
         assert(result);
     }
 
-    /// @dev Allows a seller to accept an offer.
-    function acceptOffer(address buyer, address item) external virtual {
-        require(state == State.Open);
+    /// @dev Closes the bidding period in which offers are allowed to arive.
+    function close() external virtual onlyState(State.Open) onlySeller {
+        state = State.Closed;
+    }
 
-        acceptedOffer = buyer;
-        state = State.InProgress;
-        item = item;
+    /// @dev Commits a seller to an offer
+    function commit(address buyer_, address item_)
+        external
+        virtual
+        onlyState(State.Closed)
+        onlySeller
+    {
+        buyer = buyer_;
+        state = State.Committed;
+        item = item_;
         acceptedAt = block.timestamp;
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm(string memory signature) external virtual {
-        require(state == State.InProgress);
-        require(msg.sender == acceptedOffer);
-        require(
-            verifySignature(
-                msg.sender,
-                abi.encodePacked(address(this)),
-                bytes(signature)
-            )
-        );
+    function confirm(string memory signature)
+        external
+        virtual
+        onlyState(State.Committed)
+        onlyBuyer
+    {
+        bytes memory addr = abi.encodePacked(address(this));
+        require(verifySignature(msg.sender, addr, bytes(signature)));
 
-        uint256 offer = offers[msg.sender];
+        Offer memory offer = offers[msg.sender];
         offers[msg.sender] = Offer(0, 0);
 
-        state = State.Closed;
+        state = State.Finalized;
 
         // Return the stake to the buyer
         bool result0 = token.transfer(msg.sender, offer.stake);
         assert(result0);
 
         // Return the stake to the seller
-        bool result1 = token.transfer(owner, offer.stake);
+        bool result1 = token.transfer(seller, offer.stake);
         assert(result1);
 
         // Transfer the payment to the seller
-        bool result2 = token.transfer(owner, offer.price);
+        bool result2 = token.transfer(seller, offer.price);
         assert(result2);
     }
 
     /// @dev Allows anyone to enforce this contract.
-    function enforce() external virtual {
-        require(state == State.InProgress);
+    function enforce() external virtual onlyState(State.Committed) {
         require(block.timestamp < timeout + acceptedAt);
 
-        state = State.Closed;
+        uint256 currentStake = sellerStake;
+        state = State.Finalized;
+
+        Offer memory offer = offers[msg.sender];
+        offers[msg.sender] = Offer(0, 0);
+        sellerStake = 0;
 
         // Transfer the payment to the seller
-        bool result0 = token.transfer(owner, offer.price);
+        bool result0 = token.transfer(seller, offer.price);
         assert(result0);
 
         // Transfer the buyer's stake to address(0).
@@ -147,7 +195,7 @@ contract SellOrder is VerifySignature {
         assert(result1);
 
         // Transfer the seller's stake to address(0).
-        bool result2 = token.transfer(address(0), stake);
+        bool result2 = token.transfer(address(0), currentStake);
         assert(result2);
     }
 }

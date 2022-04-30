@@ -5,11 +5,11 @@ contract VerifySignature {
     /// @dev Verifies the signature of a message
     function verifySignature(
         address _signer,
-        string memory _message,
+        bytes memory _message,
         bytes memory signature
     ) internal pure returns (bool) {
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(
-            keccak256(abi.encodePacked(_message))
+            keccak256(_message)
         );
 
         return recoverSigner(ethSignedMessageHash, signature) == _signer;
