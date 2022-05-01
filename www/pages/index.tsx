@@ -73,7 +73,17 @@ function StickerStore() {
 
   return (
     <div className="bg-blue-50 p-4 pb-8">
-      <div className="text-xs text-gray-500 px-4 pb-2">Try it out!</div>
+      <div className="text-xs text-gray-500 px-4 pb-2">
+        Try it out! (Currently only Metamask is supported due to{' '}
+        <a
+          className="underline"
+          target={'_blank'}
+          href="https://github.com/ethers-io/ethers.js/issues/1422"
+        >
+          this issue
+        </a>
+        )
+      </div>
       <div className="bg-white border border-black rounded ">
         <div className="px-4 py-2 bg-gray-50 border-b border-black">
           <div className="font-bold py-2">Buy Stickers</div>
