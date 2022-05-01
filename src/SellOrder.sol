@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
+import 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
+import 'openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
 
 contract SellOrder {
     /// @dev msg.sender is not the buyer
@@ -46,6 +46,9 @@ contract SellOrder {
     /// @dev the amount staked by the seller
     uint256 public sellerStake;
 
+    /// @dev the URI where metadata about this SellOrder can be found
+    string private _uri;
+
     struct Offer {
         /// @dev the amount the buyer is willing to pay
         uint256 price;
@@ -59,10 +62,20 @@ contract SellOrder {
     mapping(address => Offer) public offers;
 
     /// @dev Creates a new sell order.
-    constructor(IERC20 token_, uint256 timeout_) {
+    constructor(
+        IERC20 token_,
+        string memory uri_,
+        uint256 timeout_
+    ) {
         seller = msg.sender;
         token = token_;
+        _uri = uri_;
         timeout = timeout_;
+    }
+
+    /// @dev returns the URI of the sell order, containing it's metadata
+    function orderURI() external view virtual returns (string memory) {
+        return _uri;
     }
 
     /// @dev Stakes on behalf of the seller
@@ -164,7 +177,7 @@ contract SellOrder {
     ) external virtual onlyState(State.Committed) onlyBuyer {
         bytes32 hsh = keccak256(abi.encodePacked(address(this)));
         bytes32 addr = ECDSA.toEthSignedMessageHash(hsh);
-        require(item == ECDSA.recover(addr, v, r, s), "failed to verify");
+        require(item == ECDSA.recover(addr, v, r, s), 'failed to verify');
 
         Offer memory offer = offers[buyer];
         offers[buyer] = Offer(0, 0, offer.uri);
