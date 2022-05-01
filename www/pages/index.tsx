@@ -6,6 +6,7 @@ import { SellOrder } from 'rwtp';
 import * as ethUtil from 'ethereumjs-util';
 import * as sigUtil from '@metamask/eth-sig-util';
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 
 function encryptMessage(publicKey: string, message: string) {
   return ethUtil.bufferToHex(
@@ -25,6 +26,8 @@ function encryptMessage(publicKey: string, message: string) {
 const STICKERS_SELL_ORDER = '0x333C338218B72A315e00DfdB0Dd7b129014f2268';
 
 function StickerStore() {
+  const [email, setEmail] = useState('');
+  const [shippingAddress, setShippingAddress] = useState('');
   const router = useRouter();
   async function submitBuyOrder() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
@@ -39,8 +42,8 @@ function StickerStore() {
     const encryptedMessage = encryptMessage(
       encryptionPublicKey,
       JSON.stringify({
-        email: 'email',
-        shippingAddress: 'shipping address',
+        email: email,
+        shippingAddress: shippingAddress,
       })
     );
 
@@ -91,7 +94,8 @@ function StickerStore() {
             We'll deliver limited-edition stickers to your doorstep via the
             RWTP. You can trust that we'll deliver them to you, because we've
             staked <span className="text-blue-500 font-bold">20 USDC</span>. If
-            the deal doesn't go through, we'll lose those sweet 20 bucks.
+            the deal doesn't go through, we'll lose those sweet 20 bucks to the
+            void.
           </div>
         </div>
         <div className="px-4 py-4">
@@ -104,6 +108,7 @@ function StickerStore() {
               className={'px-2 py-2'}
               name="address"
               placeholder="100 Saddle Point; San Fransokyo, CA 94112"
+              onChange={(e) => setShippingAddress(e.target.value)}
             />
           </label>
 
@@ -113,6 +118,7 @@ function StickerStore() {
               type={'email'}
               className={'px-2 py-2'}
               placeholder="you@ethereum.org"
+              onChange={(e) => setEmail(e.target.value)}
             />
             <div className="text-xs px-2 py-1 bg-gray-50 border-t">
               *Only used to contact you if something goes wrong, not to sign you
@@ -128,7 +134,8 @@ function StickerStore() {
             </div>
             <button
               onClick={() => submitBuyOrder().catch(console.error)}
-              className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm"
+              className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
+              disabled={!email || !shippingAddress}
             >
               Buy stickers for 10 USDC
             </button>
