@@ -115,9 +115,9 @@ function Inner() {
           </div>
 
           <div className="px-4 py-4">
-            <button className="border px-4 py-2 rounded border-black hover:opacity-50">
+            {/* <button className="border px-4 py-2 rounded border-black hover:opacity-50">
               Cancel order
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

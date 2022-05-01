@@ -7,6 +7,12 @@ import * as ethUtil from 'ethereumjs-util';
 import * as sigUtil from '@metamask/eth-sig-util';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import solidity from 'react-syntax-highlighter/dist/cjs/languages/prism/solidity';
+import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
+
+SyntaxHighlighter.registerLanguage('solidity', solidity);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
 
 function encryptMessage(publicKey: string, message: string) {
   return ethUtil.bufferToHex(
@@ -192,8 +198,8 @@ const Home: NextPage = () => {
             The Real World Transport Protocol <code>(RWTP)</code> is a
             peer-to-peer way to buy and sell real-world goods on Ethereum. Use
             RWTP to build automated companies, low-cost futures markets,
-            decentralized ecommerce platforms, or sell moderately cool stickers
-            like we do.
+            decentralized ecommerce platforms, sell moderately cool stickers, or
+            otherwise program the economy.
           </p>
 
           <div className="mt-4">
