@@ -2,8 +2,11 @@ import { ethers } from 'ethers';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { SellOrder } from 'rwtp';
 import { useSendTransaction } from 'wagmi';
+import { useState } from 'react';
 
 export default function StickerStore() {
+  const [address, setAddress] = useState('');
+
   async function deploySale() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
@@ -18,6 +21,16 @@ export default function StickerStore() {
       '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
       'ipfs://testnet',
       60 * 60 * 24 * 30 // 1 month
+    );
+
+    setAddress(contract.address);
+  }
+
+  if (address) {
+    return (
+      <div>
+        <h1>Sale deployed at {address}</h1>
+      </div>
     );
   }
 

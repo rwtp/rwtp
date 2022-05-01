@@ -11,6 +11,10 @@ contract SellOrder {
     /// @dev msg.sender is not the seller
     error MustBeSeller();
 
+    /// @dev the offer is already submitted, you must withdraw and make a new offer
+    /// to modify it.
+    error OfferAlreadySubmitted();
+
     /// @dev A function is run at the wrong time in the lifecycle
     error InvalidState(State expected, State received);
 
@@ -128,6 +132,9 @@ contract SellOrder {
         uint256 stake,
         string memory uri
     ) external virtual onlyState(State.Open) {
+        if (!(offers[msg.sender].price == 0 && offers[msg.sender].stake == 0)) {
+            revert OfferAlreadySubmitted();
+        }
         offers[msg.sender] = Offer(price, stake, uri);
 
         bool result = token.transferFrom(

@@ -3,19 +3,85 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { InjectedConnector } from 'wagmi/connectors/injected';
-import ethers from 'ethers';
+import { ethers } from 'ethers';
+import { SellOrder } from 'rwtp';
+import * as ethUtil from 'ethereumjs-util';
+import * as sigUtil from '@metamask/eth-sig-util';
+
+function encryptMessage(publicKey: string, message: string) {
+  return ethUtil.bufferToHex(
+    Buffer.from(
+      JSON.stringify(
+        sigUtil.encrypt({
+          publicKey: publicKey,
+          data: message,
+          version: 'x25519-xsalsa20-poly1305',
+        })
+      ),
+      'utf8'
+    )
+  );
+}
+
+const STICKERS_SELL_ORDER = '0x333C338218B72A315e00DfdB0Dd7b129014f2268';
 
 function StickerStore() {
+  async function submitBuyOrder() {
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
+
+    // Encrypt the shipping details
+    const encryptionPublicKey = await provider.send(
+      'eth_getEncryptionPublicKey',
+      ['0xc05c2aaDfAdb5CdD8EE25ec67832B524003B2E37']
+    );
+
+    const encryptedMessage = encryptMessage(
+      encryptionPublicKey,
+      JSON.stringify({
+        email: 'email',
+        shippingAddress: 'shipping address',
+      })
+    );
+
+    const result = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: encryptedMessage,
+      }),
+    });
+    const { cid } = await result.json();
+
+    // Submit the order
+    const signer = provider.getSigner();
+    const sellOrder = new ethers.Contract(
+      STICKERS_SELL_ORDER,
+      SellOrder.abi,
+      signer
+    );
+
+    const abi = ['function approve(address spender, uint256 amount)'];
+    const erc20 = new ethers.Contract(await sellOrder.token(), abi, signer);
+    await erc20.approve(sellOrder.address, 1 + 1);
+
+    const tx = await sellOrder.submitOffer(1, 1, 'ipfs://' + cid);
+    console.log(tx);
+  }
+
   return (
-    <div>
-      <div>
+    <div className="bg-blue-50 p-4">
+      <div className="bg-white border rounded p-4">
         <div className="text-xs text-gray-500">Try it out!</div>
-        <div className="font-bold">Buy Stickers via RWTP</div>
+        <div className="font-bold">We'll ship you cool stickers via RWTP</div>
         <label className="border flex flex-col mt-2">
           <div className="text-xs bg-gray-100 px-2 py-1">Shipping Address</div>
           <input
             type={'text'}
             className={'px-2 py-2'}
+            name="address"
             placeholder="100 Saddle Point; San Fransokyo, CA 94112"
           />
         </label>
@@ -33,14 +99,16 @@ function StickerStore() {
           </div>
         </label>
 
-        <div className="flex flex-row items-center justify-end mt-2">
+        <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
           <div className="text-sm py-2 px-2 items-center text-gray-700 ">
-            You'll stake{' '}
-            <span className="text-blue-500 font-bold px-1">5 USDC</span> and get
-            it back when you confirm the order.
+            You put down <span className="text-blue-500 font-bold">5 USDC</span>{' '}
+            as a deposit. You'll get it back if you confirm the delivery.
           </div>
-          <button className=" ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm">
-            Buy for 10 USDC
+          <button
+            onClick={() => submitBuyOrder().catch(console.error)}
+            className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm"
+          >
+            Buy stickers for 10 USDC
           </button>
         </div>
       </div>
@@ -52,7 +120,7 @@ const Home: NextPage = () => {
   return (
     <div>
       <Head>
-        <title>RWTP - Real World Transport Protocol</title>
+        <title>RWTP - Real World Trade Protocol</title>
         <meta
           name="description"
           content="A way of shipping real world goods on ethereum"
