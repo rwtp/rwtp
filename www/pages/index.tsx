@@ -72,44 +72,57 @@ function StickerStore() {
   }
 
   return (
-    <div className="bg-blue-50 p-4">
-      <div className="bg-white border border-black rounded p-4">
-        <div className="text-xs text-gray-500">Try it out!</div>
-        <div className="font-bold">We'll ship you cool stickers via RWTP</div>
-        <label className="border flex flex-col mt-2">
-          <div className="text-xs bg-gray-100 px-2 py-1">Shipping Address</div>
-          <input
-            type={'text'}
-            className={'px-2 py-2'}
-            name="address"
-            placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-          />
-        </label>
-
-        <label className="border flex flex-col mt-2">
-          <div className="text-xs bg-gray-100 px-2 py-1">Email</div>
-          <input
-            type={'email'}
-            className={'px-2 py-2'}
-            placeholder="you@ethereum.org"
-          />
-          <div className="text-xs px-2 py-1 bg-gray-50 border-t">
-            *Only used to contact you if something goes wrong, not to sign you
-            up for an email list.
+    <div className="bg-blue-50 p-4 pb-8">
+      <div className="text-xs text-gray-500 px-4 pb-2">Try it out!</div>
+      <div className="bg-white border border-black rounded ">
+        <div className="px-4 py-2 bg-gray-50 border-b border-black">
+          <div className="font-bold py-2">Buy Stickers</div>
+          <div className="text-sm pb-2">
+            We'll deliver limited-edition stickers to your doorstep via the
+            RWTP. You can trust that we'll deliver them to you, because we've
+            staked <span className="text-blue-500 font-bold">20 USDC</span>. If
+            the deal doesn't go through, we'll lose those sweet 20 bucks.
           </div>
-        </label>
+        </div>
+        <div className="px-4 py-4">
+          <label className="border flex flex-col mt-2">
+            <div className="text-xs bg-gray-100 px-2 py-1">
+              Shipping Address
+            </div>
+            <input
+              type={'text'}
+              className={'px-2 py-2'}
+              name="address"
+              placeholder="100 Saddle Point; San Fransokyo, CA 94112"
+            />
+          </label>
 
-        <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
-          <div className="text-sm py-2 px-2 items-center text-gray-700 ">
-            You put down <span className="text-blue-500 font-bold">5 USDC</span>{' '}
-            as a deposit. You'll get it back if you confirm the delivery.
+          <label className="border flex flex-col mt-2">
+            <div className="text-xs bg-gray-100 px-2 py-1">Email</div>
+            <input
+              type={'email'}
+              className={'px-2 py-2'}
+              placeholder="you@ethereum.org"
+            />
+            <div className="text-xs px-2 py-1 bg-gray-50 border-t">
+              *Only used to contact you if something goes wrong, not to sign you
+              up for an email list.
+            </div>
+          </label>
+
+          <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
+            <div className="text-sm py-2 px-2 items-center text-gray-700 ">
+              You'll stake{' '}
+              <span className="text-blue-500 font-bold">5 USDC</span>. If you
+              confirm the delivery, you'll get this back.
+            </div>
+            <button
+              onClick={() => submitBuyOrder().catch(console.error)}
+              className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm"
+            >
+              Buy stickers for 10 USDC
+            </button>
           </div>
-          <button
-            onClick={() => submitBuyOrder().catch(console.error)}
-            className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm"
-          >
-            Buy stickers for 10 USDC
-          </button>
         </div>
       </div>
     </div>
@@ -152,8 +165,11 @@ const Home: NextPage = () => {
           <Image src={'/Header.png'} layout="responsive" height={1} width={2} />
         </div>
         <div className="px-4 mt-4">
-          <h1 className="text-2xl font-bold mb-1">
-            Real World Transport Protocol
+          <h1 className="text-2xl font-bold mb-1 items-center flex">
+            Real World Transport Protocol{' '}
+            <span className="bg-blue-50 ml-2 p-1 rounded font-mono text-blue-600 text-sm">
+              beta
+            </span>
           </h1>
           <p className="mt-2 ">
             The Real World Transport Protocol <code>(RWTP)</code> is a
