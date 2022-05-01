@@ -6,7 +6,46 @@ import { InjectedConnector } from 'wagmi/connectors/injected';
 import ethers from 'ethers';
 
 function StickerStore() {
-  return <div>hi</div>;
+  return (
+    <div>
+      <div>
+        <div className="text-xs text-gray-500">Try it out!</div>
+        <div className="font-bold">Buy Stickers via RWTP</div>
+        <label className="border flex flex-col mt-2">
+          <div className="text-xs bg-gray-100 px-2 py-1">Shipping Address</div>
+          <input
+            type={'text'}
+            className={'px-2 py-2'}
+            placeholder="100 Saddle Point; San Fransokyo, CA 94112"
+          />
+        </label>
+
+        <label className="border flex flex-col mt-2">
+          <div className="text-xs bg-gray-100 px-2 py-1">Email</div>
+          <input
+            type={'email'}
+            className={'px-2 py-2'}
+            placeholder="you@ethereum.org"
+          />
+          <div className="text-xs px-2 py-1 bg-gray-50 border-t">
+            *Only used to contact you if something goes wrong, not to sign you
+            up for an email list.
+          </div>
+        </label>
+
+        <div className="flex flex-row items-center justify-end mt-2">
+          <div className="text-sm py-2 px-2 items-center text-gray-700 ">
+            You'll stake{' '}
+            <span className="text-blue-500 font-bold px-1">5 USDC</span> and get
+            it back when you confirm the order.
+          </div>
+          <button className=" ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm">
+            Buy for 10 USDC
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const Home: NextPage = () => {
@@ -21,8 +60,8 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="max-w-4xl mx-auto flex flex-col pb-24">
-        <div className="m-8 border-b-2 border-black">
+      <div className="max-w-4xl mx-auto flex flex-col pb-24 ">
+        <div className="m-4 border-b-2 border-black">
           <div className="pb-4 flex justify-between">
             <a className="font-mono flex underline" href="/">
               rwtp
@@ -43,51 +82,20 @@ const Home: NextPage = () => {
           </div>
           <Image src={'/Header.png'} layout="responsive" height={1} width={2} />
         </div>
-        <div className="px-8">
+        <div className="px-4">
           <h1 className="text-xl font-bold mb-1">
             Real World Transport Protocol
           </h1>
           <p className="mt-2">
-            The Real World Transport Protocol <code>(RWTP)</code> is a way to
-            buy and sell real-world goods on Ethereum. Use RWTP to build
-            automated companies, low-cost futures markets, decentralized
-            ecommerce platforms, or sell stickers like we do.
+            The Real World Transport Protocol <code>(RWTP)</code> is a
+            peer-to-peer way to buy and sell real-world goods on Ethereum. Use
+            RWTP to build automated companies, low-cost futures markets,
+            decentralized ecommerce platforms, or sell really cool stickers like
+            we do.
           </p>
 
           <div className="mt-4">
             <StickerStore />
-          </div>
-
-          <h2 className="mt-4 font-bold mb-1 text-lg">How it works</h2>
-          <div className="flex mt-4 items-start">
-            <div>
-              1. A seller deploys a <code>SellOrder</code> contract and puts
-              down a deposit.
-            </div>
-          </div>
-
-          <div className="flex mt-4 items-start">
-            2. A buyer makes an offer to the seller and also puts down a
-            deposit.
-          </div>
-
-          <div className="flex mt-4 items-start">
-            3. To accept the offer, the seller generates a new keypair for the
-            item. They encrypt the item's private key with the buyer's public
-            key. Then, they publish the item's public key on-chain. Finally,
-            they ship the item and include the encrypted private key within the
-            package, such as on QR code or NFC tag.
-          </div>
-
-          <div className="flex mt-4 items-start">
-            <div>
-              4. If the buyer receives the package, they decrypt the encrypted
-              item private key with their own keypair. They sign and publish a
-              message containing the address of the <code>SellOrder</code> to
-              prove that they received the package. After completion, the
-              payment is transfered to the seller, and both parties get their
-              deposit back.
-            </div>
           </div>
         </div>
       </div>
