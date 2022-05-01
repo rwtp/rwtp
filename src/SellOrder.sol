@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import "./VerifySignature.sol";
+import "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
-contract SellOrder is VerifySignature {
+contract SellOrder {
     /// @dev msg.sender is not the buyer
     error MustBeBuyer();
 
@@ -88,7 +88,7 @@ contract SellOrder is VerifySignature {
     /// @dev reverts if msg.sender is not the seller
     modifier onlySeller() {
         if (msg.sender != seller) {
-            revert;
+            revert MustBeSeller();
         }
 
         _;
@@ -97,22 +97,29 @@ contract SellOrder is VerifySignature {
     /// @dev reverts if msg.sender is not the buyer
     modifier onlyBuyer() {
         if (msg.sender != buyer) {
-            revert;
+            revert MustBeBuyer();
         }
 
         _;
     }
 
+    function offerOf(address b) public view returns (uint256, uint256) {
+        return (offers[b].price, offers[b].stake);
+    }
+
     /// @dev creates an offer
-    function submitOffer(uint256 stake, uint256 price)
+    function submitOffer(uint256 price, uint256 stake)
         external
         virtual
         onlyState(State.Open)
     {
-        uint256 allowance = token.allowance(msg.sender, address(this));
         offers[msg.sender] = Offer(stake, price);
 
-        bool result = token.transfer(address(this), allowance);
+        bool result = token.transferFrom(
+            msg.sender,
+            address(this),
+            stake + price
+        );
         assert(result);
     }
 
@@ -148,26 +155,26 @@ contract SellOrder is VerifySignature {
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm(string memory signature)
-        external
-        virtual
-        onlyState(State.Committed)
-        onlyBuyer
-    {
-        bytes memory addr = abi.encodePacked(address(this));
-        require(verifySignature(msg.sender, addr, bytes(signature)));
+    function confirm(
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external virtual onlyState(State.Committed) onlyBuyer {
+        bytes32 hsh = keccak256(abi.encodePacked(address(this)));
+        bytes32 addr = ECDSA.toEthSignedMessageHash(hsh);
+        require(item == ECDSA.recover(addr, v, r, s), "failed to verify");
 
-        Offer memory offer = offers[msg.sender];
-        offers[msg.sender] = Offer(0, 0);
+        Offer memory offer = offers[buyer];
+        offers[buyer] = Offer(0, 0);
 
         state = State.Finalized;
 
         // Return the stake to the buyer
-        bool result0 = token.transfer(msg.sender, offer.stake);
+        bool result0 = token.transfer(buyer, offer.stake);
         assert(result0);
 
         // Return the stake to the seller
-        bool result1 = token.transfer(seller, offer.stake);
+        bool result1 = token.transfer(seller, sellerStake);
         assert(result1);
 
         // Transfer the payment to the seller
@@ -182,8 +189,8 @@ contract SellOrder is VerifySignature {
         uint256 currentStake = sellerStake;
         state = State.Finalized;
 
-        Offer memory offer = offers[msg.sender];
-        offers[msg.sender] = Offer(0, 0);
+        Offer memory offer = offers[buyer];
+        offers[buyer] = Offer(0, 0);
         sellerStake = 0;
 
         // Transfer the payment to the seller
