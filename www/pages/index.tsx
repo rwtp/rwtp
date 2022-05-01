@@ -1,12 +1,11 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { InjectedConnector } from 'wagmi/connectors/injected';
 import { ethers } from 'ethers';
 import { SellOrder } from 'rwtp';
 import * as ethUtil from 'ethereumjs-util';
 import * as sigUtil from '@metamask/eth-sig-util';
+import { useRouter } from 'next/router';
 
 function encryptMessage(publicKey: string, message: string) {
   return ethUtil.bufferToHex(
@@ -26,6 +25,7 @@ function encryptMessage(publicKey: string, message: string) {
 const STICKERS_SELL_ORDER = '0x333C338218B72A315e00DfdB0Dd7b129014f2268';
 
 function StickerStore() {
+  const router = useRouter();
   async function submitBuyOrder() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
@@ -68,12 +68,12 @@ function StickerStore() {
     await erc20.approve(sellOrder.address, 1 + 1);
 
     const tx = await sellOrder.submitOffer(1, 1, 'ipfs://' + cid);
-    console.log(tx);
+    router.push('/orders/' + STICKERS_SELL_ORDER);
   }
 
   return (
     <div className="bg-blue-50 p-4">
-      <div className="bg-white border rounded p-4">
+      <div className="bg-white border border-black rounded p-4">
         <div className="text-xs text-gray-500">Try it out!</div>
         <div className="font-bold">We'll ship you cool stickers via RWTP</div>
         <label className="border flex flex-col mt-2">
@@ -148,18 +148,19 @@ const Home: NextPage = () => {
               </a>
             </div>
           </div>
+
           <Image src={'/Header.png'} layout="responsive" height={1} width={2} />
         </div>
-        <div className="px-4">
-          <h1 className="text-xl font-bold mb-1">
+        <div className="px-4 mt-4">
+          <h1 className="text-2xl font-bold mb-1">
             Real World Transport Protocol
           </h1>
-          <p className="mt-2">
+          <p className="mt-2 ">
             The Real World Transport Protocol <code>(RWTP)</code> is a
             peer-to-peer way to buy and sell real-world goods on Ethereum. Use
             RWTP to build automated companies, low-cost futures markets,
-            decentralized ecommerce platforms, or sell really cool stickers like
-            we do.
+            decentralized ecommerce platforms, or sell moderately cool stickers
+            like we do.
           </p>
 
           <div className="mt-4">

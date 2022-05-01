@@ -122,6 +122,7 @@ contract SellOrder {
         _;
     }
 
+    /// @dev returns the offer of a particular user
     function offerOf(address b) public view returns (uint256, uint256) {
         return (offers[b].price, offers[b].stake);
     }
