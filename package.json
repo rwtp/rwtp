@@ -1,0 +1,55 @@
+{
+  "version": "0.2.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/ts/index.d.ts",
+  "files": [
+    "dist",
+    "out",
+    "ts"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build --entry ts/index.ts",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build --entry ts/index.ts",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {},
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "name": "rwtp",
+  "author": "Evan Conrad",
+  "module": "dist/ts.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/ts.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/ts.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^7.0.8",
+    "husky": "^7.0.4",
+    "size-limit": "^7.0.8",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.3.1",
+    "typescript": "^4.6.3"
+  }
+}

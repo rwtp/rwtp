@@ -47,10 +47,12 @@ contract SellOrder {
     uint256 public sellerStake;
 
     struct Offer {
-        /// @dev the amount the buyer is willing to stake
-        uint256 stake;
         /// @dev the amount the buyer is willing to pay
         uint256 price;
+        /// @dev the amount the buyer is willing to stake
+        uint256 stake;
+        /// @dev the uri of metadata that can contain shipping information (typically encrypted)
+        string uri;
     }
 
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
@@ -108,12 +110,12 @@ contract SellOrder {
     }
 
     /// @dev creates an offer
-    function submitOffer(uint256 price, uint256 stake)
-        external
-        virtual
-        onlyState(State.Open)
-    {
-        offers[msg.sender] = Offer(stake, price);
+    function submitOffer(
+        uint256 price,
+        uint256 stake,
+        string memory uri
+    ) external virtual onlyState(State.Open) {
+        offers[msg.sender] = Offer(price, stake, uri);
 
         bool result = token.transferFrom(
             msg.sender,
@@ -130,7 +132,7 @@ contract SellOrder {
         require(state == State.Open || msg.sender != buyer);
 
         Offer memory offer = offers[msg.sender];
-        offers[msg.sender] = Offer(0, 0);
+        offers[msg.sender] = Offer(0, 0, offer.uri);
 
         bool result = token.transfer(msg.sender, offer.stake + offer.price);
         assert(result);
@@ -165,7 +167,7 @@ contract SellOrder {
         require(item == ECDSA.recover(addr, v, r, s), "failed to verify");
 
         Offer memory offer = offers[buyer];
-        offers[buyer] = Offer(0, 0);
+        offers[buyer] = Offer(0, 0, offer.uri);
 
         state = State.Finalized;
 
@@ -190,7 +192,7 @@ contract SellOrder {
         state = State.Finalized;
 
         Offer memory offer = offers[buyer];
-        offers[buyer] = Offer(0, 0);
+        offers[buyer] = Offer(0, 0, offer.uri);
         sellerStake = 0;
 
         // Transfer the payment to the seller

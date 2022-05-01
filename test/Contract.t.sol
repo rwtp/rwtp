@@ -52,7 +52,7 @@ contract UnitTest is Test {
         token.transfer(buyer1, 20);
         vm.startPrank(buyer1);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(15, 5);
+        sellOrder.submitOffer(15, 5, "ipfs://somedata");
         vm.stopPrank();
         (uint256 offerPrice1, uint256 offerStake1) = sellOrder.offerOf(buyer1);
         require(offerPrice1 == 15, "offer price1 is not 15");
@@ -66,7 +66,7 @@ contract UnitTest is Test {
         token.transfer(buyer2, 20);
         vm.startPrank(buyer2);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(10, 10);
+        sellOrder.submitOffer(10, 10, "ipfs://somedata");
         vm.stopPrank();
         (uint256 offerPrice2, uint256 offerStake2) = sellOrder.offerOf(buyer2);
         require(offerPrice2 == 10, "offer price2 is not 10");
