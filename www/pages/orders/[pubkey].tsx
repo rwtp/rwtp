@@ -44,13 +44,14 @@ function Inner() {
       const erc20 = new ethers.Contract(token, abi, signer);
       const decimals = await erc20.decimals();
 
-      const [price, stake] = await sellOrder.offerOf(address);
+      const [price, stake, uri, item, state, acceptedAt] =
+        await sellOrder.offers(address);
 
       setOffer({
         price: price.div(ethers.BigNumber.from(10).pow(decimals)).toString(),
         stake: stake.div(ethers.BigNumber.from(10).pow(decimals)).toString(),
         buyer: await sellOrder.buyer(),
-        state: await sellOrder.state(),
+        state: state,
       });
     }
     load().catch(console.error);
