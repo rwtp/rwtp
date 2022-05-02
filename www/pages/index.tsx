@@ -80,6 +80,7 @@ function StickerStore() {
   const router = useRouter();
   async function submitBuyOrder() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    console.log('submitting buy order');
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
 
     const network = await provider.getNetwork();
@@ -98,6 +99,7 @@ function StickerStore() {
     }
 
     const signer = provider.getSigner();
+    console.log('STICKERS_SELL_ORDER', STICKERS_SELL_ORDER);
     const sellOrder = new ethers.Contract(
       STICKERS_SELL_ORDER,
       SellOrder.abi,
@@ -105,11 +107,15 @@ function StickerStore() {
     );
     const seller = await sellOrder.seller();
 
+    console.log('seller', seller);
+
     // Encrypt the shipping details
     const encryptionPublicKey = await provider.send(
       'eth_getEncryptionPublicKey',
       [seller]
     );
+
+    console.log('Encryption pubkey', seller);
 
     const encryptedMessage = encryptMessage(
       encryptionPublicKey,
@@ -118,6 +124,8 @@ function StickerStore() {
         shippingAddress: shippingAddress,
       })
     );
+
+    console.log('encrypt message', encryptionPublicKey);
 
     const result = await fetch('/api/upload', {
       method: 'POST',
@@ -134,11 +142,9 @@ function StickerStore() {
       'function approve(address spender, uint256 amount)',
       'function decimals() public view returns (uint8)',
     ];
-    const erc20 = new ethers.Contract(
-      await sellOrder.token(),
-      erc20ABI,
-      signer
-    );
+    const token = await sellOrder.token();
+    console.log(token);
+    const erc20 = new ethers.Contract(token, erc20ABI, signer);
     await erc20.approve(
       sellOrder.address,
       BigNumber.from(DEFAULT_PRICE + DEFAULT_STAKE).mul(
