@@ -65,11 +65,18 @@ const STICKERS_SELL_ORDER =
   process.env.NODE_ENV === 'production'
     ? '0x10ea4F08F6311Fc0c9C5b8502af8bf7dE1544925' // production
     : '0x4D2787E7C9B19Ec6C68734088767a39250476989'; // development
+const WRAPPED_ETH =
+  process.env.NODE_ENV === 'production'
+    ? '0x4200000000000000000000000000000000000006' // production (optimism)
+    : '0xd0A1E359811322d97991E03f863a0C30C2cF029C'; // development (kovan)
 const STICKER_SELLER = '0xc05c2aaDfAdb5CdD8EE25ec67832B524003B2E37'; // evan's pubkey
 
 function StickerStore() {
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
+
+  const DEFAULT_STAKE = 5;
+  const DEFAULT_PRICE = 10;
 
   const router = useRouter();
   async function submitBuyOrder() {
@@ -122,11 +129,28 @@ function StickerStore() {
       signer
     );
 
-    const abi = ['function approve(address spender, uint256 amount)'];
-    const erc20 = new ethers.Contract(await sellOrder.token(), abi, signer);
-    await erc20.approve(sellOrder.address, 1 + 1);
+    const erc20ABI = ['function approve(address spender, uint256 amount)'];
+    const erc20 = new ethers.Contract(
+      await sellOrder.token(),
+      erc20ABI,
+      signer
+    );
+    await erc20.approve(
+      sellOrder.address,
+      BigNumber.from(DEFAULT_PRICE + DEFAULT_STAKE).mul(
+        BigNumber.from(10).pow(await erc20.decimals())
+      )
+    );
 
-    const tx = await sellOrder.submitOffer(1, 1, 'ipfs://' + cid);
+    const tx = await sellOrder.submitOffer(
+      BigNumber.from(DEFAULT_PRICE).mul(
+        BigNumber.from(10).pow(await erc20.decimals())
+      ),
+      BigNumber.from(DEFAULT_STAKE).mul(
+        BigNumber.from(10).pow(await erc20.decimals())
+      ),
+      'ipfs://' + cid
+    );
     router.push('/orders/' + STICKERS_SELL_ORDER);
   }
 
