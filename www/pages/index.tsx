@@ -135,7 +135,7 @@ function StickerStore() {
   return (
     <div className="bg-blue-50 p-4 pb-8">
       <div className="text-xs text-gray-500 px-4 pb-2">
-        Try it out! (Currently only Metamask is supported due to{' '}
+        (Currently only Metamask is supported due to{' '}
         <a
           className="underline"
           target={'_blank'}
