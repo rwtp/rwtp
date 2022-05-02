@@ -1,6 +1,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { create } from 'ipfs-http-client';
+import { AbortController } from 'node-abort-controller';
+
+global.AbortController = AbortController;
 
 type Response = {
   cid: string;

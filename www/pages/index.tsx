@@ -11,7 +11,6 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import solidity from 'react-syntax-highlighter/dist/cjs/languages/prism/solidity';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
 import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../lib/constants';
-import dayjs from 'dayjs';
 
 SyntaxHighlighter.registerLanguage('solidity', solidity);
 SyntaxHighlighter.registerLanguage('typescript', typescript);
@@ -93,13 +92,23 @@ function StickerStore() {
 
     // If we're in production, switch to optimism
     if (process.env.NODE_ENV === 'production' && network.name != 'optimism') {
-      await provider.send('wallet_switchEthereumChain', [OPTIMISM_CHAIN_ID]);
+      await provider.send('wallet_switchEthereumChain', [
+        { chainId: OPTIMISM_CHAIN_ID },
+      ]);
     }
+
+    const signer = provider.getSigner();
+    const sellOrder = new ethers.Contract(
+      STICKERS_SELL_ORDER,
+      SellOrder.abi,
+      signer
+    );
+    const seller = await sellOrder.seller();
 
     // Encrypt the shipping details
     const encryptionPublicKey = await provider.send(
       'eth_getEncryptionPublicKey',
-      [STICKER_SELLER]
+      [seller]
     );
 
     const encryptedMessage = encryptMessage(
@@ -120,14 +129,6 @@ function StickerStore() {
       }),
     });
     const { cid } = await result.json();
-
-    // Submit the order
-    const signer = provider.getSigner();
-    const sellOrder = new ethers.Contract(
-      STICKERS_SELL_ORDER,
-      SellOrder.abi,
-      signer
-    );
 
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
@@ -277,6 +278,7 @@ const Home: NextPage = () => {
         <div className="m-4 border-b-2 border-black">
           <div className="pb-4 flex justify-between">
             <a className="font-mono flex underline" href="/">
+              <Image width={1} height={1} src="/favicon.png" />
               rwtp
             </a>
 
