@@ -18,19 +18,9 @@ contract UnitTest is Test {
 
     function testConstructor() public {
         ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
-        SellOrder sellOrder = new SellOrder(token, 'ipfs://', 100);
+        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://', 100);
 
-        assert(sellOrder.state() == SellOrder.State.Open);
-    }
-
-    function testCanDepositStake() public {
-        ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
-        SellOrder sellOrder = new SellOrder(token, 'ipfs://', 100);
-
-        token.approve(address(sellOrder), 50);
-        sellOrder.depositStake();
-
-        require(token.balanceOf(address(sellOrder)) == 50, 'stake is not 50');
+        assert(address(sellOrder.token()) == address(token));
     }
 
     function testHappyPath() public {
@@ -42,11 +32,7 @@ contract UnitTest is Test {
 
         // Create a sell order
         vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 'ipfs://metadata', 100);
-
-        // Stake 10 tokens, on behalf of the seller
-        token.approve(address(sellOrder), 10);
-        sellOrder.depositStake();
+        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
 
         // Submit an offer from buyer1
         token.transfer(buyer1, 20);
@@ -72,30 +58,24 @@ contract UnitTest is Test {
         require(offerPrice2 == 10, 'offer price2 is not 10');
         require(offerStake2 == 10, 'offer stake2 is not 10');
 
-        // Close the offers
-        vm.prank(seller);
-        sellOrder.close();
-
-        require(
-            sellOrder.state() == SellOrder.State.Closed,
-            'state is not closed'
-        );
-
         // Confirm buyer2's offer
         address item_pu = address(0xF446b31C8D565ACD0eADA24Fb1c562621e2e1633);
         uint256 item_pk = 28270262225976980648209755037975125003705358822066383074565795076366895392656;
-        vm.prank(seller);
+        token.transfer(seller, 50);
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 50);
         sellOrder.commit(buyer2, item_pu);
+        vm.stopPrank();
 
+        (, , , , SellOrder.State offerState1, ) = sellOrder.offers(buyer2);
         require(
-            sellOrder.state() == SellOrder.State.Committed,
+            offerState1 == SellOrder.State.Committed,
             'state is not committed'
         );
-        require(sellOrder.buyer() == buyer2, 'state is not committed');
         console.log(token.balanceOf(address(sellOrder)));
         require(
-            token.balanceOf(address(sellOrder)) == 50,
-            'Sell order does not have 50 tokens'
+            token.balanceOf(address(sellOrder)) == 90,
+            'Sell order does not have 90 tokens'
         );
 
         // Confirm the order
@@ -108,17 +88,18 @@ contract UnitTest is Test {
         vm.prank(buyer2);
         sellOrder.confirm(v, r, s);
 
+        (, , , , SellOrder.State offerState2, ) = sellOrder.offers(buyer2);
         require(
-            sellOrder.state() == SellOrder.State.Finalized,
-            'state is not Finalized'
+            offerState2 == SellOrder.State.Closed,
+            'state is not Closed'
         );
 
         require(
-            token.balanceOf(sellOrder.seller()) == 20, // 20 = payment + stake
+            token.balanceOf(sellOrder.seller()) == 60, // 60 = payment + stake
             'seller did not get paid'
         );
         require(
-            token.balanceOf(sellOrder.buyer()) == 10, // stake
+            token.balanceOf(buyer2) == 10, // stake
             'buyer did not get their stake back'
         );
     }
