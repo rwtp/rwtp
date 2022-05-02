@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
-import { ethers } from 'ethers';
+import { ethers, BigNumber } from 'ethers';
 import { SellOrder } from 'rwtp';
 import * as ethUtil from 'ethereumjs-util';
 import * as sigUtil from '@metamask/eth-sig-util';
@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import solidity from 'react-syntax-highlighter/dist/cjs/languages/prism/solidity';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
+import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../lib/constants';
 
 SyntaxHighlighter.registerLanguage('solidity', solidity);
 SyntaxHighlighter.registerLanguage('typescript', typescript);
@@ -29,20 +30,38 @@ function encryptMessage(publicKey: string, message: string) {
   );
 }
 
-const STICKERS_SELL_ORDER = '0x10ea4F08F6311Fc0c9C5b8502af8bf7dE1544925';
+const STICKERS_SELL_ORDER =
+  process.env.NODE_ENV === 'production'
+    ? '0x10ea4F08F6311Fc0c9C5b8502af8bf7dE1544925' // production
+    : '0x4D2787E7C9B19Ec6C68734088767a39250476989'; // development
+const STICKER_SELLER = '0xc05c2aaDfAdb5CdD8EE25ec67832B524003B2E37'; // evan's pubkey
 
 function StickerStore() {
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
+
   const router = useRouter();
   async function submitBuyOrder() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
 
+    const network = await provider.getNetwork();
+    // If we're in development, switch to Kovan
+    if (process.env.NODE_ENV !== 'production' && network.name != 'kovan') {
+      await provider.send('wallet_switchEthereumChain', [
+        { chainId: KOVAN_CHAIN_ID },
+      ]);
+    }
+
+    // If we're in production, switch to optimism
+    if (process.env.NODE_ENV === 'production' && network.name != 'optimism') {
+      await provider.send('wallet_switchEthereumChain', [OPTIMISM_CHAIN_ID]);
+    }
+
     // Encrypt the shipping details
     const encryptionPublicKey = await provider.send(
       'eth_getEncryptionPublicKey',
-      ['0xc05c2aaDfAdb5CdD8EE25ec67832B524003B2E37']
+      [STICKER_SELLER]
     );
 
     const encryptedMessage = encryptMessage(
@@ -191,7 +210,7 @@ const Home: NextPage = () => {
           <h1 className="text-2xl font-bold mb-1 items-center flex">
             Real World Transport Protocol{' '}
             <span className="bg-blue-50 ml-2 p-1 rounded font-mono text-blue-600 text-sm">
-              beta
+              v0.1.0
             </span>
           </h1>
           <p className="mt-2 ">

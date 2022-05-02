@@ -3,6 +3,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected';
 import { SellOrder } from 'rwtp';
 import { useSendTransaction } from 'wagmi';
 import { useState } from 'react';
+import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../lib/constants';
 
 export default function StickerStore() {
   const [address, setAddress] = useState('');
@@ -10,6 +11,17 @@ export default function StickerStore() {
   async function deploySale() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
+
+    const network = await provider.getNetwork();
+    // If we're in development, switch to Kovan
+    if (process.env.NODE_ENV !== 'production' && network.name != 'kovan') {
+      await provider.send('wallet_switchEthereumChain', [KOVAN_CHAIN_ID]);
+    }
+
+    // If we're in production, switch to optimism
+    if (process.env.NODE_ENV === 'production' && network.name != 'optimism') {
+      await provider.send('wallet_switchEthereumChain', [OPTIMISM_CHAIN_ID]);
+    }
 
     const signer = provider.getSigner();
     let factory = new ethers.ContractFactory(
