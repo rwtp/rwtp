@@ -63,7 +63,7 @@ function encryptMessage(publicKey: string, message: string) {
 
 const STICKERS_SELL_ORDER =
   process.env.NODE_ENV === 'production'
-    ? '0x10ea4F08F6311Fc0c9C5b8502af8bf7dE1544925' // production
+    ? '0x295221bdc096c06a02CD51e8689c5ac1044b4316' // production
     : '0x4D2787E7C9B19Ec6C68734088767a39250476989'; // development
 const WRAPPED_ETH =
   process.env.NODE_ENV === 'production'
