@@ -246,17 +246,17 @@ const Home: NextPage = () => {
         </div>
         <div className="px-4 mt-4">
           <h1 className="text-2xl font-bold mb-1 items-center flex">
-            Real World Transport Protocol{' '}
+            Real World Trade Protocol{' '}
             <span className="bg-blue-50 ml-2 p-1 rounded font-mono text-blue-600 text-sm">
               v0.1.0
             </span>
           </h1>
           <p className="mt-2 ">
-            The Real World Transport Protocol <code>(RWTP)</code> is a
-            peer-to-peer way to buy and sell real-world goods on Ethereum. Use
-            RWTP to build automated companies, low-cost futures markets,
-            decentralized ecommerce platforms, sell moderately cool stickers, or
-            otherwise program the economy.
+            The Real World Trade Protocol <code>(RWTP)</code> is a peer-to-peer
+            way to buy and sell real-world goods on Ethereum. Use RWTP to build
+            automated companies, low-cost futures markets, decentralized
+            ecommerce platforms, sell moderately cool stickers, or otherwise
+            program the economy.
           </p>
 
           <div className="mt-4">
