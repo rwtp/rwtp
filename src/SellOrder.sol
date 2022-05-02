@@ -15,6 +15,21 @@ contract SellOrder {
     /// @dev A function is run at the wrong time in the lifecycle
     error InvalidState(State expected, State received);
 
+    /// @dev Emitted when `buyer` submits and offer.
+    event OfferSubmitted(address indexed buyer, uint256 indexed price, uint256 indexed stake, string uri);
+
+    /// @dev Emitted when `buyer` withdrew and offer.
+    event OfferWithdrawn(address indexed buyer);
+
+    /// @dev Emitted when `buyer`'s offer was commited too.
+    event OfferCommitted(address indexed buyer);
+
+    /// @dev Emitted when `buyer` withdrew and offer.
+    event OfferConfirmed(address indexed buyer);
+
+    /// @dev Emitted when `buyer` withdrew and offer.
+    event OfferEncforced(address indexed buyer);
+
     /// @dev The token used for payment & staking, such as wETH, DAI, or USDC.
     IERC20 public token;
 
@@ -114,6 +129,8 @@ contract SellOrder {
         assert(result);
 
         offers[msg.sender] = Offer(price, stake, uri, address(0), State.Open, 0);
+
+        emit OfferSubmitted(msg.sender, price, stake, uri);
     }
 
     /// @dev allows a buyer to withdraw the offer
@@ -124,6 +141,8 @@ contract SellOrder {
         assert(result);
         
         offers[msg.sender] = Offer(0, 0, offer.uri, address(0), State.Closed, 0);
+
+        emit OfferWithdrawn(msg.sender);
     }
 
     /// @dev Commits a seller to an offer
@@ -146,6 +165,8 @@ contract SellOrder {
         // Update the status of the buyer's offer
         Offer memory offer = offers[buyer_];
         offers[buyer_] = Offer(offer.price, offer.stake, offer.uri, item_, State.Committed, block.timestamp);
+
+        emit OfferCommitted(buyer_);
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
@@ -173,6 +194,8 @@ contract SellOrder {
         // Transfer the payment to the seller
         bool result2 = token.transfer(seller, offer.price);
         assert(result2);
+
+        emit OfferConfirmed(msg.sender);
     }
 
     /// @dev Allows anyone to enforce an offer.
@@ -194,5 +217,7 @@ contract SellOrder {
         // Transfer the seller's stake to address(0).
         bool result2 = token.transfer(address(0), orderStake);
         assert(result2);
+
+        emit OfferEncforced(buyer_);
     }
 }
