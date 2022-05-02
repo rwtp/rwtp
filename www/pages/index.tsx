@@ -6,14 +6,45 @@ import { SellOrder } from 'rwtp';
 import * as ethUtil from 'ethereumjs-util';
 import * as sigUtil from '@metamask/eth-sig-util';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import solidity from 'react-syntax-highlighter/dist/cjs/languages/prism/solidity';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
 import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../lib/constants';
+import dayjs from 'dayjs';
 
 SyntaxHighlighter.registerLanguage('solidity', solidity);
 SyntaxHighlighter.registerLanguage('typescript', typescript);
+
+const useCountdown = (targetDate: any) => {
+  const countDownDate = new Date(targetDate).getTime();
+
+  const [countDown, setCountDown] = useState(
+    countDownDate - new Date().getTime()
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountDown(countDownDate - new Date().getTime());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [countDownDate]);
+
+  return getReturnValues(countDown);
+};
+
+const getReturnValues = (countDown: any) => {
+  // calculate time left
+  const days = Math.floor(countDown / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+  const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((countDown % (1000 * 60)) / 1000);
+
+  return [days, hours, minutes, seconds];
+};
 
 function encryptMessage(publicKey: string, message: string) {
   return ethUtil.bufferToHex(
@@ -99,6 +130,8 @@ function StickerStore() {
     router.push('/orders/' + STICKERS_SELL_ORDER);
   }
 
+  const [days, hours, minutes, seconds] = useCountdown('2022-05-09');
+
   return (
     <div className="bg-blue-50 p-4 pb-8">
       <div className="text-xs text-gray-500 px-4 pb-2">
@@ -114,7 +147,12 @@ function StickerStore() {
       </div>
       <div className="bg-white border border-black rounded ">
         <div className="px-4 py-2 bg-gray-50 border-b border-black">
-          <div className="font-bold py-2">Buy Stickers</div>
+          <div className="font-mono text-xs pt-2">
+            {' '}
+            Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
+            seconds
+          </div>
+          <div className="font-bold pb-2">Buy Stickers</div>
           <div className="text-sm pb-2">
             We'll deliver limited-edition stickers to your doorstep via the
             RWTP. You can trust that we'll deliver them to you, because we've
