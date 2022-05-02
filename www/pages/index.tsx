@@ -246,6 +246,31 @@ const Home: NextPage = () => {
           content="A way of shipping real world goods on ethereum"
         />
         <link rel="icon" href="/favicon.ico" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary" key="twcard" />
+        <meta
+          name="twitter:creator"
+          content={'strangemoodorg'}
+          key="twhandle"
+        />
+
+        {/* Open Graph */}
+        <meta
+          property="og:site_name"
+          content={'Strangemood'}
+          key="ogsitename"
+        />
+        <meta
+          property="og:title"
+          content={'RWTP - Real World Trade Protocol'}
+          key="ogtitle"
+        />
+        <meta
+          property="og:description"
+          content={'A way to buy and sell real-world goods on Ethereum'}
+          key="ogdesc"
+        />
       </Head>
 
       <div className="max-w-4xl mx-auto flex flex-col pb-24 ">
