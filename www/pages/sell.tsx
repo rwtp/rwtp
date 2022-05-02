@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { SellOrder } from 'rwtp';
 import { useSendTransaction } from 'wagmi';
@@ -29,8 +29,17 @@ export default function StickerStore() {
       SellOrder.bytecode,
       signer
     );
+
+    const erc20Address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c';
+    const erc20ABI = [
+      'function approve(address spender, uint256 amount)',
+      'function decimals() public view returns (uint8)',
+    ];
+    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer);
+
     const contract = await factory.deploy(
-      '0xd0a1e359811322d97991e03f863a0c30c2cf029c',
+      erc20Address,
+      BigNumber.from(20).mul(BigNumber.from(10).pow(await erc20.decimals())),
       'ipfs://testnet',
       60 * 60 * 24 * 30 // 1 month
     );

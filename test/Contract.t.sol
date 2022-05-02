@@ -40,9 +40,11 @@ contract UnitTest is Test {
         token.approve(address(sellOrder), 20);
         sellOrder.submitOffer(15, 5, 'ipfs://somedata');
         vm.stopPrank();
-        (uint256 offerPrice1, uint256 offerStake1) = sellOrder.offerOf(buyer1);
-        require(offerPrice1 == 15, 'offer price1 is not 15');
-        require(offerStake1 == 5, 'offer stake1 is not 5');
+        (uint256 offer1Price, uint256 offer1Stake, , , , ) = sellOrder.offers(
+            buyer1
+        );
+        require(offer1Price == 15, 'offer price1 is not 15');
+        require(offer1Stake == 5, 'offer stake1 is not 5');
         require(
             token.balanceOf(address(sellOrder)) >= 20,
             'transfer did not occur '
@@ -54,9 +56,11 @@ contract UnitTest is Test {
         token.approve(address(sellOrder), 20);
         sellOrder.submitOffer(10, 10, 'ipfs://somedata');
         vm.stopPrank();
-        (uint256 offerPrice2, uint256 offerStake2) = sellOrder.offerOf(buyer2);
-        require(offerPrice2 == 10, 'offer price2 is not 10');
-        require(offerStake2 == 10, 'offer stake2 is not 10');
+        (uint256 offer2price, uint256 offer2stake, , , , ) = sellOrder.offers(
+            buyer2
+        );
+        require(offer2price == 10, 'offer price2 is not 10');
+        require(offer2stake == 10, 'offer stake2 is not 10');
 
         // Confirm buyer2's offer
         address item_pu = address(0xF446b31C8D565ACD0eADA24Fb1c562621e2e1633);
@@ -89,10 +93,7 @@ contract UnitTest is Test {
         sellOrder.confirm(v, r, s);
 
         (, , , , SellOrder.State offerState2, ) = sellOrder.offers(buyer2);
-        require(
-            offerState2 == SellOrder.State.Closed,
-            'state is not Closed'
-        );
+        require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
 
         require(
             token.balanceOf(sellOrder.seller()) == 60, // 60 = payment + stake

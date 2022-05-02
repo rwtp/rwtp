@@ -16,7 +16,12 @@ contract SellOrder {
     error InvalidState(State expected, State received);
 
     /// @dev Emitted when `buyer` submits and offer.
-    event OfferSubmitted(address indexed buyer, uint256 indexed price, uint256 indexed stake, string uri);
+    event OfferSubmitted(
+        address indexed buyer,
+        uint256 indexed price,
+        uint256 indexed stake,
+        string uri
+    );
 
     /// @dev Emitted when `buyer` withdrew and offer.
     event OfferWithdrawn(address indexed buyer);
@@ -107,11 +112,6 @@ contract SellOrder {
         _;
     }
 
-    /// @dev returns the offer of a particular user
-    function offerOf(address b) public view returns (uint256, uint256) {
-        return (offers[b].price, offers[b].stake);
-    }
-
     /// @dev creates an offer
     function submitOffer(
         uint256 price,
@@ -128,19 +128,37 @@ contract SellOrder {
         );
         assert(result);
 
-        offers[msg.sender] = Offer(price, stake, uri, address(0), State.Open, 0);
+        offers[msg.sender] = Offer(
+            price,
+            stake,
+            uri,
+            address(0),
+            State.Open,
+            0
+        );
 
         emit OfferSubmitted(msg.sender, price, stake, uri);
     }
 
     /// @dev allows a buyer to withdraw the offer
-    function withdrawOffer() external virtual onlyState(msg.sender, State.Open) {
+    function withdrawOffer()
+        external
+        virtual
+        onlyState(msg.sender, State.Open)
+    {
         Offer memory offer = offers[msg.sender];
-        
+
         bool result = token.transfer(msg.sender, offer.stake + offer.price);
         assert(result);
-        
-        offers[msg.sender] = Offer(0, 0, offer.uri, address(0), State.Closed, 0);
+
+        offers[msg.sender] = Offer(
+            0,
+            0,
+            offer.uri,
+            address(0),
+            State.Closed,
+            0
+        );
 
         emit OfferWithdrawn(msg.sender);
     }
@@ -155,16 +173,19 @@ contract SellOrder {
         // Deposit the stake required to commit to the offer
         uint256 allowance = token.allowance(msg.sender, address(this));
         require(allowance >= orderStake);
-        bool result = token.transferFrom(
-            msg.sender,
-            address(this),
-            orderStake
-        );
+        bool result = token.transferFrom(msg.sender, address(this), orderStake);
         assert(result);
 
         // Update the status of the buyer's offer
         Offer memory offer = offers[buyer_];
-        offers[buyer_] = Offer(offer.price, offer.stake, offer.uri, item_, State.Committed, block.timestamp);
+        offers[buyer_] = Offer(
+            offer.price,
+            offer.stake,
+            offer.uri,
+            item_,
+            State.Committed,
+            block.timestamp
+        );
 
         emit OfferCommitted(buyer_);
     }
@@ -179,9 +200,16 @@ contract SellOrder {
         bytes32 hsh = keccak256(abi.encodePacked(address(this)));
         bytes32 addr = ECDSA.toEthSignedMessageHash(hsh);
         require(offer.item == ECDSA.recover(addr, v, r, s), 'failed to verify');
-        
+
         // Close the offer
-        offers[msg.sender] = Offer(0, 0, offer.uri, address(0), State.Closed, block.timestamp);
+        offers[msg.sender] = Offer(
+            0,
+            0,
+            offer.uri,
+            address(0),
+            State.Closed,
+            block.timestamp
+        );
 
         // Return the stake to the buyer
         bool result0 = token.transfer(msg.sender, offer.stake);
@@ -199,12 +227,23 @@ contract SellOrder {
     }
 
     /// @dev Allows anyone to enforce an offer.
-    function enforce(address buyer_) external virtual onlyState(msg.sender, State.Committed) {
+    function enforce(address buyer_)
+        external
+        virtual
+        onlyState(msg.sender, State.Committed)
+    {
         Offer memory offer = offers[buyer_];
         require(block.timestamp < timeout + offer.acceptedAt);
 
         // Close the offer
-        offers[buyer_] = Offer(0, 0, offer.uri, address(0), State.Closed, block.timestamp);
+        offers[buyer_] = Offer(
+            0,
+            0,
+            offer.uri,
+            address(0),
+            State.Closed,
+            block.timestamp
+        );
 
         // Transfer the payment to the seller
         bool result0 = token.transfer(seller, offer.price);

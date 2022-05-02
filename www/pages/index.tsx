@@ -129,7 +129,10 @@ function StickerStore() {
       signer
     );
 
-    const erc20ABI = ['function approve(address spender, uint256 amount)'];
+    const erc20ABI = [
+      'function approve(address spender, uint256 amount)',
+      'function decimals() public view returns (uint8)',
+    ];
     const erc20 = new ethers.Contract(
       await sellOrder.token(),
       erc20ABI,
