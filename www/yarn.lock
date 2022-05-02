@@ -4030,10 +4030,10 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rwtp@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.4.0.tgz#93d37bf38bf3f58ada6018e1239f05cc3e4b869c"
-  integrity sha512-8J7RYhdlhwCBfss4cmIJemnrajAmp5YD+AMWPt6+2PhlfbAJ/KnDfijdAE0A+qh5wSVrfNZTxq7l3XTLOXIr3g==
+rwtp@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.5.0.tgz#9312cfd373876086fbe38aa082ccc96c8ca0b8cc"
+  integrity sha512-zuubeGfUYiCIe3KDmokqGAMjEtKi1y9ygHTUAGHFi2MihpIiQlNDbKg7sTEir3i8R8ReJiKMmYyeAtpjgwaArQ==
 
 rxjs@^6.6.3:
   version "6.6.7"

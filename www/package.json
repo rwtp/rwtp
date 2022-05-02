@@ -19,7 +19,7 @@
     "react": "18.1.0",
     "react-dom": "18.1.0",
     "react-syntax-highlighter": "^15.5.0",
-    "rwtp": "^0.4.0",
+    "rwtp": "^0.5.0",
     "wagmi": "^0.3.1"
   },
   "devDependencies": {
