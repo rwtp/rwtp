@@ -29,7 +29,7 @@ function encryptMessage(publicKey: string, message: string) {
   );
 }
 
-const STICKERS_SELL_ORDER = '0x333C338218B72A315e00DfdB0Dd7b129014f2268';
+const STICKERS_SELL_ORDER = '0x10ea4F08F6311Fc0c9C5b8502af8bf7dE1544925';
 
 function StickerStore() {
   const [email, setEmail] = useState('');
@@ -206,6 +206,18 @@ const Home: NextPage = () => {
             <StickerStore />
           </div>
         </div>
+
+        {/* <div className="px-4 mt-12">
+          <h2 className="text-xl font-bold mb-2">Usage</h2>
+          <p className="pb-2">
+            To put something up for sale, deploy a new <code>SellOrder</code>.
+          </p>
+          <div className="bg-gray-900 px-4 py-2 rounded">
+            <SyntaxHighlighter language="solidity" useInlineStyles={false}>
+              {`new StickerStore(address _token, address _router, address _signer)`}
+            </SyntaxHighlighter>
+          </div>
+        </div> */}
       </div>
     </div>
   );
