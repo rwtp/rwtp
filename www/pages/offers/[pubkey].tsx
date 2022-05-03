@@ -15,7 +15,11 @@ interface Offer {
   price: string;
   stake: string;
   uri: string;
+  state: string;
+  acceptedAt: number;
 }
+
+const STATES = ["CLOSED", "OPEN", "COMMITTED", "COMPLETED"];
 
 function Inner() {
   const router = useRouter();
@@ -24,6 +28,7 @@ function Inner() {
   useEffect(() => {
     if (!router.query.pubkey) return;
 
+    // TODO: Handle when there are no offers
     async function load() {
       // Prepare prepare provider
       const provider = new ethers.providers.Web3Provider(
@@ -48,20 +53,20 @@ function Inner() {
       console.log(decimals);
 
       // Get buyer
-      let eventABI = ["event OfferSubmitted(address indexed buyer, uint256 indexed price, uint256 indexed stake, string uri);"];
-      let iface = new ethers.utils.Interface(eventABI);
       const filter = sellOrder.filters.OfferSubmitted();
       let events = await sellOrder.queryFilter(filter);
-      // let parsedEvents = events.map((event) => iface.parseLog(event));
-      console.log(events);
-      let offers: Offer[] = events.map<Offer>((event) => {
+      let offers: Offer[] = await Promise.all(events.map<Promise<Offer>>(async (event) => {
+        const buyerAddress = event.args![0];
+        const [price, stake, uri, , state, acceptedAt] = await sellOrder.offers(buyerAddress);
         return {
-          buyer: event.args![0] || "",
-          price: ((event.args![1] as BigNumber).toNumber() / Math.pow(10, decimals)).toString() || "",
-          stake: ((event.args![2] as BigNumber).toNumber() / Math.pow(10, decimals)).toString() || "",
-          uri: event.args![3] || ""
+          buyer: buyerAddress,
+          price: ((price as BigNumber).toNumber() / Math.pow(10, decimals)).toString() || "",
+          stake: ((stake as BigNumber).toNumber() / Math.pow(10, decimals)).toString() || "",
+          uri: uri,
+          state: STATES[state],
+          acceptedAt: acceptedAt
         }
-      })
+      }));
       console.log(offers);
       setOffers(offers);
     }
@@ -76,27 +81,28 @@ function Inner() {
 
   return (
     <div className="bg-blue-50 h-full">
-      <div className="max-w-2xl mx-auto px-4 pt-24 w-full flex gap-2">
-        <a href="/" className="underline">
+      <div className="max-w-2xl mx-auto px-4 pt-24 w-full flex gap-4">
+        <h1 className="text-4xl font-bold">Offers</h1>
+        <a href="/" className="underline mt-auto">
           home
         </a>
       </div>
       <div className="max-w-2xl mx-auto my-auto flex flex-col pb-24 p-4 gap-4">
         {offers.map((offer) => {
-          return (<div key={offer.buyer} className="bg-white border border-black">
+          return (<div hidden={offer.state === "CLOSED"} key={offer.buyer} className="bg-white border border-black">
             <div
               className="bg-gray-50 px-2 py-1 border-b font-mono text-sm"
             >
-              <div className="opacity-50 text-xs">{offer.buyer}</div>
+              <div className="opacity-50 text-xs">From: {offer.buyer}</div>
               <div className="flex items-center py-2">
-                <div className="text-blue-600 font-bold">Offer Made</div>
+              <div className={offer.state === "OPEN" ? "text-blue-600 font-bold" : "opacity-50"}>Offer Made</div>
 
                 <ChevronRightIcon className="h-4 w-4" />
 
-                <div className="opacity-50">Offer Accepted</div>
+                <div className={offer.state === "COMMITTED" ? "text-blue-600 font-bold" : "opacity-50"}>Offer Accepted</div>
                 <ChevronRightIcon className="h-4 w-4" />
 
-                <div className="opacity-50">Completed</div>
+                <div className={offer.state === "COMPLETED" ? "text-blue-600 font-bold" : "opacity-50"}>Completed</div>
               </div>
             </div>
 
@@ -117,11 +123,10 @@ function Inner() {
                 </div>
               </div>
             </div>
-
-            <div className="px-4 py-4">
-              <button className="border px-4 py-2 rounded border-black hover:opacity-50">
-              Cancel order
-            </button>
+            <div className="px-4 pb-4">
+              <button className="rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all">
+                Accept offer
+              </button>
             </div>
           </div>)}
         )}
