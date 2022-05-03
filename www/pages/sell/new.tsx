@@ -9,6 +9,13 @@ export default function Sell() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const router = useRouter();
+  const [sellersStake, setSellersStake] = useState(0);
+  const [buyersStake, setBuyersStake] = useState(0);
+  const [price, setPrice] = useState(0);
+  const [stake, setStake] = useState(0);
+  const [token, setToken] = useState(
+    '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
+  );
 
   async function deploySale() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
@@ -36,12 +43,18 @@ export default function Sell() {
       signer
     );
 
-    const erc20Address = '0xd0a1e359811322d97991e03f863a0c30c2cf029c';
+    const erc20Address = token;
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
       'function decimals() public view returns (uint8)',
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer);
+    const decimals = await erc20.decimals();
+
+    const encryptionPublicKey = await provider.send(
+      'eth_getEncryptionPublicKey',
+      [await signer.getAddress()]
+    );
 
     const result = await fetch('/api/upload', {
       method: 'POST',
@@ -52,6 +65,13 @@ export default function Sell() {
         data: {
           title: title,
           description: description,
+          encryptionPublicKey: encryptionPublicKey,
+          priceSuggested: BigNumber.from(price)
+            .mul(10 ** decimals)
+            .toHexString(),
+          stakeSuggested: BigNumber.from(stake)
+            .mul(10 ** decimals)
+            .toHexString(),
         },
       }),
     });
@@ -88,6 +108,7 @@ export default function Sell() {
               className="border px-4 py-2 mb-2"
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Title"
+              value={title}
             />
           </label>
           <label className="flex flex-col">
@@ -96,13 +117,56 @@ export default function Sell() {
               className="border px-4 py-2 mb-2"
               placeholder="Description"
               onChange={(e) => setDescription(e.target.value)}
+              value={description}
             />
           </label>
-          {/* 
-          <label className="flex flex-col">
-            <strong className="mb-1">Primary Image</strong>
-            <input type={'file'} />
-          </label> */}
+
+          <div className="flex">
+            <label className="flex flex-1 flex-col">
+              <strong className="mb-1">Seller's Stake</strong>
+              <input
+                className="border px-4 py-2 mb-2"
+                type="number"
+                placeholder="1.5"
+                onChange={(e) => setSellersStake(parseFloat(e.target.value))}
+                value={sellersStake}
+              />
+            </label>
+
+            <label className="flex flex-1 flex-col">
+              <strong className="mb-1">Buyer's Stake</strong>
+              <input
+                className="border-r border-t border-b px-4 py-2 mb-2"
+                type="number"
+                placeholder="1.5"
+                onChange={(e) => setBuyersStake(parseFloat(e.target.value))}
+                value={buyersStake}
+              />
+            </label>
+          </div>
+
+          <div className="flex">
+            <label className="flex flex-col">
+              <strong className="mb-1">Price</strong>
+              <input
+                className="border-l border-t border-b px-4 py-2 mb-2"
+                type="number"
+                placeholder="1.5"
+                onChange={(e) => setPrice(parseFloat(e.target.value))}
+                value={price}
+              />
+            </label>
+            <label className="flex flex-1 flex-col">
+              <strong className="mb-1">Token</strong>
+              <input
+                className="border px-4 py-2 mb-2"
+                type="string"
+                placeholder="0x..."
+                onChange={(e) => setToken(e.target.value)}
+                value={token}
+              />
+            </label>
+          </div>
         </div>
         <div className="mt-8">
           <button

@@ -55,16 +55,18 @@ export default function Pubkey() {
   return (
     <div className="h-full flex w-full">
       <div className="flex w-full border-l border-r mx-auto">
-        <div className="flex-1 py-24 px-8 items-center bg-gray-50">
-          <div className="flex mb-2">
-            <div className="border flex border-black">
-              <Image width={128} height={128} src="/rwtp.png" />
+        <div className="flex-1 justify-center flex flex-col px-8 bg-gray-50 items-center">
+          <div>
+            <div className="flex mb-2">
+              <div className="border flex border-black">
+                <Image width={128} height={128} src="/rwtp.png" />
+              </div>
             </div>
+            <h1 className="font-bold text-xl">{sellOrder?.metadata.title}</h1>
+            <p className="pb-2">{sellOrder?.metadata.description}</p>
           </div>
-          <h1 className="font-bold text-xl">{sellOrder?.metadata.title}</h1>
-          <p className="pb-2">{sellOrder?.metadata.description}</p>
         </div>
-        <div className="py-24 px-8 flex-1 bg-white p-4 border-l ">
+        <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 border-l ">
           <label className="flex flex-col mt-2">
             <div className="text-xs font-bold py-1">Shipping Address</div>
             <input
@@ -76,7 +78,7 @@ export default function Pubkey() {
             />
           </label>
 
-          <label className="flex flex-col mt-2">
+          <label className="flex flex-col  mt-2">
             <div className="text-xs font-bold py-1">Email</div>
             <input
               type={'text'}
