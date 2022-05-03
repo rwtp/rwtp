@@ -17,12 +17,16 @@ export default function StickerStore() {
     const network = await provider.getNetwork();
     // If we're in development, switch to Kovan
     if (process.env.NODE_ENV !== 'production' && network.name != 'kovan') {
-      await provider.send('wallet_switchEthereumChain', [KOVAN_CHAIN_ID]);
+      await provider.send('wallet_switchEthereumChain', [
+        { chainId: KOVAN_CHAIN_ID },
+      ]);
     }
 
     // If we're in production, switch to optimism
     if (process.env.NODE_ENV === 'production' && network.name != 'optimism') {
-      await provider.send('wallet_switchEthereumChain', [OPTIMISM_CHAIN_ID]);
+      await provider.send('wallet_switchEthereumChain', [
+        { chainId: OPTIMISM_CHAIN_ID },
+      ]);
     }
 
     const signer = provider.getSigner();
