@@ -269,8 +269,8 @@ function StickerStore() {
                 The price is <span className="text-blue-500 font-bold">10 USDC</span> with
                 a <span className="text-blue-500 font-bold">5 USDC</span> stake. Your stake will be returned
                 if you confirm your delivery. 
-                {chainId == 137 && <p> <a className="text-blue-600 font-bold underline" href="https://buy.moonpay.com/?defaultCurrencyCode=usdc_polygon" target="_blank">Buy USDC</a>.</p>}
-                {chainId == 10 && <p> <a className="text-blue-600 font-bold underline" href="https://global.transak.com" target="_blank">Buy USDC</a>.</p>}
+                {chainId == 137 && <p> <a className="text-blue-500 font-bold underline" href="https://buy.moonpay.com/?defaultCurrencyCode=usdc_polygon" target="_blank">Buy USDC</a>.</p>}
+                {chainId == 10 && <p> <a className="text-blue-500 font-bold underline" href="https://global.transak.com" target="_blank">Buy USDC</a>.</p>}
               </div>
               <button
                 onClick={() => submitBuyOrder().catch(console.error)}
