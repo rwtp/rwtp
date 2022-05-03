@@ -265,7 +265,7 @@ function StickerStore() {
             </label>
 
             <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
-              <div className="text-sm py-2 px-2 items-center text-gray-700 ">
+              <div className="text-sm py-2 pr-2 items-center text-gray-700 ">
                 The price is <span className="text-blue-500 font-bold">10 USDC</span> with
                 a <span className="text-blue-500 font-bold">5 USDC</span> stake. Your stake will be returned
                 if you confirm your delivery. 
