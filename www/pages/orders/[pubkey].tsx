@@ -13,7 +13,6 @@ import {
 interface Offer {
   price: string;
   stake: string;
-  buyer: string;
   state: string;
 }
 
@@ -50,7 +49,6 @@ function Inner() {
       setOffer({
         price: price.div(ethers.BigNumber.from(10).pow(decimals)).toString(),
         stake: stake.div(ethers.BigNumber.from(10).pow(decimals)).toString(),
-        buyer: await sellOrder.buyer(),
         state: state,
       });
     }

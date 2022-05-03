@@ -68,7 +68,6 @@ const WRAPPED_ETH =
   process.env.NODE_ENV === 'production'
     ? '0x4200000000000000000000000000000000000006' // production (optimism)
     : '0xd0A1E359811322d97991E03f863a0C30C2cF029C'; // development (kovan)
-const STICKER_SELLER = '0xc05c2aaDfAdb5CdD8EE25ec67832B524003B2E37'; // evan's pubkey
 
 function StickerStore() {
   const [email, setEmail] = useState('');
@@ -80,7 +79,7 @@ function StickerStore() {
   const router = useRouter();
   async function submitBuyOrder() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-    console.log('submitting buy order');
+
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
 
     const network = await provider.getNetwork();
@@ -99,7 +98,6 @@ function StickerStore() {
     }
 
     const signer = provider.getSigner();
-    console.log('STICKERS_SELL_ORDER', STICKERS_SELL_ORDER);
     const sellOrder = new ethers.Contract(
       STICKERS_SELL_ORDER,
       SellOrder.abi,
@@ -107,15 +105,8 @@ function StickerStore() {
     );
     const seller = await sellOrder.seller();
 
-    console.log('seller', seller);
-
     // Encrypt the shipping details
-    const encryptionPublicKey = await provider.send(
-      'eth_getEncryptionPublicKey',
-      [seller]
-    );
-
-    console.log('Encryption pubkey', seller);
+    const encryptionPublicKey = 'EAYabfhy8OTaRcuTax5Q8zMBYadgrd3nf8haHJLHIwU='; // hard coding jacob's pubkey for now
 
     const encryptedMessage = encryptMessage(
       encryptionPublicKey,
@@ -124,8 +115,6 @@ function StickerStore() {
         shippingAddress: shippingAddress,
       })
     );
-
-    console.log('encrypt message', encryptionPublicKey);
 
     const result = await fetch('/api/upload', {
       method: 'POST',
@@ -143,24 +132,22 @@ function StickerStore() {
       'function decimals() public view returns (uint8)',
     ];
     const token = await sellOrder.token();
-    console.log(token);
     const erc20 = new ethers.Contract(token, erc20ABI, signer);
+    const decimals = await erc20.decimals();
+
     await erc20.approve(
       sellOrder.address,
       BigNumber.from(DEFAULT_PRICE + DEFAULT_STAKE).mul(
-        BigNumber.from(10).pow(await erc20.decimals())
+        BigNumber.from(10).pow(decimals)
       )
     );
 
     const tx = await sellOrder.submitOffer(
-      BigNumber.from(DEFAULT_PRICE).mul(
-        BigNumber.from(10).pow(await erc20.decimals())
-      ),
-      BigNumber.from(DEFAULT_STAKE).mul(
-        BigNumber.from(10).pow(await erc20.decimals())
-      ),
+      BigNumber.from(DEFAULT_PRICE).mul(BigNumber.from(10).pow(decimals)),
+      BigNumber.from(DEFAULT_STAKE).mul(BigNumber.from(10).pow(decimals)),
       'ipfs://' + cid
     );
+
     router.push('/orders/' + STICKERS_SELL_ORDER);
   }
 
