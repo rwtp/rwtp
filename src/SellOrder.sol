@@ -221,7 +221,7 @@ contract SellOrder {
     function enforce(address buyer_)
         external
         virtual
-        onlyState(msg.sender, State.Committed)
+        onlyState(buyer_, State.Committed)
     {
         Offer memory offer = offers[buyer_];
         require(block.timestamp < timeout + offer.acceptedAt);
@@ -239,12 +239,12 @@ contract SellOrder {
         bool result0 = token.transfer(seller, offer.price);
         assert(result0);
 
-        // Transfer the buyer's stake to address(0).
-        bool result1 = token.transfer(address(0), offer.stake);
+        // Transfer the buyer's stake to address(dead).
+        bool result1 = token.transfer(address(0x000000000000000000000000000000000000dEaD), offer.stake);
         assert(result1);
 
-        // Transfer the seller's stake to address(0).
-        bool result2 = token.transfer(address(0), orderStake);
+        // Transfer the seller's stake to address(dead).
+        bool result2 = token.transfer(address(0x000000000000000000000000000000000000dEaD), orderStake);
         assert(result2);
 
         emit OfferEnforced(buyer_);
