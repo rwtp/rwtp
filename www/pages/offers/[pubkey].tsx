@@ -83,7 +83,7 @@ function Inner() {
       </div>
       <div className="max-w-2xl mx-auto my-auto flex flex-col pb-24 p-4 gap-4">
         {offers.map((offer) => {
-          return (<div className="bg-white border border-black">
+          return (<div key={offer.buyer} className="bg-white border border-black">
             <div
               className="bg-gray-50 px-2 py-1 border-b font-mono text-sm"
             >
@@ -99,37 +99,29 @@ function Inner() {
                 <div className="opacity-50">Completed</div>
               </div>
             </div>
-            <div className="px-4 py-4">
-              <h2 className="font-bold text-lg">
-                Your order is pending approval.
-              </h2>
-              <p className="text-gray-700">
-                We'll send you an email if your order is approved.
-              </p>
-            </div>
 
-            <div className="px-4 py-2">
+            <div className="px-4 py-4">
               <div className="flex items-center">
                 <CashIcon className="h-4 w-4 mr-2" />
                 <div>
-                  You offered to pay{' '}
-                  <span className="font-bold">{offer.price} USDC.</span>
+                  Price
+                  <span className="font-bold"> {offer.price} USDC.</span>
                 </div>
               </div>
 
               <div className="flex items-center">
                 <InboxInIcon className="h-4 w-4 mr-2" />
                 <div>
-                  You put down a deposit of{' '}
-                  <span className="font-bold">{offer.stake} USDC.</span>
+                  Stake
+                  <span className="font-bold"> {offer.stake} USDC.</span>
                 </div>
               </div>
             </div>
 
             <div className="px-4 py-4">
-              {/* <button className="border px-4 py-2 rounded border-black hover:opacity-50">
+              <button className="border px-4 py-2 rounded border-black hover:opacity-50">
               Cancel order
-            </button> */}
+            </button>
             </div>
           </div>)}
         )}
