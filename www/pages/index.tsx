@@ -38,6 +38,7 @@ function useChain() {
   const [chainId, setChainId] = useState(NaN);
 
   useEffect(() => {
+    if (!window.ethereum) return;
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     provider.getNetwork().then((network) => {
       if (network.name == "homestead") network.name = "ethereum"
@@ -169,7 +170,8 @@ function StickerStore() {
   return (
     <div className="bg-blue-50 p-4 pb-8">
       <div className="text-xs text-gray-500 pb-2">
-        Network: {chain} (id:{chainId}) (Currently only Metamask is supported due to{' '}
+        {chain && 'Network: '+chain+' (id:'+chainId+') '} 
+        (Currently only Metamask is supported due to{' '}
         <a
           className="underline"
           target={'_blank'}
