@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
-import { ethers, BigNumber } from 'ethers';
+import { ethers, BigNumber, providers } from 'ethers';
 import { SellOrder } from 'rwtp';
 import * as ethUtil from 'ethereumjs-util';
 import * as sigUtil from '@metamask/eth-sig-util';
@@ -32,6 +32,22 @@ const useCountdown = (targetDate: any) => {
 
   return getReturnValues(countDown);
 };
+
+function useChain() {
+  const [chain, setChain] = useState('');
+  const [chainId, setChainId] = useState(NaN);
+
+  useEffect(() => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    provider.getNetwork().then((network) => {
+      if (network.name == "homestead") network.name = "ethereum"
+      setChain(network.name);
+      setChainId(network.chainId)
+    });
+  });
+
+  return [chain, chainId];
+}
 
 const getReturnValues = (countDown: any) => {
   // calculate time left
@@ -64,14 +80,11 @@ const STICKERS_SELL_ORDER =
   process.env.NODE_ENV === 'production'
     ? '0x295221bdc096c06a02CD51e8689c5ac1044b4316' // production
     : '0x4D2787E7C9B19Ec6C68734088767a39250476989'; // development
-const WRAPPED_ETH =
-  process.env.NODE_ENV === 'production'
-    ? '0x4200000000000000000000000000000000000006' // production (optimism)
-    : '0xd0A1E359811322d97991E03f863a0C30C2cF029C'; // development (kovan)
 
 function StickerStore() {
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
+  const [chain, chainId] = useChain();
 
   const DEFAULT_STAKE = 5;
   const DEFAULT_PRICE = 10;
@@ -155,8 +168,8 @@ function StickerStore() {
 
   return (
     <div className="bg-blue-50 p-4 pb-8">
-      <div className="text-xs text-gray-500 px-4 pb-2">
-        (Currently only Metamask is supported due to{' '}
+      <div className="text-xs text-gray-500 pb-2">
+        Network: {chain} (id:{chainId}) (Currently only Metamask is supported due to{' '}
         <a
           className="underline"
           target={'_blank'}
@@ -169,9 +182,11 @@ function StickerStore() {
       <div className="bg-white border border-black rounded ">
         <div className="px-4 py-2 bg-gray-50 border-b border-black">
           <div className="font-mono text-xs pt-2">
-            {' '}
-            Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
-            seconds
+            <div suppressHydrationWarning>
+              {' '}
+              Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
+              seconds
+            </div>
           </div>
           <div className="font-bold pb-2">Buy Stickers</div>
           <div className="text-sm pb-2">
@@ -212,8 +227,8 @@ function StickerStore() {
 
           <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
             <div className="text-sm py-2 px-2 items-center text-gray-700 ">
-              You'll stake{' '}
-              <span className="text-blue-500 font-bold">5 USDC</span>. If you
+              You'll stake
+              <span className="text-blue-500 font-bold"> 5 USDC</span>. If you
               confirm the delivery, you'll get this back.
             </div>
             <button
