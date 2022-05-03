@@ -40,7 +40,7 @@ contract UnitTest is Test {
         token.approve(address(sellOrder), 20);
         sellOrder.submitOffer(15, 5, 'ipfs://somedata');
         vm.stopPrank();
-        (uint256 offer1Price, uint256 offer1Stake, , , , ) = sellOrder.offers(
+        (uint256 offer1Price, uint256 offer1Stake, , , ) = sellOrder.offers(
             buyer1
         );
         require(offer1Price == 15, 'offer price1 is not 15');
@@ -56,22 +56,20 @@ contract UnitTest is Test {
         token.approve(address(sellOrder), 20);
         sellOrder.submitOffer(10, 10, 'ipfs://somedata');
         vm.stopPrank();
-        (uint256 offer2price, uint256 offer2stake, , , , ) = sellOrder.offers(
+        (uint256 offer2price, uint256 offer2stake, , , ) = sellOrder.offers(
             buyer2
         );
         require(offer2price == 10, 'offer price2 is not 10');
         require(offer2stake == 10, 'offer stake2 is not 10');
 
         // Confirm buyer2's offer
-        address item_pu = address(0xF446b31C8D565ACD0eADA24Fb1c562621e2e1633);
-        uint256 item_pk = 28270262225976980648209755037975125003705358822066383074565795076366895392656;
         token.transfer(seller, 50);
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
-        sellOrder.commit(buyer2, item_pu);
+        sellOrder.commit(buyer2);
         vm.stopPrank();
 
-        (, , , , SellOrder.State offerState1, ) = sellOrder.offers(buyer2);
+        (, , , SellOrder.State offerState1, ) = sellOrder.offers(buyer2);
         require(
             offerState1 == SellOrder.State.Committed,
             'state is not committed'
@@ -83,16 +81,10 @@ contract UnitTest is Test {
         );
 
         // Confirm the order
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-            item_pk,
-            ECDSA.toEthSignedMessageHash(
-                keccak256(abi.encodePacked(address(sellOrder)))
-            ) // converts an address to bytes
-        );
         vm.prank(buyer2);
-        sellOrder.confirm(v, r, s);
+        sellOrder.confirm();
 
-        (, , , , SellOrder.State offerState2, ) = sellOrder.offers(buyer2);
+        (, , , SellOrder.State offerState2, ) = sellOrder.offers(buyer2);
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
 
         require(

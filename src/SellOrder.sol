@@ -64,8 +64,6 @@ contract SellOrder {
         uint256 stake;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
-        /// @dev The public key of the item keypair, used to confirm delivery.
-        address item;
         /// @dev the state of the offer
         State state;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
@@ -132,7 +130,6 @@ contract SellOrder {
             price,
             stake,
             uri,
-            address(0),
             State.Open,
             0
         );
@@ -155,7 +152,6 @@ contract SellOrder {
             0,
             0,
             offer.uri,
-            address(0),
             State.Closed,
             0
         );
@@ -164,7 +160,7 @@ contract SellOrder {
     }
 
     /// @dev Commits a seller to an offer
-    function commit(address buyer_, address item_)
+    function commit(address buyer_)
         external
         virtual
         onlyState(buyer_, State.Open)
@@ -182,7 +178,6 @@ contract SellOrder {
             offer.price,
             offer.stake,
             offer.uri,
-            item_,
             State.Committed,
             block.timestamp
         );
@@ -191,22 +186,13 @@ contract SellOrder {
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm(
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external virtual onlyState(msg.sender, State.Committed) {
-        Offer memory offer = offers[msg.sender];
-        bytes32 hsh = keccak256(abi.encodePacked(address(this)));
-        bytes32 addr = ECDSA.toEthSignedMessageHash(hsh);
-        require(offer.item == ECDSA.recover(addr, v, r, s), 'failed to verify');
-
+    function confirm() external virtual onlyState(msg.sender, State.Committed) {
         // Close the offer
+        Offer memory offer = offers[msg.sender];
         offers[msg.sender] = Offer(
             0,
             0,
             offer.uri,
-            address(0),
             State.Closed,
             block.timestamp
         );
@@ -240,7 +226,6 @@ contract SellOrder {
             0,
             0,
             offer.uri,
-            address(0),
             State.Closed,
             block.timestamp
         );
