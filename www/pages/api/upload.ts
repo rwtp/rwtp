@@ -19,8 +19,10 @@ export default async function handler(
 ) {
   const body = req.body as Body;
 
-  const projectId = '277IbGirb1KWD3z8myADmbbeCyI';
-  const projectSecret = '23616240472a1d019108d445667d3710';
+  const projectId =
+    process.env.INFURA_PROJECT_ID || '277IbGirb1KWD3z8myADmbbeCyI'; // dev key
+  const projectSecret =
+    process.env.INFURA_PROJECT_SECRET || '23616240472a1d019108d445667d3710'; // dev secret
   const auth =
     'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 

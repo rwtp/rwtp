@@ -7,6 +7,8 @@ import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../lib/constants';
 
 export default function StickerStore() {
   const [address, setAddress] = useState('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
 
   async function deploySale() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
@@ -37,10 +39,24 @@ export default function StickerStore() {
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer);
 
+    const result = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          title: title,
+          description: description,
+        },
+      }),
+    });
+    const { cid } = await result.json();
+
     const contract = await factory.deploy(
       erc20Address,
       BigNumber.from(20).mul(BigNumber.from(10).pow(await erc20.decimals())),
-      'ipfs://testnet',
+      'ipfs://' + cid,
       60 * 60 * 24 * 30 // 1 month
     );
 
@@ -64,20 +80,25 @@ export default function StickerStore() {
         <div className="flex flex-col">
           <label className="flex flex-col">
             <strong className="mb-1">Title</strong>
-            <input className="border px-4 py-2 mb-2" placeholder="Title" />
+            <input
+              className="border px-4 py-2 mb-2"
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title"
+            />
           </label>
           <label className="flex flex-col">
             <strong className="mb-1">Description</strong>
             <textarea
               className="border px-4 py-2 mb-2"
               placeholder="Description"
+              onChange={(e) => setDescription(e.target.value)}
             />
           </label>
-
+          {/* 
           <label className="flex flex-col">
             <strong className="mb-1">Primary Image</strong>
             <input type={'file'} />
-          </label>
+          </label> */}
         </div>
         <div className="mt-8">
           <button

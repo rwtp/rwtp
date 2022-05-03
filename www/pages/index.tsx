@@ -354,7 +354,7 @@ const Home: NextPage = () => {
         <div className="m-4 border-b-2 border-black">
           <div className="pb-4 flex justify-between">
             <a className="font-mono flex underline" href="/">
-              <Image width={1} height={1} src="/favicon.png" />
+              <Image width={24} height={24} src="/smallrwtp.png" />
               rwtp
             </a>
 
@@ -403,18 +403,6 @@ const Home: NextPage = () => {
             <StickerStore />
           </div>
         </div>
-
-        {/* <div className="px-4 mt-12">
-          <h2 className="text-xl font-bold mb-2">Usage</h2>
-          <p className="pb-2">
-            To put something up for sale, deploy a new <code>SellOrder</code>.
-          </p>
-          <div className="bg-gray-900 px-4 py-2 rounded">
-            <SyntaxHighlighter language="solidity" useInlineStyles={false}>
-              {`new StickerStore(address _token, address _router, address _signer)`}
-            </SyntaxHighlighter>
-          </div>
-        </div> */}
       </div>
     </div>
   );
