@@ -77,6 +77,42 @@ function encryptMessage(publicKey: string, message: string) {
   );
 }
 
+async function switchNetwork(chainId: number) {
+  if (!window.ethereum) return;
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    if (chainId == 137) {
+      await provider.send('wallet_addEthereumChain', [
+        {
+          chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
+          chainName: "Polygon Mainnet",
+          nativeCurrency: {
+            name: "Matic",
+            symbol: "MATIC",
+            decimals: 18,
+          },
+          rpcUrls: ["https://polygon-rpc.com"]
+        }
+      ]);
+    } else if (chainId == 10) {
+      await provider.send('wallet_addEthereumChain', [
+        {
+          chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
+          chainName: "Optimism",
+          nativeCurrency: {
+            name: "Ethereum",
+            symbol: "ETH",
+            decimals: 18,
+          },
+          rpcUrls: ["https://mainnet.optimism.io"]
+        }
+      ]);
+    }
+    await provider.send('wallet_switchEthereumChain', [
+      { chainId: "0x" + chainId.toString(16) },
+    ]);
+}
+
+const SUPPORTED_CHAIN_IDS = [10, 137];
 const STICKERS_SELL_ORDER =
   process.env.NODE_ENV === 'production'
     ? '0x295221bdc096c06a02CD51e8689c5ac1044b4316' // production
@@ -170,7 +206,7 @@ function StickerStore() {
   return (
     <div className="bg-blue-50 p-4 pb-8">
       <div className="text-xs text-gray-500 pb-2">
-        {chain && 'Network: '+chain+' (id:'+chainId+') '} 
+        {chain && 'Network: ' + chain + ' '} 
         (Currently only Metamask is supported due to{' '}
         <a
           className="underline"
@@ -181,6 +217,7 @@ function StickerStore() {
         </a>
         )
       </div>
+      {SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
       <div className="bg-white border border-black rounded ">
         <div className="px-4 py-2 bg-gray-50 border-b border-black">
           <div className="font-mono text-xs pt-2">
@@ -242,7 +279,36 @@ function StickerStore() {
             </button>
           </div>
         </div>
-      </div>
+      </div>}
+      {!SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
+      <div className="bg-white border border-black rounded ">
+        <div className="px-4 py-2 bg-gray-50 border-b border-black">
+          <div className="font-bold pb-2">Unsupported Network</div>
+          <div className="text-sm pb-2">
+            This product is currently unavailable on the <span className="text-blue-500 font-bold">{chain}</span> network.
+            Set your Metamask to a supported network.
+          </div>
+        </div>
+        <div className="px-4 py-4">
+          <div className="text-sm py-2 text-gray-700 ">
+              Switch to:
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <button
+              className='className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"'
+              onClick={() => switchNetwork(137)}
+            >
+              Polygon
+            </button>
+            <button
+              className='className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"'
+              onClick={() => switchNetwork(10)}
+            >
+              Optimism
+            </button>
+          </div>
+        </div>
+      </div>}
     </div>
   );
 }
