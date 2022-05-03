@@ -79,37 +79,37 @@ function encryptMessage(publicKey: string, message: string) {
 
 async function switchNetwork(chainId: number) {
   if (!window.ethereum) return;
-    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-    if (chainId == 137) {
-      await provider.send('wallet_addEthereumChain', [
-        {
-          chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
-          chainName: "Polygon Mainnet",
-          nativeCurrency: {
-            name: "Matic",
-            symbol: "MATIC",
-            decimals: 18,
-          },
-          rpcUrls: ["https://polygon-rpc.com"]
-        }
-      ]);
-    } else if (chainId == 10) {
-      await provider.send('wallet_addEthereumChain', [
-        {
-          chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
-          chainName: "Optimism",
-          nativeCurrency: {
-            name: "Ethereum",
-            symbol: "ETH",
-            decimals: 18,
-          },
-          rpcUrls: ["https://mainnet.optimism.io"]
-        }
-      ]);
-    }
-    await provider.send('wallet_switchEthereumChain', [
-      { chainId: "0x" + chainId.toString(16) },
+  const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+  if (chainId == 137) {
+    await provider.send('wallet_addEthereumChain', [
+      {
+        chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
+        chainName: "Polygon Mainnet",
+        nativeCurrency: {
+          name: "Matic",
+          symbol: "MATIC",
+          decimals: 18,
+        },
+        rpcUrls: ["https://polygon-rpc.com"]
+      }
     ]);
+  } else if (chainId == 10) {
+    await provider.send('wallet_addEthereumChain', [
+      {
+        chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
+        chainName: "Optimism",
+        nativeCurrency: {
+          name: "Ethereum",
+          symbol: "ETH",
+          decimals: 18,
+        },
+        rpcUrls: ["https://mainnet.optimism.io"]
+      }
+    ]);
+  }
+  await provider.send('wallet_switchEthereumChain', [
+    { chainId: "0x" + chainId.toString(16) },
+  ]);
 }
 
 const SUPPORTED_CHAIN_IDS = [10, 137];
@@ -206,7 +206,7 @@ function StickerStore() {
   return (
     <div className="bg-blue-50 p-4 pb-8">
       <div className="text-xs text-gray-500 pb-2">
-        {chain && 'Network: ' + chain + ' '} 
+        {chain && 'Network: ' + chain + ' '}
         (Currently only Metamask is supported due to{' '}
         <a
           className="underline"
@@ -218,97 +218,97 @@ function StickerStore() {
         )
       </div>
       {SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
-      <div className="bg-white border border-black rounded ">
-        <div className="px-4 py-2 bg-gray-50 border-b border-black">
-          <div className="font-mono text-xs pt-2">
-            <div suppressHydrationWarning>
-              {' '}
-              Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
-              seconds
+        <div className="bg-white border border-black rounded ">
+          <div className="px-4 py-2 bg-gray-50 border-b border-black">
+            <div className="font-mono text-xs pt-2">
+              <div suppressHydrationWarning>
+                {' '}
+                Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
+                seconds
+              </div>
+            </div>
+            <div className="font-bold pb-2">Buy Stickers</div>
+            <div className="text-sm pb-2">
+              We'll deliver limited-edition stickers to your doorstep via the
+              RWTP. You can trust that we'll deliver them to you, because we've
+              staked <span className="text-blue-500 font-bold">20 USDC</span>. If
+              the deal doesn't go through, we'll lose those sweet 20 bucks to the
+              void.
             </div>
           </div>
-          <div className="font-bold pb-2">Buy Stickers</div>
-          <div className="text-sm pb-2">
-            We'll deliver limited-edition stickers to your doorstep via the
-            RWTP. You can trust that we'll deliver them to you, because we've
-            staked <span className="text-blue-500 font-bold">20 USDC</span>. If
-            the deal doesn't go through, we'll lose those sweet 20 bucks to the
-            void.
-          </div>
-        </div>
-        <div className="px-4 py-4">
-          <label className="border flex flex-col mt-2">
-            <div className="text-xs bg-gray-100 px-2 py-1">
-              Shipping Address
-            </div>
-            <input
-              type={'text'}
-              className={'px-2 py-2'}
-              name="address"
-              placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-              onChange={(e) => setShippingAddress(e.target.value)}
-            />
-          </label>
+          <div className="px-4 py-4">
+            <label className="border flex flex-col mt-2">
+              <div className="text-xs bg-gray-100 px-2 py-1">
+                Shipping Address
+              </div>
+              <input
+                type={'text'}
+                className={'px-2 py-2'}
+                name="address"
+                placeholder="100 Saddle Point; San Fransokyo, CA 94112"
+                onChange={(e) => setShippingAddress(e.target.value)}
+              />
+            </label>
 
-          <label className="border flex flex-col mt-2">
-            <div className="text-xs bg-gray-100 px-2 py-1">Email</div>
-            <input
-              type={'email'}
-              className={'px-2 py-2'}
-              placeholder="you@ethereum.org"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <div className="text-xs px-2 py-1 bg-gray-50 border-t">
-              *Only used to contact you if something goes wrong, not to sign you
-              up for an email list.
-            </div>
-          </label>
+            <label className="border flex flex-col mt-2">
+              <div className="text-xs bg-gray-100 px-2 py-1">Email</div>
+              <input
+                type={'email'}
+                className={'px-2 py-2'}
+                placeholder="you@ethereum.org"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div className="text-xs px-2 py-1 bg-gray-50 border-t">
+                *Only used to contact you if something goes wrong, not to sign you
+                up for an email list.
+              </div>
+            </label>
 
-          <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
-            <div className="text-sm py-2 px-2 items-center text-gray-700 ">
-              The price is <span className="text-blue-500 font-bold">10 USDC</span> with
-              a <span className="text-blue-500 font-bold">5 USDC</span> stake. Your stake will be returned
-              if you confirm your delivery.
+            <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
+              <div className="text-sm py-2 px-2 items-center text-gray-700 ">
+                The price is <span className="text-blue-500 font-bold">10 USDC</span> with
+                a <span className="text-blue-500 font-bold">5 USDC</span> stake. Your stake will be returned
+                if you confirm your delivery.
+              </div>
+              <button
+                onClick={() => submitBuyOrder().catch(console.error)}
+                className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
+                disabled={!email || !shippingAddress}
+              >
+                Send 15 USDC
+              </button>
             </div>
-            <button
-              onClick={() => submitBuyOrder().catch(console.error)}
-              className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
-              disabled={!email || !shippingAddress}
-            >
-              Send 15 USDC
-            </button>
           </div>
-        </div>
-      </div>}
+        </div>}
       {!SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
-      <div className="bg-white border border-black rounded ">
-        <div className="px-4 py-2 bg-gray-50 border-b border-black">
-          <div className="font-bold pb-2">Unsupported Network</div>
-          <div className="text-sm pb-2">
-            This product is currently unavailable on the <span className="text-blue-500 font-bold">{chain}</span> network.
-            Set your Metamask to a supported network.
+        <div className="bg-white border border-black rounded ">
+          <div className="px-4 py-2 bg-gray-50 border-b border-black">
+            <div className="font-bold pb-2">Unsupported Network</div>
+            <div className="text-sm pb-2">
+              This product is currently unavailable on the <span className="text-blue-500 font-bold">{chain}</span> network.
+              Set your Metamask to a supported network.
+            </div>
           </div>
-        </div>
-        <div className="px-4 py-4">
-          <div className="text-sm py-2 text-gray-700 ">
+          <div className="px-4 py-4">
+            <div className="text-sm py-2 text-gray-700 ">
               Switch to:
+            </div>
+            <div className="flex flex-row items-center gap-2">
+              <button
+                className='className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"'
+                onClick={() => switchNetwork(137)}
+              >
+                Polygon
+              </button>
+              <button
+                className='className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"'
+                onClick={() => switchNetwork(10)}
+              >
+                Optimism
+              </button>
+            </div>
           </div>
-          <div className="flex flex-row items-center gap-2">
-            <button
-              className='className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"'
-              onClick={() => switchNetwork(137)}
-            >
-              Polygon
-            </button>
-            <button
-              className='className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"'
-              onClick={() => switchNetwork(10)}
-            >
-              Optimism
-            </button>
-          </div>
-        </div>
-      </div>}
+        </div>}
     </div>
   );
 }

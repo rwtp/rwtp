@@ -33,7 +33,7 @@ contract SellOrder {
     event OfferConfirmed(address indexed buyer);
 
     /// @dev Emitted when `buyer` withdrew and offer.
-    event OfferEncforced(address indexed buyer);
+    event OfferEnforced(address indexed buyer);
 
     /// @dev The token used for payment & staking, such as wETH, DAI, or USDC.
     IERC20 public token;
@@ -257,6 +257,6 @@ contract SellOrder {
         bool result2 = token.transfer(address(0), orderStake);
         assert(result2);
 
-        emit OfferEncforced(buyer_);
+        emit OfferEnforced(buyer_);
     }
 }
