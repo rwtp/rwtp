@@ -113,9 +113,11 @@ async function switchNetwork(chainId: number) {
 }
 
 const SUPPORTED_CHAIN_IDS = [10, 137];
+const OPTIMISM_SELL_ORDER_ADDRESS = "0x0B05dCAB8e96e076e78a4fe3B4B56C86853d0679";
+const POLYGON_SELL_ORDER_ADDRESS = "0x9fCcC594735639B6C18496d375a1C3675Cedd5d8";
 const STICKERS_SELL_ORDER =
   process.env.NODE_ENV === 'production'
-    ? '0x295221bdc096c06a02CD51e8689c5ac1044b4316' // production
+    ? OPTIMISM_SELL_ORDER_ADDRESS // production
     : '0x4D2787E7C9B19Ec6C68734088767a39250476989'; // development
 
 function StickerStore() {
@@ -130,7 +132,7 @@ function StickerStore() {
   async function submitBuyOrder() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
 
-    await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
+    await provider.send('eth_requestAccounts', []); // <- this prompts user to connect metamask
 
     const network = await provider.getNetwork();
     // If we're in development, switch to Kovan
