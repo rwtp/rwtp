@@ -92,6 +92,11 @@ contract SellOrder {
         return _uri;
     }
 
+    /// @dev sets the URI of the sell order, containing it's metadata
+    function setURI(string memory uri_) external virtual onlySeller {
+        _uri = uri_;
+    }
+
     /// @dev reverts if the function is not at the expected state
     modifier onlyState(address buyer_, State expected) {
         if (offers[buyer_].state != expected) {
