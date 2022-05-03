@@ -20,9 +20,10 @@ export default async function handler(
   const body = req.body as Body;
 
   const projectId =
-    process.env.INFURA_PROJECT_ID || '277IbGirb1KWD3z8myADmbbeCyI'; // dev key
+    process.env.INFURA_IPFS_PROJECT_ID || '277IbGirb1KWD3z8myADmbbeCyI'; // dev key
   const projectSecret =
-    process.env.INFURA_PROJECT_SECRET || '23616240472a1d019108d445667d3710'; // dev secret
+    process.env.INFURA_IPFS_PROJECT_SECRET ||
+    '23616240472a1d019108d445667d3710'; // dev secret
   const auth =
     'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 
@@ -35,7 +36,13 @@ export default async function handler(
     },
   });
 
-  const addResult = await ipfs.add(body.data);
+  let input;
+  if (typeof body.data == 'string') {
+    input = body.data;
+  } else {
+    input = JSON.stringify(body.data);
+  }
+  const addResult = await ipfs.add(input);
 
   res.status(200).json({ cid: addResult.cid.toString() });
 }

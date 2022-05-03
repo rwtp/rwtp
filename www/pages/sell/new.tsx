@@ -3,7 +3,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected';
 import { SellOrder } from 'rwtp';
 import { useSendTransaction } from 'wagmi';
 import { useState } from 'react';
-import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../lib/constants';
+import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../../lib/constants';
 
 export default function StickerStore() {
   const [address, setAddress] = useState('');
