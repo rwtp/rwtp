@@ -266,16 +266,16 @@ function StickerStore() {
 
           <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
             <div className="text-sm py-2 px-2 items-center text-gray-700 ">
-              You'll stake
-              <span className="text-blue-500 font-bold"> 5 USDC</span>. If you
-              confirm the delivery, you'll get this back.
+              The price is <span className="text-blue-500 font-bold">10 USDC</span> with
+              a <span className="text-blue-500 font-bold">5 USDC</span> stake. Your stake will be returned
+              if you confirm your delivery.
             </div>
             <button
               onClick={() => submitBuyOrder().catch(console.error)}
               className="ml-2 rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
               disabled={!email || !shippingAddress}
             >
-              Buy stickers for 10 USDC
+              Send 15 USDC
             </button>
           </div>
         </div>
