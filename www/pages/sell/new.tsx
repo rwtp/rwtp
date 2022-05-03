@@ -67,10 +67,10 @@ export default function Sell() {
           description: description,
           encryptionPublicKey: encryptionPublicKey,
           priceSuggested: BigNumber.from(price)
-            .mul(10 ** decimals)
+            .mul(BigNumber.from(10).pow(decimals))
             .toHexString(),
           stakeSuggested: BigNumber.from(stake)
-            .mul(10 ** decimals)
+            .mul(BigNumber.from(10).pow(decimals))
             .toHexString(),
         },
       }),
@@ -79,7 +79,7 @@ export default function Sell() {
 
     const contract = await factory.deploy(
       erc20Address,
-      BigNumber.from(20).mul(BigNumber.from(10).pow(await erc20.decimals())),
+      BigNumber.from(20).mul(BigNumber.from(10).pow(decimals)),
       'ipfs://' + cid,
       60 * 60 * 24 * 30 // 1 month
     );
