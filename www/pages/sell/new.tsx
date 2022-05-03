@@ -1,14 +1,14 @@
 import { BigNumber, ethers } from 'ethers';
-import { InjectedConnector } from 'wagmi/connectors/injected';
 import { SellOrder } from 'rwtp';
-import { useSendTransaction } from 'wagmi';
 import { useState } from 'react';
 import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../../lib/constants';
+import { useRouter } from 'next/router';
 
-export default function StickerStore() {
+export default function Sell() {
   const [address, setAddress] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const router = useRouter();
 
   async function deploySale() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
@@ -64,7 +64,7 @@ export default function StickerStore() {
       60 * 60 * 24 * 30 // 1 month
     );
 
-    setAddress(contract.address);
+    router.push(`/sell/${contract.address}`);
   }
 
   if (address) {
