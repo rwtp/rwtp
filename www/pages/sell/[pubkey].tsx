@@ -75,18 +75,17 @@ export default function Pubkey() {
         shippingAddress: shippingAddress,
       })
     );
-    
-    const cid = "QmaeTQ8P3uA8GqMV8YJaRdFrWjtrTqwwNYfemP6pSc4eBp";
-    // const result = await fetch('/api/upload', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     data: encryptedMessage,
-    //   }),
-    // });
-    // const { cid } = await result.json();
+
+    const result = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: encryptedMessage,
+      }),
+    });
+    const { cid } = await result.json();
 
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
@@ -98,25 +97,30 @@ export default function Pubkey() {
 
     const tokenTx = await erc20.approve(
       sellOrder.contract.address,
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested) + Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(
-        BigNumber.from(10).pow(decimals)
-      )
+      BigNumber.from(
+        Number.parseFloat(sellOrder.metadata.priceSuggested) +
+          Number.parseFloat(sellOrder.metadata.stakeSuggested)
+      ).mul(BigNumber.from(10).pow(decimals))
     );
     const tokenRcpt = await tokenTx.wait();
     if (tokenRcpt.status != 1) {
-      console.log("Error approving tokens");
+      console.log('Error approving tokens');
       return;
     }
 
     const orderTx = await sellOrder.contract.submitOffer(
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested)).mul(BigNumber.from(10).pow(decimals)),
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(BigNumber.from(10).pow(decimals)),
+      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested)).mul(
+        BigNumber.from(10).pow(decimals)
+      ),
+      BigNumber.from(Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(
+        BigNumber.from(10).pow(decimals)
+      ),
       'ipfs://' + cid
     );
-    
+
     const orderRcpt = await orderTx.wait();
     if (orderRcpt.status != 1) {
-      console.log("Error submitting order");
+      console.log('Error submitting order');
       return;
     }
 
@@ -124,7 +128,7 @@ export default function Pubkey() {
   }
 
   if (!sellOrder) {
-    return(<div>Loading...</div>)
+    return <div>Loading...</div>;
   }
 
   return (
