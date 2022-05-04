@@ -223,25 +223,25 @@ function StickerStore() {
         </a>
         )
       </div>
-      {SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
-        <div className="bg-white border border-black rounded ">
-          <div className="px-4 py-2 bg-gray-50 border-b border-black">
-            <div className="font-mono text-xs pt-2">
-              <div suppressHydrationWarning>
-                {' '}
-                Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
-                seconds
-              </div>
-            </div>
-            <div className="font-bold pb-2">Buy Stickers</div>
-            <div className="text-sm pb-2">
-              We'll deliver limited-edition stickers to your doorstep via the
-              RWTP. You can trust that we'll deliver them to you, because we've
-              staked <span className="text-blue-500 font-bold">20 USDC</span>. If
-              the deal doesn't go through, we'll lose those sweet 20 bucks to the
-              void.
+      <div className="bg-white border border-black rounded ">
+        <div className="px-4 py-2 bg-gray-50 border-b border-black">
+          <div className="font-mono text-xs pt-2">
+            <div suppressHydrationWarning>
+              {' '}
+              Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
+              seconds
             </div>
           </div>
+          <div className="font-bold pb-2">Buy Stickers</div>
+          <div className="text-sm pb-2">
+            We'll deliver limited-edition stickers to your doorstep via the
+            RWTP. You can trust that we'll deliver them to you, because we've
+            staked <span className="text-blue-500 font-bold">20 USDC</span>. If
+            the deal doesn't go through, we'll lose those sweet 20 bucks to the
+            void.
+          </div>
+        </div>
+        {SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
           <div className="px-4 py-4">
             <label className="border flex flex-col mt-2">
               <div className="text-xs bg-gray-100 px-2 py-1">
@@ -274,7 +274,7 @@ function StickerStore() {
               <div className="text-sm py-2 pr-2 items-center text-gray-700 ">
                 The price is <span className="text-blue-500 font-bold">10 USDC</span> with
                 a <span className="text-blue-500 font-bold">5 USDC</span> stake. Your stake will be returned
-                if you confirm your delivery. 
+                if you confirm your delivery.
                 {chainId == 137 && <p> <a className="text-blue-500 font-bold underline" href="https://buy.moonpay.com/?defaultCurrencyCode=usdc_polygon" target="_blank">Buy USDC</a>.</p>}
                 {chainId == 10 && <p> <a className="text-blue-500 font-bold underline" href="https://global.transak.com" target="_blank">Buy USDC</a>.</p>}
               </div>
@@ -286,20 +286,21 @@ function StickerStore() {
                 Send 15 USDC
               </button>
             </div>
-          </div>
-        </div>}
-      {!SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
-        <div className="bg-white border border-black rounded ">
-          <div className="px-4 py-2 bg-gray-50 border-b border-black">
+          </div>}
+        {!chainId &&
+          <div className="px-4 py-4">
+            <div className="font-bold pb-2">Connect to Metamask</div>
+            <div className="text-sm pb-2">
+              Making purchases on RWTP requires a Metamask wallet on a supported network. 
+              You can install the Metamask Chrome extension <a className='underline text-blue-500 font-bold' href="https://metamask.io/download/" target="_blank">here</a>.
+            </div>
+          </div>}
+        {!!chainId && !SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
+          <div className="px-4 py-4">
             <div className="font-bold pb-2">Unsupported Network</div>
             <div className="text-sm pb-2">
               This product is currently unavailable on the <span className="text-blue-500 font-bold">{chain}</span> network.
-              Set your Metamask to a supported network.
-            </div>
-          </div>
-          <div className="px-4 py-4">
-            <div className="text-sm py-2 text-gray-700 ">
-              Switch to:
+              Set your Metamask to a supported network:
             </div>
             <div className="flex flex-row items-center gap-2">
               <button
@@ -315,8 +316,8 @@ function StickerStore() {
                 Optimism
               </button>
             </div>
-          </div>
-        </div>}
+          </div>}
+      </div>
     </div>
   );
 }
