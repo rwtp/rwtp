@@ -204,7 +204,7 @@ function StickerStore() {
       'ipfs://' + cid
     );
 
-    router.push('/orders/' + STICKERS_SELL_ORDER);
+    router.push('/orders/' + sellOrderAddress);
   }
 
   const [days, hours, minutes, seconds] = useCountdown('2022-05-09');
