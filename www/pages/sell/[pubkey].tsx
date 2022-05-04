@@ -6,10 +6,18 @@ import { SellOrder } from 'rwtp';
 import Image from 'next/image';
 import { encryptMessage } from '../../lib/encryption';
 
+interface Metadata {
+  title: string;
+  description: string;
+  encryptionPublicKey: string;
+  priceSuggested: string;
+  stakeSuggested: string;
+}
+
 function useReadOnlySellOrder(pubkey: string) {
   const [sellOrder, setSellOrder] = useState<{
     contract: ethers.Contract;
-    metadata: any;
+    metadata: Metadata;
   }>();
 
   useEffect(() => {
@@ -53,32 +61,32 @@ export default function Pubkey() {
   const [shippingAddress, setShippingAddress] = useState('');
 
   async function onBuy() {
-    if (!sellOrder) return;
-    if (!email) return;
-    if (!shippingAddress) return;
+    if (!sellOrder || !email || !shippingAddress) return;
 
-    console.log(sellOrder.metadata);
-    const encrypted = encryptMessage(
+    // Load metamask
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    await provider.send('eth_requestAccounts', []); // <- this prompts user to connect metamask
+    const signer = provider.getSigner();
+
+    const encryptedMessage = encryptMessage(
       sellOrder.metadata.encryptionPublicKey,
       JSON.stringify({
-        email,
-        shippingAddress,
+        email: email,
+        shippingAddress: shippingAddress,
       })
     );
-
-    const result = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        data: encrypted,
-      }),
-    });
-    const { cid } = await result.json();
-
-    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-    const signer = provider.getSigner();
+    
+    const cid = "QmaeTQ8P3uA8GqMV8YJaRdFrWjtrTqwwNYfemP6pSc4eBp";
+    // const result = await fetch('/api/upload', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify({
+    //     data: encryptedMessage,
+    //   }),
+    // });
+    // const { cid } = await result.json();
 
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
@@ -88,27 +96,35 @@ export default function Pubkey() {
     const erc20 = new ethers.Contract(token, erc20ABI, signer);
     const decimals = await erc20.decimals();
 
-    const price = BigNumber.from(sellOrder.metadata.priceSuggested);
-    const stake = BigNumber.from(sellOrder.metadata.stakeSuggested);
-
-    await erc20.approve(sellOrder.contract.address, price.add(stake));
-
-    const writableSellOrder = new ethers.Contract(
+    const tokenTx = await erc20.approve(
       sellOrder.contract.address,
-      SellOrder.abi,
-      signer
+      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested) + Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(
+        BigNumber.from(10).pow(decimals)
+      )
     );
+    const tokenRcpt = await tokenTx.wait();
+    if (tokenRcpt.status != 1) {
+      console.log("Error approving tokens");
+      return;
+    }
 
-    console.log(price, stake, price.add(stake));
-
-    const tx = await writableSellOrder.submitOffer(
-      price,
-      stake,
+    const orderTx = await sellOrder.contract.submitOffer(
+      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested)).mul(BigNumber.from(10).pow(decimals)),
+      BigNumber.from(Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(BigNumber.from(10).pow(decimals)),
       'ipfs://' + cid
     );
-    console.log(tx);
+    
+    const orderRcpt = await orderTx.wait();
+    if (orderRcpt.status != 1) {
+      console.log("Error submitting order");
+      return;
+    }
 
-    // router.push('/orders/' + sellOrder.contract.address);
+    router.push('/orders/' + pubkey);
+  }
+
+  if (!sellOrder) {
+    return(<div>Loading...</div>)
   }
 
   return (
@@ -121,8 +137,8 @@ export default function Pubkey() {
                 <Image width={128} height={128} src="/rwtp.png" />
               </div>
             </div>
-            <h1 className="font-bold text-xl">{sellOrder?.metadata.title}</h1>
-            <p className="pb-2">{sellOrder?.metadata.description}</p>
+            <h1 className="font-bold text-xl">{sellOrder.metadata.title}</h1>
+            <p className="pb-2">{sellOrder.metadata.description}</p>
           </div>
         </div>
         <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 border-l ">
