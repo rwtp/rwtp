@@ -12,7 +12,6 @@ import {
   MailIcon,
   HomeIcon
 } from '@heroicons/react/solid';
-import { json } from 'stream/consumers';
 
 interface Offer {
   buyer: string;
@@ -30,6 +29,7 @@ const STATES = ["CLOSED", "OPEN", "COMMITTED", "COMPLETED"];
 
 function Inner() {
   const router = useRouter();
+  const [timeout, setTimeout] = useState(0);
   const [offers, setOffers] = useState<Offer[]>();
 
   useEffect(() => {
@@ -51,12 +51,15 @@ function Inner() {
         signer
       );
 
+      const timeout = await sellOrder.timeout();
+      setTimeout(timeout.toNumber());
+
+
       // Load token contract
       const token = await sellOrder.token();
       const abi = ['function decimals() public view returns (uint8)'];
       const erc20 = new ethers.Contract(token, abi, signer);
       const decimals = await erc20.decimals();
-      console.log(decimals);
 
       // Get buyer
       const filter = sellOrder.filters.OfferSubmitted();
@@ -72,12 +75,11 @@ function Inner() {
           stake: ((stake as BigNumber).toNumber() / Math.pow(10, decimals)).toString() || "",
           uri: uri,
           state: STATES[Number(state)],
-          acceptedAt: acceptedAt,
+          acceptedAt: acceptedAt?.toNumber(),
           email: localStorage.getItem(`${uri}-email`) ?? "",
           address: localStorage.getItem(`${uri}-address`) ?? ""
         }
       }));
-      console.log(offers);
       setOffers(offers);
     }
     load().catch(console.error);
@@ -113,12 +115,12 @@ function Inner() {
   }
 
   async function commitToOffer(buyer: string) {
-    // TODO
     // Load sell order
     if (!router.query.pubkey) return;
     const provider = new ethers.providers.Web3Provider(
       window.ethereum as any
     );
+    await provider.send('eth_requestAccounts', []); // <- this prompts user to connect metamask
     const signer = provider.getSigner();
     const sellOrder = new ethers.Contract(
       router.query.pubkey as string,
@@ -126,6 +128,24 @@ function Inner() {
       signer
     );
     // Approve ERC 20 transfer for stake
+    const erc20ABI = [
+      'function approve(address spender, uint256 amount)',
+      'function decimals() public view returns (uint8)',
+    ];
+    const token = await sellOrder.token();
+    const erc20 = new ethers.Contract(token, erc20ABI, signer);
+    const orderStake: BigNumber = await sellOrder.orderStake();
+    const tokenTx = await erc20.approve(
+      sellOrder.address,
+      orderStake
+    );
+    const tokenRcpt = await tokenTx.wait();
+    if (tokenRcpt.status != 1) {
+      console.log("Error approving tokens");
+      return;
+    }
+
+    // Commit to the order
     const tx = await sellOrder.commit(buyer);
     console.log(tx);
   }
@@ -208,12 +228,16 @@ function Inner() {
               >
                 Decrypt data
               </button>}
-              <button
+              
+              {offer.state && offer.state === "OPEN" && <button
                 className="rounded bg-blue-500 text-white border border-blue-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
                 onClick={async () => await commitToOffer(offer.buyer)}
               >
                 Accept offer
-              </button>
+              </button>}
+              {offer.state && offer.state === "COMMITTED" && <div>
+                <span className="font-bold">Expires at {new Date((offer.acceptedAt + timeout) * 1000).toLocaleString()}</span>
+              </div>}
             </div>
           </div>)
         }
