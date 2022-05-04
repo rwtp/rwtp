@@ -191,18 +191,29 @@ function StickerStore() {
     const erc20 = new ethers.Contract(token, erc20ABI, signer);
     const decimals = await erc20.decimals();
 
-    await erc20.approve(
+    const tokenTx = await erc20.approve(
       sellOrder.address,
       BigNumber.from(DEFAULT_PRICE + DEFAULT_STAKE).mul(
         BigNumber.from(10).pow(decimals)
       )
     );
+    const tokenRcpt = await tokenTx.wait();
+    if (tokenRcpt.status != 1) {
+      console.log("Error approving tokens");
+      return;
+    }
 
-    const tx = await sellOrder.submitOffer(
+    const orderTx = await sellOrder.submitOffer(
       BigNumber.from(DEFAULT_PRICE).mul(BigNumber.from(10).pow(decimals)),
       BigNumber.from(DEFAULT_STAKE).mul(BigNumber.from(10).pow(decimals)),
       'ipfs://' + cid
     );
+    
+    const orderRcpt = await orderTx.wait();
+    if (orderRcpt.status != 1) {
+      console.log("Error submitting order");
+      return;
+    }
 
     router.push('/orders/' + sellOrderAddress);
   }
