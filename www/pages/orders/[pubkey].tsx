@@ -55,6 +55,22 @@ function Inner() {
     load().catch(console.error);
   }, [router.query.pubkey]);
 
+  async function withdraw() {
+    // Load sell order
+    if (!router.query.pubkey) return;
+    const provider = new ethers.providers.Web3Provider(
+      window.ethereum as any
+    );
+    const signer = provider.getSigner();
+    const sellOrder = new ethers.Contract(
+      router.query.pubkey as string,
+      SellOrder.abi,
+      signer
+    );
+    const tx = await sellOrder.withdrawOffer()
+    console.log(tx);
+  }
+
   if (!offer) {
     return (
       <div className="max-w-4xl mx-auto flex flex-col pb-24">Loading...</div>
@@ -72,7 +88,6 @@ function Inner() {
         <div className="bg-white border border-black">
           <div
             className="bg-gray-50 px-2 py-1 border-b font-mono text-sm"
-            border-b
           >
             <div className="opacity-50 text-xs">{router.query.pubkey}</div>
             <div className="flex items-center py-2">
@@ -114,9 +129,12 @@ function Inner() {
           </div>
 
           <div className="px-4 py-4">
-            {/* <button className="border px-4 py-2 rounded border-black hover:opacity-50">
-              Cancel order
-            </button> */}
+            { offer.price !== '0' && <button
+              className="rounded bg-red-500 text-white border border-red-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
+              onClick={async () => await withdraw()}
+            >
+              Cancel offer
+            </button>}
           </div>
         </div>
       </div>
