@@ -2,8 +2,6 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import { BigNumber, ethers } from 'ethers';
 import { SellOrder } from 'rwtp';
-import * as ethUtil from 'ethereumjs-util';
-import * as sigUtil from '@metamask/eth-sig-util';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import {
@@ -63,15 +61,17 @@ function Inner() {
       // Get buyer
       const filter = sellOrder.filters.OfferSubmitted();
       let events = await sellOrder.queryFilter(filter);
-      let offers: Offer[] = await Promise.all(events.map<Promise<Offer>>(async (event) => {
-        const buyerAddress = event.args![0];
-        const [price, stake, uri, , state, acceptedAt] = await sellOrder.offers(buyerAddress);
+      
+      const buyerAddresses = new Set<string>();
+      events.map((event) => {buyerAddresses.add(event.args![0])})
+      let offers: Offer[] = await Promise.all(Array.from(buyerAddresses).map<Promise<Offer>>(async (buyerAddress) => {
+        const [price, stake, uri, state, acceptedAt] = await sellOrder.offers(buyerAddress);
         return {
           buyer: buyerAddress,
           price: ((price as BigNumber).toNumber() / Math.pow(10, decimals)).toString() || "",
           stake: ((stake as BigNumber).toNumber() / Math.pow(10, decimals)).toString() || "",
           uri: uri,
-          state: STATES[state],
+          state: STATES[Number(state)],
           acceptedAt: acceptedAt,
           email: localStorage.getItem(`${uri}-email`) ?? "",
           address: localStorage.getItem(`${uri}-address`) ?? ""
@@ -114,20 +114,20 @@ function Inner() {
 
   async function commitToOffer(buyer: string) {
     // TODO
-    // // Load sell order
-    // if (!router.query.pubkey) return;
-    // const provider = new ethers.providers.Web3Provider(
-    //   window.ethereum as any
-    // );
-    // const signer = provider.getSigner();
-    // const sellOrder = new ethers.Contract(
-    //   router.query.pubkey as string,
-    //   SellOrder.abi,
-    //   signer
-    // );
-    // // Approve ERC 20 transfer for stake
-    // const tx = await sellOrder.commit(buyer);
-    // console.log(tx);
+    // Load sell order
+    if (!router.query.pubkey) return;
+    const provider = new ethers.providers.Web3Provider(
+      window.ethereum as any
+    );
+    const signer = provider.getSigner();
+    const sellOrder = new ethers.Contract(
+      router.query.pubkey as string,
+      SellOrder.abi,
+      signer
+    );
+    // Approve ERC 20 transfer for stake
+    const tx = await sellOrder.commit(buyer);
+    console.log(tx);
   }
 
   if (!offers) {
@@ -146,7 +146,7 @@ function Inner() {
       </div>
       <div className="max-w-2xl mx-auto my-auto flex flex-col pb-24 p-4 gap-4">
         {offers.map((offer, index) => {
-          return (<div hidden={offer.state === "CLOSED"} key={offer.buyer} className="bg-white border border-black">
+          return (<div hidden={offer.state === "CLOSED" || !offer.state} key={offer.buyer} className="bg-white border border-black">
             <div
               className="bg-gray-50 px-2 py-1 border-b font-mono text-sm"
             >
