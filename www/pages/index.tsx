@@ -115,10 +115,11 @@ async function switchNetwork(chainId: number) {
 const SUPPORTED_CHAIN_IDS = [10, 137];
 const OPTIMISM_SELL_ORDER_ADDRESS = "0x0B05dCAB8e96e076e78a4fe3B4B56C86853d0679";
 const POLYGON_SELL_ORDER_ADDRESS = "0x9fCcC594735639B6C18496d375a1C3675Cedd5d8";
+const KOVAN_SELL_ORDER_ADDRESS = "0x4D2787E7C9B19Ec6C68734088767a39250476989";
 const STICKERS_SELL_ORDER =
   process.env.NODE_ENV === 'production'
     ? OPTIMISM_SELL_ORDER_ADDRESS // production
-    : '0x4D2787E7C9B19Ec6C68734088767a39250476989'; // development
+    : KOVAN_SELL_ORDER_ADDRESS; // development
 
 function StickerStore() {
   const [email, setEmail] = useState('');
@@ -134,28 +135,31 @@ function StickerStore() {
 
     await provider.send('eth_requestAccounts', []); // <- this prompts user to connect metamask
 
-    const network = await provider.getNetwork();
     // If we're in development, switch to Kovan
-    if (process.env.NODE_ENV !== 'production' && network.name != 'kovan') {
+    if (process.env.NODE_ENV !== 'production' && chain != 'optimism-kovan') {
       await provider.send('wallet_switchEthereumChain', [
         { chainId: KOVAN_CHAIN_ID },
       ]);
     }
 
-    // If we're in production, switch to optimism
-    if (process.env.NODE_ENV === 'production' && network.name != 'optimism') {
-      await provider.send('wallet_switchEthereumChain', [
-        { chainId: OPTIMISM_CHAIN_ID },
-      ]);
-    }
-
     const signer = provider.getSigner();
+    let sellOrderAddress: string;
+    switch (chainId) {
+      case 10:
+        sellOrderAddress = OPTIMISM_SELL_ORDER_ADDRESS;
+        break;
+      case 137:
+        sellOrderAddress = POLYGON_SELL_ORDER_ADDRESS;
+        break;
+      default:
+        sellOrderAddress = KOVAN_SELL_ORDER_ADDRESS;
+        break;
+    }
     const sellOrder = new ethers.Contract(
-      STICKERS_SELL_ORDER,
+      sellOrderAddress,
       SellOrder.abi,
       signer
     );
-    const seller = await sellOrder.seller();
 
     // Encrypt the shipping details
     const encryptionPublicKey = 'EAYabfhy8OTaRcuTax5Q8zMBYadgrd3nf8haHJLHIwU='; // hard coding jacob's pubkey for now
