@@ -4,6 +4,7 @@ import { ethers, BigNumber, providers } from 'ethers';
 import { useEffect, useState } from 'react';
 import { SellOrder } from 'rwtp';
 import Image from 'next/image';
+import { encryptMessage } from '../../lib/encryption';
 
 function useReadOnlySellOrder(pubkey: string) {
   const [sellOrder, setSellOrder] = useState<{
@@ -28,7 +29,6 @@ function useReadOnlySellOrder(pubkey: string) {
       );
 
       const cid = (await contract.orderURI()).replace('ipfs://', '');
-      console.log('cid', cid);
 
       const uri = `https://ipfs.infura.io/ipfs/` + cid;
       const resp = await fetch(uri);
@@ -51,6 +51,65 @@ export default function Pubkey() {
   const sellOrder = useReadOnlySellOrder(pubkey);
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
+
+  async function onBuy() {
+    if (!sellOrder) return;
+    if (!email) return;
+    if (!shippingAddress) return;
+
+    console.log(sellOrder.metadata);
+    const encrypted = encryptMessage(
+      sellOrder.metadata.encryptionPublicKey,
+      JSON.stringify({
+        email,
+        shippingAddress,
+      })
+    );
+
+    const result = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: encrypted,
+      }),
+    });
+    const { cid } = await result.json();
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    const signer = provider.getSigner();
+
+    const erc20ABI = [
+      'function approve(address spender, uint256 amount)',
+      'function decimals() public view returns (uint8)',
+    ];
+    const token = await sellOrder.contract.token();
+    const erc20 = new ethers.Contract(token, erc20ABI, signer);
+    const decimals = await erc20.decimals();
+
+    const price = BigNumber.from(sellOrder.metadata.priceSuggested);
+    const stake = BigNumber.from(sellOrder.metadata.stakeSuggested);
+
+    await erc20.approve(sellOrder.contract.address, price.add(stake));
+
+    const writableSellOrder = new ethers.Contract(
+      sellOrder.contract.address,
+      SellOrder.abi,
+      signer
+    );
+
+    console.log(price, stake, price.add(stake));
+
+    const tx = await writableSellOrder.submitOffer(
+      price,
+      stake,
+      'ipfs://' + cid
+    );
+    console.log(tx);
+
+    // router.push('/orders/' + sellOrder.contract.address);
+  }
 
   return (
     <div className="h-full flex w-full">
@@ -89,7 +148,10 @@ export default function Pubkey() {
             />
           </label>
           <div className="mt-4">
-            <button className="bg-black text-white px-4 py-2 rounded w-full">
+            <button
+              className="bg-black text-white px-4 py-2 rounded w-full"
+              onClick={() => onBuy().catch(console.error)}
+            >
               Buy with crypto
             </button>
             <div className="text-sm mt-4 text-gray-500">
