@@ -3,6 +3,13 @@ import { SellOrder } from 'rwtp';
 import { useState } from 'react';
 import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../../lib/constants';
 import { useRouter } from 'next/router';
+import { toBn } from 'evm-bn';
+
+function round(numAsStr: string, decimalPlaces = 18) {
+  const arr = numAsStr.split('.');
+  const fraction = arr[1].substr(0, decimalPlaces);
+  return arr[0] + '.' + fraction;
+}
 
 export default function Sell() {
   const [address, setAddress] = useState('');
@@ -20,7 +27,6 @@ export default function Sell() {
   async function deploySale() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
-
     const network = await provider.getNetwork();
     // If we're in development, switch to Kovan
     if (process.env.NODE_ENV !== 'production' && network.name != 'kovan') {
@@ -28,21 +34,18 @@ export default function Sell() {
         { chainId: KOVAN_CHAIN_ID },
       ]);
     }
-
     // If we're in production, switch to optimism
     if (process.env.NODE_ENV === 'production' && network.name != 'optimism') {
       await provider.send('wallet_switchEthereumChain', [
         { chainId: OPTIMISM_CHAIN_ID },
       ]);
     }
-
     const signer = provider.getSigner();
     let factory = new ethers.ContractFactory(
       SellOrder.abi,
       SellOrder.bytecode,
       signer
     );
-
     const erc20Address = token;
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
@@ -50,12 +53,10 @@ export default function Sell() {
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer);
     const decimals = await erc20.decimals();
-
     const encryptionPublicKey = await provider.send(
       'eth_getEncryptionPublicKey',
       [await signer.getAddress()]
     );
-
     const result = await fetch('/api/upload', {
       method: 'POST',
       headers: {
@@ -66,17 +67,12 @@ export default function Sell() {
           title: title,
           description: description,
           encryptionPublicKey: encryptionPublicKey,
-          priceSuggested: BigNumber.from(price)
-            .mul(BigNumber.from(10).pow(decimals))
-            .toHexString(),
-          stakeSuggested: BigNumber.from(stake)
-            .mul(BigNumber.from(10).pow(decimals))
-            .toHexString(),
+          priceSuggested: toBn(price.toString(), decimals).toHexString(),
+          stakeSuggested: toBn(stake.toString(), decimals).toHexString(),
         },
       }),
     });
     const { cid } = await result.json();
-
     const contract = await factory.deploy(
       erc20Address,
       BigNumber.from(20).mul(BigNumber.from(10).pow(decimals)),
@@ -84,7 +80,6 @@ export default function Sell() {
       60 * 60 * 24 * 30 // 1 month
     );
     await contract.deployTransaction.wait();
-
     router.push(`/sell/${contract.address}`);
   }
 
