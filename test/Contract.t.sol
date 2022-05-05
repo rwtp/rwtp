@@ -23,6 +23,79 @@ contract UnitTest is Test {
         assert(address(sellOrder.token()) == address(token));
     }
 
+    // Test enforce function (can't be enforced before time limit, can be enforced afterwards)
+    function testEnforce() public {
+        vm.warp(0); // set the time to 0
+        // Setup
+        ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
+        address seller = address(0x1234567890123456784012345678901234567829);
+        address buyer1 = address(0x2234567890123456754012345678901234567821);
+        address buyer2 = address(0x5234567890123456754012345678901234567822);
+
+        // Create a sell order
+        vm.prank(seller);
+        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+
+        // Submit an offer from buyer2
+        token.transfer(buyer2, 20);
+        vm.startPrank(buyer2);
+        token.approve(address(sellOrder), 20);
+        sellOrder.submitOffer(10, 10, 'ipfs://somedata');
+        vm.stopPrank();
+        (uint256 offer2price, uint256 offer2stake, , , ) = sellOrder.offers(
+            buyer2
+        );
+        require(offer2price == 10, 'offer price2 is not 10');
+        require(offer2stake == 10, 'offer stake2 is not 10');
+
+        vm.warp(30); // warp to block 30
+        // Confirm buyer2's offer
+        token.transfer(seller, 50);
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 50);
+        sellOrder.commit(buyer2);
+        vm.stopPrank();
+
+        // Submit an offer from buyer
+        vm.startPrank(seller);
+        vm.expectRevert();
+        sellOrder.enforce(buyer2);
+        vm.stopPrank();
+
+        vm.warp(51); // warp to block 51 (should still fail)
+        vm.startPrank(seller);
+        vm.expectRevert();
+        sellOrder.enforce(buyer2);
+        vm.stopPrank();
+
+        vm.warp(81); // warp to block 81 (should succeed)
+        vm.startPrank(seller);
+        vm.expectRevert();
+        sellOrder.enforce(buyer2);
+        vm.stopPrank();
+    }
+
+    function testFailSubmittingOfferTwiceFails() public {
+        ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
+        address seller = address(0x1234567890123456784012345678901234567829);
+        address buyer = address(0x2234567890123456754012345678901234567821);
+
+        vm.prank(seller);
+        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://', 100);
+
+        token.transfer(buyer, 20);
+        vm.startPrank(buyer);
+        token.approve(address(sellOrder), 20);
+        sellOrder.submitOffer(15, 5, 'ipfs://somedata');
+        vm.stopPrank();
+
+        token.transfer(buyer, 20);
+        vm.startPrank(buyer);
+        token.approve(address(sellOrder), 20);
+        sellOrder.submitOffer(15, 5, 'ipfs://somedata');
+        vm.stopPrank();
+    }
+
     function testHappyPath() public {
         // Setup
         ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);

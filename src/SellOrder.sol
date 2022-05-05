@@ -205,7 +205,7 @@ contract SellOrder {
         onlyState(buyer_, State.Committed)
     {
         Offer memory offer = offers[buyer_];
-        require(block.timestamp < timeout + offer.acceptedAt);
+        require(block.timestamp > timeout + offer.acceptedAt);
 
         // Close the offer
         offers[buyer_] = Offer(0, 0, offer.uri, State.Closed, block.timestamp);
