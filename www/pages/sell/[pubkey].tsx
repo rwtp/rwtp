@@ -97,10 +97,14 @@ export default function Pubkey() {
 
     const tokenTx = await erc20.approve(
       sellOrder.contract.address,
-      BigNumber.from(
-        Number.parseFloat(sellOrder.metadata.priceSuggested) +
-          Number.parseFloat(sellOrder.metadata.stakeSuggested)
-      ).mul(BigNumber.from(10).pow(decimals))
+      BigNumber.from(sellOrder.metadata.priceSuggested).add(
+        BigNumber.from(sellOrder.metadata.stakeSuggested)
+      )
+    );
+    console.log(
+      BigNumber.from(sellOrder.metadata.priceSuggested)
+        .add(BigNumber.from(sellOrder.metadata.stakeSuggested))
+        .toString()
     );
     const tokenRcpt = await tokenTx.wait();
     if (tokenRcpt.status != 1) {
@@ -109,13 +113,12 @@ export default function Pubkey() {
     }
 
     const orderTx = await sellOrder.contract.submitOffer(
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested)).mul(
-        BigNumber.from(10).pow(decimals)
-      ),
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(
-        BigNumber.from(10).pow(decimals)
-      ),
-      'ipfs://' + cid
+      BigNumber.from(sellOrder.metadata.priceSuggested),
+      BigNumber.from(sellOrder.metadata.stakeSuggested),
+      'ipfs://' + cid,
+      {
+        gasLimit: 10000000,
+      }
     );
 
     const orderRcpt = await orderTx.wait();
