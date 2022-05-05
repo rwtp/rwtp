@@ -5,30 +5,6 @@ import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../../lib/constants';
 import { useRouter } from 'next/router';
 import { toBn } from 'evm-bn';
 
-function useToken(tokenAddress: string) {
-  const [details, setDetails] = useState();
-
-  useEffect(() => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-    const signer = provider.getSigner();
-
-    const erc20ABI = [
-      'function approve(address spender, uint256 amount)',
-      'function decimals() public view returns (uint8)',
-    ];
-    const erc20 = new ethers.Contract(tokenAddress, erc20ABI, signer);
-
-    async function load() {
-      const decimals = await erc20.decimals();
-      decimals;
-    }
-
-    load().catch(console.error);
-  }, [tokenAddress]);
-
-  return details;
-}
-
 export default function Sell() {
   const [address, setAddress] = useState('');
   const [title, setTitle] = useState('');
