@@ -11,6 +11,8 @@ interface IOrderBook {
 
     event FeeChanged(uint256 previous, uint256 next);
 
+    function owner() external view returns (address);
+
     function fee() external view returns (uint256);
 
     function setFee(uint256 _fee) external;

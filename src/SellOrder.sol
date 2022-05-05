@@ -210,7 +210,10 @@ contract SellOrder {
         assert(result2);
 
         // Transfer payment to the order book
-        bool result3 = token.transfer(address(orderBook), toOrderBook);
+        bool result3 = token.transfer(
+            IOrderBook(orderBook).owner(),
+            toOrderBook
+        );
         assert(result3);
 
         emit OfferConfirmed(msg.sender);

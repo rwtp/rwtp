@@ -9,7 +9,13 @@ import 'forge-std/console.sol';
 import '../src/OrderBook.sol';
 
 contract UnitTest is Test {
-    OrderBook book = new OrderBook();
+    address DAO = address(0x4234567890123456784012345678901234567821);
+    OrderBook book;
+
+    function setUp() public {
+        vm.prank(DAO);
+        book = new OrderBook();
+    }
 
     function toSignature(
         uint8 v,
@@ -226,5 +232,53 @@ contract UnitTest is Test {
 
         (, , , SellOrder.State offerState2, ) = sellOrder.offers(seller);
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
+    }
+
+    function testOrderBookFees() public {
+        // Setup
+        ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 200);
+
+        address seller = address(0x1234567890123456784012345678901234567829);
+        address buyer1 = address(0x2234567890123456754012345678901234567821);
+
+        // Create a sell order
+
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50, // stake
+            'ipfs://metadata',
+            100
+        );
+
+        // Submit an offer
+        token.transfer(buyer1, 100);
+        vm.startPrank(buyer1);
+        token.approve(address(sellOrder), 100);
+        sellOrder.submitOffer(100, 0, 'ipfs://somedata');
+        vm.stopPrank();
+
+        // Commit to the offer
+        token.transfer(seller, 50);
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 50);
+        sellOrder.commit(buyer1);
+        vm.stopPrank();
+
+        // Confirm the order
+        vm.prank(buyer1);
+        sellOrder.confirm();
+
+        // Check that the order book got 1 token
+        require(
+            token.balanceOf(book.owner()) == 1,
+            'order book owner did not get 1 token'
+        );
+
+        // Check that the seller got 99 tokens, plus their 50 stake back
+        require(
+            token.balanceOf(seller) == 99 + 50,
+            'seller did not get 1 token'
+        );
     }
 }
