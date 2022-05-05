@@ -3,6 +3,8 @@ pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import './interfaces/IOrderBook.sol';
 
 contract SellOrder {
     /// @dev msg.sender is not the seller
@@ -43,6 +45,9 @@ contract SellOrder {
     /// @dev the amount the seller is offering to stake per order.
     uint256 public orderStake;
 
+    /// @dev order book
+    address public orderBook;
+
     /// @dev the URI where metadata about this SellOrder can be found
     string private _uri;
 
@@ -71,12 +76,14 @@ contract SellOrder {
 
     /// @dev Creates a new sell order.
     constructor(
+        address seller_,
         IERC20 token_,
         uint256 orderStake_,
         string memory uri_,
         uint256 timeout_
     ) {
-        seller = msg.sender;
+        orderBook = msg.sender;
+        seller = seller_;
         token = token_;
         orderStake = orderStake_;
         _uri = uri_;
@@ -194,9 +201,20 @@ contract SellOrder {
         bool result1 = token.transfer(seller, orderStake);
         assert(result1);
 
-        // Transfer the payment to the seller
-        bool result2 = token.transfer(seller, offer.price);
+        uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
+            1000000;
+        uint256 toSeller = offer.price - toOrderBook;
+
+        // Transfer payment to the seller
+        bool result2 = token.transfer(seller, toSeller);
         assert(result2);
+
+        // Transfer payment to the order book
+        bool result3 = token.transfer(
+            IOrderBook(orderBook).owner(),
+            toOrderBook
+        );
+        assert(result3);
 
         emit OfferConfirmed(msg.sender);
     }

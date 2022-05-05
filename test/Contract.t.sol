@@ -6,8 +6,17 @@ import './ERC20Mock.sol';
 import '../src/SellOrder.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import 'forge-std/console.sol';
+import '../src/OrderBook.sol';
 
-contract UnitTest is Test {
+contract SellOrderTest is Test {
+    address DAO = address(0x4234567890123456784012345678901234567821);
+    OrderBook book;
+
+    function setUp() public {
+        vm.prank(DAO);
+        book = new OrderBook();
+    }
+
     function toSignature(
         uint8 v,
         bytes32 r,
@@ -18,7 +27,13 @@ contract UnitTest is Test {
 
     function testConstructor() public {
         ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            address(this),
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         assert(address(sellOrder.token()) == address(token));
     }
@@ -32,8 +47,13 @@ contract UnitTest is Test {
         address buyer = address(0x5234567890123456754012345678901234567822);
 
         // Create a sell order
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
@@ -78,8 +98,14 @@ contract UnitTest is Test {
         address seller = address(0x1234567890123456784012345678901234567829);
         address buyer = address(0x2234567890123456754012345678901234567821);
 
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://', 100);
+        // Create a sell order
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
@@ -102,8 +128,13 @@ contract UnitTest is Test {
         address buyer2 = address(0x5234567890123456754012345678901234567822);
 
         // Create a sell order
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         // Submit an offer from buyer1
         token.transfer(buyer1, 20);
@@ -173,8 +204,13 @@ contract UnitTest is Test {
         address seller = address(0x1234567890123456784012345678901234567829);
 
         // Create a sell order
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         // Submit an offer from seller
         token.transfer(seller, 20);
@@ -196,5 +232,89 @@ contract UnitTest is Test {
 
         (, , , SellOrder.State offerState2, ) = sellOrder.offers(seller);
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
+    }
+
+    function testOrderBookFees() public {
+        // Setup
+        ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 200);
+
+        address seller = address(0x1234567890123456784012345678901234567829);
+        address buyer1 = address(0x2234567890123456754012345678901234567821);
+
+        // Create a sell order
+
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50, // stake
+            'ipfs://metadata',
+            100
+        );
+
+        // Submit an offer
+        token.transfer(buyer1, 100);
+        vm.startPrank(buyer1);
+        token.approve(address(sellOrder), 100);
+        sellOrder.submitOffer(100, 0, 'ipfs://somedata');
+        vm.stopPrank();
+
+        // Commit to the offer
+        token.transfer(seller, 50);
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 50);
+        sellOrder.commit(buyer1);
+        vm.stopPrank();
+
+        // Confirm the order
+        vm.prank(buyer1);
+        sellOrder.confirm();
+
+        // Check that the order book got 1 token
+        require(
+            token.balanceOf(book.owner()) == 1,
+            'order book owner did not get 1 token'
+        );
+
+        // Check that the seller got 99 tokens, plus their 50 stake back
+        require(
+            token.balanceOf(seller) == 99 + 50,
+            'seller did not get 1 token'
+        );
+    }
+}
+
+contract OrderBookTest is Test {
+    function testFailOnlyOwnerCanSetFees() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+        book.setFee(10);
+    }
+
+    function testFailOnlyOwnerCanSetOwner() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+        book.setOwner(address(0x4234567890123456784012345678901234567822));
+    }
+
+    function testOwnerCanSetFees() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+
+        vm.prank(owner);
+        book.setFee(10);
+        require(book.fee() == 10, 'fee is not 10');
+    }
+
+    function testOwnerCanSetOwner() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+
+        vm.prank(owner);
+        book.setOwner(owner);
+        require(book.owner() == owner, 'owner is not owner');
     }
 }
