@@ -2,9 +2,9 @@
 pragma solidity ^0.8.13;
 
 import 'forge-std/Test.sol';
-import 'openzeppelin-contracts/contracts/mocks/ERC20Mock.sol';
+import './ERC20Mock.sol';
 import '../src/SellOrder.sol';
-import 'openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
+import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import 'forge-std/console.sol';
 
 contract UnitTest is Test {
