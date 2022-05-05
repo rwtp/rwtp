@@ -131,13 +131,7 @@ contract SellOrder {
         );
         assert(result);
 
-        offers[msg.sender] = Offer(
-            price,
-            stake,
-            uri,
-            State.Open,
-            0
-        );
+        offers[msg.sender] = Offer(price, stake, uri, State.Open, 0);
 
         emit OfferSubmitted(msg.sender, price, stake, uri);
     }
@@ -153,13 +147,7 @@ contract SellOrder {
         bool result = token.transfer(msg.sender, offer.stake + offer.price);
         assert(result);
 
-        offers[msg.sender] = Offer(
-            0,
-            0,
-            offer.uri,
-            State.Closed,
-            0
-        );
+        offers[msg.sender] = Offer(0, 0, offer.uri, State.Closed, 0);
 
         emit OfferWithdrawn(msg.sender);
     }
@@ -227,24 +215,24 @@ contract SellOrder {
         require(block.timestamp < timeout + offer.acceptedAt);
 
         // Close the offer
-        offers[buyer_] = Offer(
-            0,
-            0,
-            offer.uri,
-            State.Closed,
-            block.timestamp
-        );
+        offers[buyer_] = Offer(0, 0, offer.uri, State.Closed, block.timestamp);
 
         // Transfer the payment to the seller
         bool result0 = token.transfer(seller, offer.price);
         assert(result0);
 
         // Transfer the buyer's stake to address(dead).
-        bool result1 = token.transfer(address(0x000000000000000000000000000000000000dEaD), offer.stake);
+        bool result1 = token.transfer(
+            address(0x000000000000000000000000000000000000dEaD),
+            offer.stake
+        );
         assert(result1);
 
         // Transfer the seller's stake to address(dead).
-        bool result2 = token.transfer(address(0x000000000000000000000000000000000000dEaD), orderStake);
+        bool result2 = token.transfer(
+            address(0x000000000000000000000000000000000000dEaD),
+            orderStake
+        );
         assert(result2);
 
         emit OfferEnforced(buyer_);
