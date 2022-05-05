@@ -108,7 +108,9 @@ export default function Pubkey() {
     const erc20 = new ethers.Contract(token, erc20ABI, signer);
     const tokenTx = await erc20.approve(
       readOnlySellOrder.contract.address,
-      BigNumber.from(10000).add(BigNumber.from(10000)),
+      BigNumber.from(readOnlySellOrder.metadata.priceSuggested).add(
+        BigNumber.from(readOnlySellOrder.metadata.stakeSuggested)
+      ),
       {
         gasLimit: 10000000,
       }
@@ -121,8 +123,8 @@ export default function Pubkey() {
     }
 
     const orderTx = await writableSellOrder.submitOffer(
-      BigNumber.from(10000),
-      BigNumber.from(10000),
+      BigNumber.from(readOnlySellOrder.metadata.priceSuggested),
+      BigNumber.from(readOnlySellOrder.metadata.stakeSuggested),
       'ipfs://' + cid,
       {
         gasLimit: 10000000,
