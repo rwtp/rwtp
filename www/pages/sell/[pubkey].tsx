@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { SellOrder } from 'rwtp';
 import Image from 'next/image';
 import { encryptMessage } from '../../lib/encryption';
+import { fromBn } from 'evm-bn';
 
 interface Metadata {
   title: string;
@@ -163,12 +164,13 @@ export default function Pubkey() {
       <div className="flex w-full border-l border-r mx-auto">
         <div className="flex-1 justify-center flex flex-col px-8 bg-gray-50 items-center">
           <div>
-            <div className="flex mb-2">
+            <div className="flex mb-2 ">
               <div className="border flex border-black">
-                <Image width={128} height={128} src="/rwtp.png" />
+                <Image width={256} height={256} src="/rwtp.png" />
               </div>
             </div>
-            <h1 className="font-bold text-xl">
+
+            <h1 className="font-bold pt-2">
               {readOnlySellOrder.metadata.title}
             </h1>
             <p className="pb-2">{readOnlySellOrder.metadata.description}</p>
@@ -196,12 +198,18 @@ export default function Pubkey() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </label>
+
           <div className="mt-4">
             <button
-              className="bg-black text-white px-4 py-2 rounded w-full"
+              className="bg-black text-white px-4 py-2 rounded w-full justify-between flex"
               onClick={() => onBuy().catch(console.error)}
             >
-              Buy with crypto
+              <div>Buy</div>
+              <div>
+                {fromBn(
+                  BigNumber.from(readOnlySellOrder.metadata.priceSuggested)
+                )}
+              </div>
             </button>
             <div className="text-sm mt-4 text-gray-500">
               If this item doesn't ship to you, the seller be fined{' '}
