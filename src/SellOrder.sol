@@ -117,6 +117,9 @@ contract SellOrder {
         uint256 stake,
         string memory uri
     ) external virtual onlyState(msg.sender, State.Closed) {
+        uint256 allowance = token.allowance(msg.sender, address(this));
+        require(allowance >= stake + price, 'Insufficient allowance');
+
         offers[msg.sender] = Offer(price, stake, uri, State.Open, 0);
 
         bool result = token.transferFrom(
@@ -124,7 +127,7 @@ contract SellOrder {
             address(this),
             stake + price
         );
-        assert(result);
+        require(result, 'Transfer failed');
 
         emit OfferSubmitted(msg.sender, price, stake, uri);
     }

@@ -7,3 +7,5 @@ node_modules
 openzeppelin-contractsartifacts
 artifacts
 openzeppelin-contracts/
+.deps
+ipfs
