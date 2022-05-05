@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import 'forge-std/console.sol';
 import '../src/OrderBook.sol';
 
-contract UnitTest is Test {
+contract SellOrderTest is Test {
     address DAO = address(0x4234567890123456784012345678901234567821);
     OrderBook book;
 
@@ -280,5 +280,41 @@ contract UnitTest is Test {
             token.balanceOf(seller) == 99 + 50,
             'seller did not get 1 token'
         );
+    }
+}
+
+contract OrderBookTest is Test {
+    function testFailOnlyOwnerCanSetFees() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+        book.setFee(10);
+    }
+
+    function testFailOnlyOwnerCanSetOwner() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+        book.setOwner(address(0x4234567890123456784012345678901234567822));
+    }
+
+    function testOwnerCanSetFees() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+
+        vm.prank(owner);
+        book.setFee(10);
+        require(book.fee() == 10, 'fee is not 10');
+    }
+
+    function testOwnerCanSetOwner() public {
+        address owner = address(0x1234567890123456784012345678901234567829);
+        vm.prank(owner);
+        OrderBook book = new OrderBook();
+
+        vm.prank(owner);
+        book.setOwner(owner);
+        require(book.owner() == owner, 'owner is not owner');
     }
 }
