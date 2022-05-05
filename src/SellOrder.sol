@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import 'openzeppelin-contracts/contracts/token/ERC20/IERC20.sol';
-import 'openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 
 contract SellOrder {
     /// @dev msg.sender is not the seller
     error MustBeSeller();
-
-    /// @dev the offer is already submitted, you must withdraw and make a new offer
-    /// to modify it.
-    error OfferAlreadySubmitted();
 
     /// @dev A function is run at the wrong time in the lifecycle
     error InvalidState(State expected, State received);
@@ -121,23 +117,14 @@ contract SellOrder {
         uint256 stake,
         string memory uri
     ) external virtual onlyState(msg.sender, State.Closed) {
-        if (!(offers[msg.sender].price == 0 && offers[msg.sender].stake == 0)) {
-            revert OfferAlreadySubmitted();
-        }
+        offers[msg.sender] = Offer(price, stake, uri, State.Open, 0);
+
         bool result = token.transferFrom(
             msg.sender,
             address(this),
             stake + price
         );
         assert(result);
-
-        offers[msg.sender] = Offer(
-            price,
-            stake,
-            uri,
-            State.Open,
-            0
-        );
 
         emit OfferSubmitted(msg.sender, price, stake, uri);
     }
@@ -153,13 +140,7 @@ contract SellOrder {
         bool result = token.transfer(msg.sender, offer.stake + offer.price);
         assert(result);
 
-        offers[msg.sender] = Offer(
-            0,
-            0,
-            offer.uri,
-            State.Closed,
-            0
-        );
+        offers[msg.sender] = Offer(0, 0, offer.uri, State.Closed, 0);
 
         emit OfferWithdrawn(msg.sender);
     }
@@ -224,27 +205,27 @@ contract SellOrder {
         onlyState(buyer_, State.Committed)
     {
         Offer memory offer = offers[buyer_];
-        require(block.timestamp < timeout + offer.acceptedAt);
+        require(block.timestamp > timeout + offer.acceptedAt);
 
         // Close the offer
-        offers[buyer_] = Offer(
-            0,
-            0,
-            offer.uri,
-            State.Closed,
-            block.timestamp
-        );
+        offers[buyer_] = Offer(0, 0, offer.uri, State.Closed, block.timestamp);
 
         // Transfer the payment to the seller
         bool result0 = token.transfer(seller, offer.price);
         assert(result0);
 
         // Transfer the buyer's stake to address(dead).
-        bool result1 = token.transfer(address(0x000000000000000000000000000000000000dEaD), offer.stake);
+        bool result1 = token.transfer(
+            address(0x000000000000000000000000000000000000dEaD),
+            offer.stake
+        );
         assert(result1);
 
         // Transfer the seller's stake to address(dead).
-        bool result2 = token.transfer(address(0x000000000000000000000000000000000000dEaD), orderStake);
+        bool result2 = token.transfer(
+            address(0x000000000000000000000000000000000000dEaD),
+            orderStake
+        );
         assert(result2);
 
         emit OfferEnforced(buyer_);

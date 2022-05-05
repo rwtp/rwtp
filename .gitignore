@@ -4,3 +4,6 @@ dist
 node_modules
 
 .vercel
+openzeppelin-contractsartifacts
+artifacts
+openzeppelin-contracts/

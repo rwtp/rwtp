@@ -83,6 +83,7 @@ export default function Sell() {
       'ipfs://' + cid,
       60 * 60 * 24 * 30 // 1 month
     );
+    await contract.deployTransaction.wait();
 
     router.push(`/sell/${contract.address}`);
   }

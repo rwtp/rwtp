@@ -76,6 +76,7 @@ export default function Pubkey() {
       })
     );
     
+    // Post shipping metadata
     const result = await fetch('/api/upload', {
       method: 'POST',
       headers: {
@@ -87,35 +88,37 @@ export default function Pubkey() {
     });
     const { cid } = await result.json();
 
+    // Approve token transfer
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
       'function decimals() public view returns (uint8)',
     ];
     const token = await sellOrder.contract.token();
     const erc20 = new ethers.Contract(token, erc20ABI, signer);
-    const decimals = await erc20.decimals();
-
     const tokenTx = await erc20.approve(
       sellOrder.contract.address,
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested) + Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(
-        BigNumber.from(10).pow(decimals)
+      BigNumber.from(sellOrder.metadata.priceSuggested).add(
+        BigNumber.from(sellOrder.metadata.stakeSuggested)
       )
     );
     const tokenRcpt = await tokenTx.wait();
     if (tokenRcpt.status != 1) {
-      console.log("Error approving tokens");
+      console.log('Error approving tokens');
       return;
     }
 
+    // Submit order
     const orderTx = await sellOrder.contract.submitOffer(
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.priceSuggested)).mul(BigNumber.from(10).pow(decimals)),
-      BigNumber.from(Number.parseFloat(sellOrder.metadata.stakeSuggested)).mul(BigNumber.from(10).pow(decimals)),
-      'ipfs://' + cid
+      BigNumber.from(sellOrder.metadata.priceSuggested),
+      BigNumber.from(sellOrder.metadata.stakeSuggested),
+      'ipfs://' + cid,
+      {
+        gasLimit: 10000000,
+      }
     );
-    
     const orderRcpt = await orderTx.wait();
     if (orderRcpt.status != 1) {
-      console.log("Error submitting order");
+      console.log('Error submitting order');
       return;
     }
 
@@ -123,7 +126,7 @@ export default function Pubkey() {
   }
 
   if (!sellOrder) {
-    return(<div>Loading...</div>)
+    return <div>Loading...</div>;
   }
 
   return (
