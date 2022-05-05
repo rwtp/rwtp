@@ -76,17 +76,16 @@ export default function Pubkey() {
       })
     );
     
-    const cid = "QmaeTQ8P3uA8GqMV8YJaRdFrWjtrTqwwNYfemP6pSc4eBp";
-    // const result = await fetch('/api/upload', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     data: encryptedMessage,
-    //   }),
-    // });
-    // const { cid } = await result.json();
+    const result = await fetch('/api/upload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: encryptedMessage,
+      }),
+    });
+    const { cid } = await result.json();
 
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
