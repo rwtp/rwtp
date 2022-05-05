@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
   InboxInIcon,
 } from '@heroicons/react/solid';
+import { fromBn } from 'evm-bn';
 
 interface Offer {
   price: string;
@@ -47,8 +48,8 @@ function Inner() {
         await sellOrder.offers(address);
 
       setOffer({
-        price: price.div(ethers.BigNumber.from(10).pow(decimals)).toString(),
-        stake: stake.div(ethers.BigNumber.from(10).pow(decimals)).toString(),
+        price: fromBn(price, decimals).toString(),
+        stake: fromBn(stake, decimals).toString(),
         state: state,
       });
     }
@@ -58,17 +59,14 @@ function Inner() {
   async function withdraw() {
     // Load sell order
     if (!router.query.pubkey) return;
-    const provider = new ethers.providers.Web3Provider(
-      window.ethereum as any
-    );
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     const signer = provider.getSigner();
     const sellOrder = new ethers.Contract(
       router.query.pubkey as string,
       SellOrder.abi,
       signer
     );
-    const tx = await sellOrder.withdrawOffer()
-    console.log(tx);
+    const tx = await sellOrder.withdrawOffer();
   }
 
   if (!offer) {
@@ -86,9 +84,7 @@ function Inner() {
       </div>
       <div className="max-w-2xl mx-auto my-auto flex flex-col pb-24 p-4">
         <div className="bg-white border border-black">
-          <div
-            className="bg-gray-50 px-2 py-1 border-b font-mono text-sm"
-          >
+          <div className="bg-gray-50 px-2 py-1 border-b font-mono text-sm">
             <div className="opacity-50 text-xs">{router.query.pubkey}</div>
             <div className="flex items-center py-2">
               <div className="text-blue-600 font-bold">Offer Made</div>
@@ -129,12 +125,14 @@ function Inner() {
           </div>
 
           <div className="px-4 py-4">
-            { offer.price !== '0' && <button
-              className="rounded bg-red-500 text-white border border-red-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
-              onClick={async () => await withdraw()}
-            >
-              Cancel offer
-            </button>}
+            {offer.price !== '0' && (
+              <button
+                className="rounded bg-red-500 text-white border border-red-700 px-4 py-2 text-sm disabled:opacity-50 transition-all"
+                onClick={async () => await withdraw()}
+              >
+                Cancel offer
+              </button>
+            )}
           </div>
         </div>
       </div>
