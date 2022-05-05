@@ -117,14 +117,14 @@ contract SellOrder {
         uint256 stake,
         string memory uri
     ) external virtual onlyState(msg.sender, State.Closed) {
+        offers[msg.sender] = Offer(price, stake, uri, State.Open, 0);
+
         bool result = token.transferFrom(
             msg.sender,
             address(this),
             stake + price
         );
         assert(result);
-
-        offers[msg.sender] = Offer(price, stake, uri, State.Open, 0);
 
         emit OfferSubmitted(msg.sender, price, stake, uri);
     }
