@@ -145,7 +145,6 @@ contract UnitTest is Test {
             offerState1 == SellOrder.State.Committed,
             'state is not committed'
         );
-        console.log(token.balanceOf(address(sellOrder)));
         require(
             token.balanceOf(address(sellOrder)) == 90,
             'Sell order does not have 90 tokens'
@@ -166,5 +165,36 @@ contract UnitTest is Test {
             token.balanceOf(buyer2) == 10, // stake
             'buyer did not get their stake back'
         );
+    }
+
+    function testSellerBuysTheirOwnOrder() public {
+        // Setup
+        ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
+        address seller = address(0x1234567890123456784012345678901234567829);
+
+        // Create a sell order
+        vm.prank(seller);
+        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+
+        // Submit an offer from seller
+        token.transfer(seller, 20);
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 20);
+        sellOrder.submitOffer(15, 5, 'ipfs://somedata');
+        vm.stopPrank();
+
+        // commit to the order
+        token.transfer(seller, 50);
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 50);
+        sellOrder.commit(seller);
+        vm.stopPrank();
+
+        // Confirm the order
+        vm.prank(seller);
+        sellOrder.confirm();
+
+        (, , , SellOrder.State offerState2, ) = sellOrder.offers(seller);
+        require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
     }
 }

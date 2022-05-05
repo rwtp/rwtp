@@ -18,6 +18,7 @@ function useReadOnlySellOrder(pubkey: string) {
   const [sellOrder, setSellOrder] = useState<{
     contract: ethers.Contract;
     metadata: Metadata;
+    hasOrdered: boolean;
   }>();
 
   useEffect(() => {
@@ -37,6 +38,7 @@ function useReadOnlySellOrder(pubkey: string) {
       );
 
       const cid = (await contract.orderURI()).replace('ipfs://', '');
+      const order = await contract.offers(await signer.getAddress());
 
       const uri = `https://ipfs.infura.io/ipfs/` + cid;
       const resp = await fetch(uri);
@@ -45,6 +47,7 @@ function useReadOnlySellOrder(pubkey: string) {
       setSellOrder({
         contract,
         metadata,
+        hasOrdered: order && order.state != 0,
       });
     }
     load().catch(console.error);
@@ -56,26 +59,34 @@ function useReadOnlySellOrder(pubkey: string) {
 export default function Pubkey() {
   const router = useRouter();
   const pubkey = router.query.pubkey as string;
-  const sellOrder = useReadOnlySellOrder(pubkey);
+  const readOnlySellOrder = useReadOnlySellOrder(pubkey);
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
 
   async function onBuy() {
-    if (!sellOrder || !email || !shippingAddress) return;
+    if (!readOnlySellOrder || !email || !shippingAddress) return;
 
     // Load metamask
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send('eth_requestAccounts', []); // <- this prompts user to connect metamask
     const signer = provider.getSigner();
 
+    const writableSellOrder = new ethers.Contract(
+      pubkey as string,
+      SellOrder.abi,
+      signer
+    );
+
+    await writableSellOrder.deployed();
+
     const encryptedMessage = encryptMessage(
-      sellOrder.metadata.encryptionPublicKey,
+      readOnlySellOrder.metadata.encryptionPublicKey,
       JSON.stringify({
         email: email,
         shippingAddress: shippingAddress,
       })
     );
-    
+
     // Post shipping metadata
     const result = await fetch('/api/upload', {
       method: 'POST',
@@ -93,29 +104,31 @@ export default function Pubkey() {
       'function approve(address spender, uint256 amount)',
       'function decimals() public view returns (uint8)',
     ];
-    const token = await sellOrder.contract.token();
+    const token = await writableSellOrder.token();
     const erc20 = new ethers.Contract(token, erc20ABI, signer);
     const tokenTx = await erc20.approve(
-      sellOrder.contract.address,
-      BigNumber.from(sellOrder.metadata.priceSuggested).add(
-        BigNumber.from(sellOrder.metadata.stakeSuggested)
-      )
+      readOnlySellOrder.contract.address,
+      BigNumber.from(10000).add(BigNumber.from(10000)),
+      {
+        gasLimit: 10000000,
+      }
     );
+
     const tokenRcpt = await tokenTx.wait();
     if (tokenRcpt.status != 1) {
       console.log('Error approving tokens');
       return;
     }
 
-    // Submit order
-    const orderTx = await sellOrder.contract.submitOffer(
-      BigNumber.from(sellOrder.metadata.priceSuggested),
-      BigNumber.from(sellOrder.metadata.stakeSuggested),
+    const orderTx = await writableSellOrder.submitOffer(
+      BigNumber.from(10000),
+      BigNumber.from(10000),
       'ipfs://' + cid,
       {
         gasLimit: 10000000,
       }
     );
+
     const orderRcpt = await orderTx.wait();
     if (orderRcpt.status != 1) {
       console.log('Error submitting order');
@@ -125,8 +138,22 @@ export default function Pubkey() {
     router.push('/orders/' + pubkey);
   }
 
-  if (!sellOrder) {
+  if (!readOnlySellOrder) {
     return <div>Loading...</div>;
+  }
+
+  if (readOnlySellOrder.hasOrdered) {
+    return (
+      <div>
+        You have already ordered this item.{' '}
+        <a
+          href={`/orders/${readOnlySellOrder.contract.address}`}
+          className="underline"
+        >
+          See your order here.
+        </a>
+      </div>
+    );
   }
 
   return (
@@ -139,8 +166,10 @@ export default function Pubkey() {
                 <Image width={128} height={128} src="/rwtp.png" />
               </div>
             </div>
-            <h1 className="font-bold text-xl">{sellOrder.metadata.title}</h1>
-            <p className="pb-2">{sellOrder.metadata.description}</p>
+            <h1 className="font-bold text-xl">
+              {readOnlySellOrder.metadata.title}
+            </h1>
+            <p className="pb-2">{readOnlySellOrder.metadata.description}</p>
           </div>
         </div>
         <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 border-l ">
