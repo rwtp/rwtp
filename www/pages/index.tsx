@@ -11,6 +11,7 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import solidity from 'react-syntax-highlighter/dist/cjs/languages/prism/solidity';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
 import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../lib/constants';
+import { Footer } from '../components/Footer';
 
 SyntaxHighlighter.registerLanguage('solidity', solidity);
 SyntaxHighlighter.registerLanguage('typescript', typescript);
@@ -41,9 +42,9 @@ function useChain() {
     if (!window.ethereum) return;
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     provider.getNetwork().then((network) => {
-      if (network.name == "homestead") network.name = "ethereum"
+      if (network.name == 'homestead') network.name = 'ethereum';
       setChain(network.name);
-      setChainId(network.chainId)
+      setChainId(network.chainId);
     });
   });
 
@@ -83,39 +84,40 @@ async function switchNetwork(chainId: number) {
   if (chainId == 137) {
     await provider.send('wallet_addEthereumChain', [
       {
-        chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
-        chainName: "Polygon Mainnet",
+        chainId: '0x' + chainId.toString(16), // A 0x-prefixed hexadecimal string
+        chainName: 'Polygon Mainnet',
         nativeCurrency: {
-          name: "Matic",
-          symbol: "MATIC",
+          name: 'Matic',
+          symbol: 'MATIC',
           decimals: 18,
         },
-        rpcUrls: ["https://polygon-rpc.com"]
-      }
+        rpcUrls: ['https://polygon-rpc.com'],
+      },
     ]);
   } else if (chainId == 10) {
     await provider.send('wallet_addEthereumChain', [
       {
-        chainId: "0x" + chainId.toString(16), // A 0x-prefixed hexadecimal string
-        chainName: "Optimism",
+        chainId: '0x' + chainId.toString(16), // A 0x-prefixed hexadecimal string
+        chainName: 'Optimism',
         nativeCurrency: {
-          name: "Ethereum",
-          symbol: "ETH",
+          name: 'Ethereum',
+          symbol: 'ETH',
           decimals: 18,
         },
-        rpcUrls: ["https://mainnet.optimism.io"]
-      }
+        rpcUrls: ['https://mainnet.optimism.io'],
+      },
     ]);
   }
   await provider.send('wallet_switchEthereumChain', [
-    { chainId: "0x" + chainId.toString(16) },
+    { chainId: '0x' + chainId.toString(16) },
   ]);
 }
 
 const SUPPORTED_CHAIN_IDS = [10, 137];
-const OPTIMISM_SELL_ORDER_ADDRESS = "0x1b1955f6732691b9d7FBC4F01FF28F640aA52940";
-const POLYGON_SELL_ORDER_ADDRESS = "0x9fCcC594735639B6C18496d375a1C3675Cedd5d8";
-const KOVAN_SELL_ORDER_ADDRESS = "0x4D2787E7C9B19Ec6C68734088767a39250476989";
+const OPTIMISM_SELL_ORDER_ADDRESS =
+  '0x1b1955f6732691b9d7FBC4F01FF28F640aA52940';
+const POLYGON_SELL_ORDER_ADDRESS = '0x9fCcC594735639B6C18496d375a1C3675Cedd5d8';
+const KOVAN_SELL_ORDER_ADDRESS = '0x4D2787E7C9B19Ec6C68734088767a39250476989';
 const STICKERS_SELL_ORDER =
   process.env.NODE_ENV === 'production'
     ? OPTIMISM_SELL_ORDER_ADDRESS // production
@@ -199,7 +201,7 @@ function StickerStore() {
     );
     const tokenRcpt = await tokenTx.wait();
     if (tokenRcpt.status != 1) {
-      console.log("Error approving tokens");
+      console.log('Error approving tokens');
       return;
     }
 
@@ -208,10 +210,10 @@ function StickerStore() {
       BigNumber.from(DEFAULT_STAKE).mul(BigNumber.from(10).pow(decimals)),
       'ipfs://' + cid
     );
-    
+
     const orderRcpt = await orderTx.wait();
     if (orderRcpt.status != 1) {
-      console.log("Error submitting order");
+      console.log('Error submitting order');
       return;
     }
 
@@ -239,8 +241,8 @@ function StickerStore() {
           <div className="font-mono text-xs pt-2">
             <div suppressHydrationWarning>
               {' '}
-              Available for {days} days {hours} hours {minutes} minutes {seconds}{' '}
-              seconds
+              Available for {days} days {hours} hours {minutes} minutes{' '}
+              {seconds} seconds
             </div>
           </div>
           <div className="font-bold pb-2">Buy Stickers</div>
@@ -252,7 +254,7 @@ function StickerStore() {
             void.
           </div>
         </div>
-        {SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
+        {SUPPORTED_CHAIN_IDS.includes(chainId as number) && (
           <div className="px-4 py-4">
             <label className="border flex flex-col mt-2">
               <div className="text-xs bg-gray-100 px-2 py-1">
@@ -276,21 +278,57 @@ function StickerStore() {
                 onChange={(e) => setEmail(e.target.value)}
               />
               <div className="text-xs px-2 py-1 bg-gray-50 border-t">
-                *Only used to contact you if something goes wrong, not to sign you
-                up for an email list.
+                *Only used to contact you if something goes wrong, not to sign
+                you up for an email list.
               </div>
             </label>
 
             <div className="flex flex-col sm:flex-row items-center justify-end mt-2">
               <div className="text-sm py-2 pr-2 items-center text-gray-700 ">
-                The price is <span className="text-blue-500 font-bold">10 USDC</span> with
-                a <span className="text-blue-500 font-bold">5 USDC</span> stake. Your stake will be returned
-                if you confirm your delivery.
-                {chainId == 137 && <p> <a className="text-blue-500 font-bold underline" href="https://buy.moonpay.com/?defaultCurrencyCode=usdc_polygon" target="_blank">Buy USDC</a></p>}
-                {chainId == 10 && <p> <a className="text-blue-500 font-bold underline" href="https://global.transak.com" target="_blank">Buy USDC</a></p>}
-                
-                {chainId == 137 && <p className="text-xs text-gray-500 pb-2"><i>Please make sure you are purchasing USDC on the <b>Polygon Network</b> in MoonPay</i></p>}
-                {chainId == 10 && <p className="text-xs text-gray-500 pb-2"><i>Please make sure you are purchasing USDC on the <b>Optimism Network</b> in Transak</i></p>}
+                The price is{' '}
+                <span className="text-blue-500 font-bold">10 USDC</span> with a{' '}
+                <span className="text-blue-500 font-bold">5 USDC</span> stake.
+                Your stake will be returned if you confirm your delivery.
+                {chainId == 137 && (
+                  <p>
+                    {' '}
+                    <a
+                      className="text-blue-500 font-bold underline"
+                      href="https://buy.moonpay.com/?defaultCurrencyCode=usdc_polygon"
+                      target="_blank"
+                    >
+                      Buy USDC
+                    </a>
+                  </p>
+                )}
+                {chainId == 10 && (
+                  <p>
+                    {' '}
+                    <a
+                      className="text-blue-500 font-bold underline"
+                      href="https://global.transak.com"
+                      target="_blank"
+                    >
+                      Buy USDC
+                    </a>
+                  </p>
+                )}
+                {chainId == 137 && (
+                  <p className="text-xs text-gray-500 pb-2">
+                    <i>
+                      Please make sure you are purchasing USDC on the{' '}
+                      <b>Polygon Network</b> in MoonPay
+                    </i>
+                  </p>
+                )}
+                {chainId == 10 && (
+                  <p className="text-xs text-gray-500 pb-2">
+                    <i>
+                      Please make sure you are purchasing USDC on the{' '}
+                      <b>Optimism Network</b> in Transak
+                    </i>
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => submitBuyOrder().catch(console.error)}
@@ -300,20 +338,31 @@ function StickerStore() {
                 Send 15 USDC
               </button>
             </div>
-          </div>}
-        {!chainId &&
+          </div>
+        )}
+        {!chainId && (
           <div className="px-4 py-4">
             <div className="font-bold pb-2">Connect to Metamask</div>
             <div className="text-sm pb-2">
-              Making purchases on RWTP requires a Metamask wallet on a supported network. 
-              You can install the Metamask Chrome extension <a className='underline text-blue-500 font-bold' href="https://metamask.io/download/" target="_blank">here</a>.
+              Making purchases on RWTP requires a Metamask wallet on a supported
+              network. You can install the Metamask Chrome extension{' '}
+              <a
+                className="underline text-blue-500 font-bold"
+                href="https://metamask.io/download/"
+                target="_blank"
+              >
+                here
+              </a>
+              .
             </div>
-          </div>}
-        {!!chainId && !SUPPORTED_CHAIN_IDS.includes(chainId as number) &&
+          </div>
+        )}
+        {!!chainId && !SUPPORTED_CHAIN_IDS.includes(chainId as number) && (
           <div className="px-4 py-4">
             <div className="font-bold pb-2">Unsupported Network</div>
             <div className="text-sm pb-2">
-              This product is currently unavailable on the <span className="text-blue-500 font-bold">{chain}</span> network.
+              This product is currently unavailable on the{' '}
+              <span className="text-blue-500 font-bold">{chain}</span> network.
               Set your Metamask to a supported network:
             </div>
             <div className="flex flex-row items-center gap-2">
@@ -330,7 +379,8 @@ function StickerStore() {
                 Optimism
               </button>
             </div>
-          </div>}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -427,6 +477,7 @@ const Home: NextPage = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
