@@ -1,14 +1,32 @@
 import { BigNumber, ethers } from 'ethers';
 import { SellOrder } from 'rwtp';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../../lib/constants';
 import { useRouter } from 'next/router';
 import { toBn } from 'evm-bn';
 
-function round(numAsStr: string, decimalPlaces = 18) {
-  const arr = numAsStr.split('.');
-  const fraction = arr[1].substr(0, decimalPlaces);
-  return arr[0] + '.' + fraction;
+function useToken(tokenAddress: string) {
+  const [details, setDetails] = useState();
+
+  useEffect(() => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+    const signer = provider.getSigner();
+
+    const erc20ABI = [
+      'function approve(address spender, uint256 amount)',
+      'function decimals() public view returns (uint8)',
+    ];
+    const erc20 = new ethers.Contract(tokenAddress, erc20ABI, signer);
+
+    async function load() {
+      const decimals = await erc20.decimals();
+      decimals;
+    }
+
+    load().catch(console.error);
+  }, [tokenAddress]);
+
+  return details;
 }
 
 export default function Sell() {

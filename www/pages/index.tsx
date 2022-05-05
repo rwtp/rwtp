@@ -461,7 +461,7 @@ const Home: NextPage = () => {
           <h1 className="text-2xl font-bold mb-1 items-center flex">
             Real World Trade Protocol{' '}
             <span className="bg-blue-50 ml-2 p-1 rounded font-mono text-blue-600 text-sm">
-              v0.1.0
+              v0.6.2
             </span>
           </h1>
           <p className="mt-2 ">
