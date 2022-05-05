@@ -5,18 +5,10 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import './SellOrder.sol';
+import './interfaces/IOrderBook.sol';
 
 /// @dev A factory for creating orders. The Graph should index this contract.
-contract OrderBook is Ownable {
-    /// @dev emitted when a new sell order is created
-    event SellOrderCreated(address indexed sellOrder);
-
-    /// @dev emitted when setOwner is called
-    event OwnerChanged(address previous, address next);
-
-    /// @dev emitted when setOwner is called
-    event FeeChanged(uint256 previous, uint256 next);
-
+contract OrderBook is Ownable, IOrderBook {
     /// @dev all the sell orders available in the order book
     mapping(address => bool) public sellOrders;
 
@@ -47,16 +39,10 @@ contract OrderBook is Ownable {
         uint256 stake,
         string memory uri,
         uint256 timeout
-    ) external {
-        SellOrder sellOrder = new SellOrder(
-            this,
-            seller,
-            token,
-            stake,
-            uri,
-            timeout
-        );
+    ) external returns (SellOrder) {
+        SellOrder sellOrder = new SellOrder(seller, token, stake, uri, timeout);
         emit SellOrderCreated(address(sellOrder));
         sellOrders[address(sellOrder)] = true;
+        return sellOrder;
     }
 }

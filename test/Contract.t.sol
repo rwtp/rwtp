@@ -6,8 +6,11 @@ import './ERC20Mock.sol';
 import '../src/SellOrder.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import 'forge-std/console.sol';
+import '../src/OrderBook.sol';
 
 contract UnitTest is Test {
+    OrderBook book = new OrderBook();
+
     function toSignature(
         uint8 v,
         bytes32 r,
@@ -18,7 +21,13 @@ contract UnitTest is Test {
 
     function testConstructor() public {
         ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            address(this),
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         assert(address(sellOrder.token()) == address(token));
     }
@@ -32,8 +41,13 @@ contract UnitTest is Test {
         address buyer = address(0x5234567890123456754012345678901234567822);
 
         // Create a sell order
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
@@ -78,8 +92,14 @@ contract UnitTest is Test {
         address seller = address(0x1234567890123456784012345678901234567829);
         address buyer = address(0x2234567890123456754012345678901234567821);
 
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://', 100);
+        // Create a sell order
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
@@ -102,8 +122,13 @@ contract UnitTest is Test {
         address buyer2 = address(0x5234567890123456754012345678901234567822);
 
         // Create a sell order
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         // Submit an offer from buyer1
         token.transfer(buyer1, 20);
@@ -173,8 +198,13 @@ contract UnitTest is Test {
         address seller = address(0x1234567890123456784012345678901234567829);
 
         // Create a sell order
-        vm.prank(seller);
-        SellOrder sellOrder = new SellOrder(token, 50, 'ipfs://metadata', 100);
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
 
         // Submit an offer from seller
         token.transfer(seller, 20);

@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import './OrderBook.sol';
+import './interfaces/IOrderBook.sol';
 
 contract SellOrder {
     /// @dev msg.sender is not the seller
@@ -46,7 +46,7 @@ contract SellOrder {
     uint256 public orderStake;
 
     /// @dev order book
-    OrderBook public orderBook;
+    address public orderBook;
 
     /// @dev the URI where metadata about this SellOrder can be found
     string private _uri;
@@ -76,14 +76,13 @@ contract SellOrder {
 
     /// @dev Creates a new sell order.
     constructor(
-        OrderBook orderBook_,
         address seller_,
         IERC20 token_,
         uint256 orderStake_,
         string memory uri_,
         uint256 timeout_
     ) {
-        orderBook = orderBook_;
+        orderBook = msg.sender;
         seller = seller_;
         token = token_;
         orderStake = orderStake_;
@@ -202,7 +201,8 @@ contract SellOrder {
         bool result1 = token.transfer(seller, orderStake);
         assert(result1);
 
-        uint256 toOrderBook = (offer.price * orderBook.fee()) / 1000000;
+        uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
+            1000000;
         uint256 toSeller = offer.price - toOrderBook;
 
         // Transfer payment to the seller
