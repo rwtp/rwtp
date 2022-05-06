@@ -74,6 +74,9 @@ contract SellOrder {
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
     mapping(address => Offer) public offers;
 
+    /// @dev The denominator of parts per million
+    uint256 constant ONE_MILLION = 1000000;
+
     /// @dev Creates a new sell order.
     constructor(
         address seller_,
@@ -202,7 +205,7 @@ contract SellOrder {
         assert(result1);
 
         uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
-            1000000;
+            ONE_MILLION;
         uint256 toSeller = offer.price - toOrderBook;
 
         // Transfer payment to the seller
