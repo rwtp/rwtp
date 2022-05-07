@@ -31,6 +31,9 @@ contract SellOrder {
     /// @dev Emitted when `buyer` withdrew and offer.
     event OfferEnforced(address indexed buyer);
 
+    /// @dev The sell order's URI changed
+    event OrderURIChanged(string previous, string next);
+
     /// @dev The token used for payment & staking, such as wETH, DAI, or USDC.
     IERC20 public token;
 
@@ -99,6 +102,7 @@ contract SellOrder {
     /// @dev sets the URI of the sell order, containing it's metadata
     function setURI(string memory uri_) external virtual onlySeller {
         _uri = uri_;
+        emit OrderURIChanged(_uri, uri_);
     }
 
     /// @dev reverts if the function is not at the expected state
