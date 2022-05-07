@@ -1,95 +1,175 @@
-import { BigNumber, ethers } from 'ethers';
-import { SellOrder } from 'rwtp';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import {
+  useContractEvent,
+  useContractWrite,
+  useProvider,
+  useSigner,
+} from 'wagmi';
+import { OrderBook } from 'rwtp';
 import { useEffect, useState } from 'react';
-import { KOVAN_CHAIN_ID, OPTIMISM_CHAIN_ID } from '../../lib/constants';
-import { useRouter } from 'next/router';
+import { ArrowRightIcon, ExclamationIcon } from '@heroicons/react/solid';
+import { ethers } from 'ethers';
+import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
+import { useRouter } from 'next/router';
 
-export default function Sell() {
-  const [address, setAddress] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const router = useRouter();
-  const [sellersStake, setSellersStake] = useState(0);
-  const [buyersStake, setBuyersStake] = useState(0);
-  const [price, setPrice] = useState(0);
-  const [stake, setStake] = useState(0);
-  const [token, setToken] = useState(
-    '0xd0a1e359811322d97991e03f863a0c30c2cf029c'
-  );
+function useCreateSellOrder() {
+  const signer = useSigner();
 
-  async function deploySale() {
-    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-    await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
-    const network = await provider.getNetwork();
+  async function createSellOrder(data: {
+    title: string;
+    description: string;
+    priceSuggested: number;
+    stakeSuggested: number;
+    token: string;
+    encryptionPublicKey: string;
+  }) {
+    if (!signer || !signer.data) return;
 
-    // If we're in development, switch to Kovan
-    if (process.env.NODE_ENV !== 'production' && network.name != 'kovan') {
-      await provider.send('wallet_switchEthereumChain', [
-        { chainId: KOVAN_CHAIN_ID },
-      ]);
-    }
-    // If we're in production, switch to optimism
-    if (process.env.NODE_ENV === 'production' && network.name != 'optimism') {
-      await provider.send('wallet_switchEthereumChain', [
-        { chainId: OPTIMISM_CHAIN_ID },
-      ]);
-    }
-
-    const signer = provider.getSigner();
-    let factory = new ethers.ContractFactory(
-      SellOrder.abi,
-      SellOrder.bytecode,
-      signer
-    );
-    const erc20Address = token;
+    const erc20Address = data.token;
     const erc20ABI = [
       'function approve(address spender, uint256 amount)',
       'function decimals() public view returns (uint8)',
     ];
-    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer);
+    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
-    const encryptionPublicKey = await provider.send(
-      'eth_getEncryptionPublicKey',
-      [await signer.getAddress()]
-    );
-    const result = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        data: {
-          title: title,
-          description: description,
-          encryptionPublicKey: encryptionPublicKey,
-          priceSuggested: toBn(price.toString(), decimals).toHexString(),
-          stakeSuggested: toBn(stake.toString(), decimals).toHexString(),
-        },
-      }),
+  }
+}
+
+async function postToIPFS(data: any) {
+  const result = await fetch('/api/upload', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      data: data,
+    }),
+  });
+  const { cid } = await result.json();
+  return cid;
+}
+
+function Layout(props: { children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col">
+      <div className="flex px-4 py-4 justify-between items-center w-full bg-gray-50 border-b">
+        <div>
+          <ConnectButton />
+        </div>
+        <div className=""></div>
+      </div>
+      {props.children}
+    </div>
+  );
+}
+
+export default function Page() {
+  const [state, setState] = useState({
+    title: '',
+    description: '',
+    sellersStake: 0,
+    buyersStake: 0,
+    price: 0,
+    token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
+  });
+  const [secretKey, setSecretKey] = useState('');
+  const [sellOrder, setSellOrder] = useState();
+  const signer = useSigner();
+  const router = useRouter();
+
+  const book = useContractWrite(
+    {
+      addressOrName: OrderBook.address,
+      contractInterface: OrderBook.abi,
+    },
+    'createSellOrder'
+  );
+
+  async function createSellOrder() {
+    if (!signer || !signer.data) return;
+
+    const erc20Address = state.token;
+    const erc20ABI = [
+      'function approve(address spender, uint256 amount)',
+      'function decimals() public view returns (uint8)',
+    ];
+    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
+    const decimals = await erc20.decimals();
+
+    const keypair = nacl.box.keyPair();
+    setSecretKey(Buffer.from(keypair.secretKey).toString('hex'));
+
+    const cid = await postToIPFS({
+      title: state.title,
+      description: state.description,
+      encryptionPublicKey: Buffer.from(keypair.publicKey).toString('hex'),
+      priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
+      stakeSuggested: toBn(
+        state.buyersStake.toString(),
+        decimals
+      ).toHexString(),
     });
-    const { cid } = await result.json();
-    const contract = await factory.deploy(
-      erc20Address,
-      BigNumber.from(20).mul(BigNumber.from(10).pow(decimals)),
-      'ipfs://' + cid,
-      60 * 60 * 24 * 30 // 1 month
-    );
-    await contract.deployTransaction.wait();
-    router.push(`/sell/${contract.address}`);
+
+    const tx = await book.writeAsync({
+      args: [
+        await signer.data.getAddress(),
+        erc20Address,
+        toBn(state.sellersStake.toString(), decimals).toHexString(),
+        cid,
+        60 * 60 * 24 * 30,
+      ],
+    });
+    const result = (await tx.wait()) as any;
+    if (!result.events || result.events.length < 1) {
+      throw new Error(
+        "Unexpectedly could not find 'events' in the transaction hash of createSellOrder. Maybe an ethers bug? Maybe the CreateSellOrder event isn't picked up fast enough? This basically shouldn't happen."
+      );
+    }
+    const sellOrderAddress = result.events[0].args[0];
+    setSellOrder(sellOrderAddress);
   }
 
-  if (address) {
+  if (sellOrder) {
     return (
-      <div>
-        <h1>Sale deployed at {address}</h1>
-      </div>
+      <Layout>
+        <div className="flex flex-col p-8 h-full mt-12">
+          <div className="flex-col max-w-xl mx-auto my-auto h-full">
+            <h1 className="text-xl font-bold mb-1 flex items-center">
+              Write down this secret key, you'll never see it again.
+            </h1>
+            <p className="mb-6 text-gray">
+              You won't be able to see incoming orders without it. Put it in a
+              password manager, or somewhere safe.
+            </p>
+
+            <input
+              className="px-4 py-2 border border-blue-500 rounded shadow-inner w-full text-sm font-mono"
+              value={`${secretKey}`}
+              autoFocus
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => {}}
+            />
+
+            <div className="mt-4 flex justify-end">
+              <button
+                className="underline rounded px-4 py-2 flex items-center"
+                onClick={() => {
+                  router.push('/sell/' + sellOrder);
+                }}
+              >
+                I wrote down the key <ArrowRightIcon className="w-4 h-4 ml-2" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div>
-      <div className="max-w-4xl mx-auto flex flex-col p-8">
+    <Layout>
+      <div className="px-4 py-4">
         <div className="font-bold mb-8 pb-4 text-xl border-b">
           Create a new sell order
         </div>
@@ -98,9 +178,11 @@ export default function Sell() {
             <strong className="mb-1">Title</strong>
             <input
               className="border px-4 py-2 mb-2"
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) =>
+                setState((s) => ({ ...s, title: e.target.value }))
+              }
               placeholder="Title"
-              value={title}
+              value={state.title}
             />
           </label>
           <label className="flex flex-col">
@@ -108,8 +190,10 @@ export default function Sell() {
             <textarea
               className="border px-4 py-2 mb-2"
               placeholder="Description"
-              onChange={(e) => setDescription(e.target.value)}
-              value={description}
+              onChange={(e) =>
+                setState((s) => ({ ...s, description: e.target.value }))
+              }
+              value={state.description}
             />
           </label>
 
@@ -120,8 +204,13 @@ export default function Sell() {
                 className="border px-4 py-2 mb-2"
                 type="number"
                 placeholder="1.5"
-                onChange={(e) => setSellersStake(parseFloat(e.target.value))}
-                value={sellersStake}
+                onChange={(e) =>
+                  setState((s) => ({
+                    ...s,
+                    sellersStake: parseFloat(e.target.value),
+                  }))
+                }
+                value={state.sellersStake}
               />
             </label>
 
@@ -131,8 +220,13 @@ export default function Sell() {
                 className="border-r border-t border-b px-4 py-2 mb-2"
                 type="number"
                 placeholder="1.5"
-                onChange={(e) => setBuyersStake(parseFloat(e.target.value))}
-                value={buyersStake}
+                onChange={(e) =>
+                  setState((s) => ({
+                    ...s,
+                    buyersStake: parseFloat(e.target.value),
+                  }))
+                }
+                value={state.buyersStake}
               />
             </label>
           </div>
@@ -144,8 +238,13 @@ export default function Sell() {
                 className="border-l border-t border-b px-4 py-2 mb-2"
                 type="number"
                 placeholder="1.5"
-                onChange={(e) => setPrice(parseFloat(e.target.value))}
-                value={price}
+                onChange={(e) =>
+                  setState((s) => ({
+                    ...s,
+                    price: parseFloat(e.target.value),
+                  }))
+                }
+                value={state.price}
               />
             </label>
             <label className="flex flex-1 flex-col">
@@ -154,21 +253,23 @@ export default function Sell() {
                 className="border px-4 py-2 mb-2"
                 type="string"
                 placeholder="0x..."
-                onChange={(e) => setToken(e.target.value)}
-                value={token}
+                onChange={(e) =>
+                  setState((s) => ({ ...s, token: e.target.value }))
+                }
+                value={state.token}
               />
             </label>
           </div>
         </div>
         <div className="mt-8">
           <button
-            className="border border-blue-900 flex items-center px-4 py-1 rounded bg-blue-500 text-white"
-            onClick={deploySale}
+            className="border border-blue-900 flex items-center px-4 py-1 rounded bg-blue-500 text-white hover:bg-blue-400 transition-all"
+            onClick={() => createSellOrder().catch(console.error)}
           >
-            Publish new sell order
+            Publish new sell order <ArrowRightIcon className="w-4 h-4 ml-4" />
           </button>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
