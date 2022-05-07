@@ -13,29 +13,6 @@ import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
 
-function useCreateSellOrder() {
-  const signer = useSigner();
-
-  async function createSellOrder(data: {
-    title: string;
-    description: string;
-    priceSuggested: number;
-    stakeSuggested: number;
-    token: string;
-    encryptionPublicKey: string;
-  }) {
-    if (!signer || !signer.data) return;
-
-    const erc20Address = data.token;
-    const erc20ABI = [
-      'function approve(address spender, uint256 amount)',
-      'function decimals() public view returns (uint8)',
-    ];
-    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
-    const decimals = await erc20.decimals();
-  }
-}
-
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
     method: 'POST',
