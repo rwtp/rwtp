@@ -22,6 +22,7 @@ export default function Sell() {
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
     await provider.send('eth_requestAccounts', []); // <- this promps user to connect metamask
     const network = await provider.getNetwork();
+
     // If we're in development, switch to Kovan
     if (process.env.NODE_ENV !== 'production' && network.name != 'kovan') {
       await provider.send('wallet_switchEthereumChain', [
@@ -34,6 +35,7 @@ export default function Sell() {
         { chainId: OPTIMISM_CHAIN_ID },
       ]);
     }
+
     const signer = provider.getSigner();
     let factory = new ethers.ContractFactory(
       SellOrder.abi,

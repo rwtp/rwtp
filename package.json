@@ -54,6 +54,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.6.0",
-    "evm-bn": "^1.1.1"
+    "@rainbow-me/rainbowkit": "^0.1.0",
+    "eth-sig-util": "^3.0.1",
+    "evm-bn": "^1.1.1",
+    "tweetnacl": "^1.0.3"
   }
 }

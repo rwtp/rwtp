@@ -11,9 +11,10 @@
   "dependencies": {
     "@heroicons/react": "^1.0.6",
     "@metamask/eth-sig-util": "^4.0.1",
+    "@rainbow-me/rainbowkit": "^0.1.0",
     "dayjs": "^1.11.1",
     "ethereumjs-util": "^7.1.4",
-    "ethers": "^5.6.4",
+    "ethers": "^5.6.5",
     "evm-bn": "^1.1.1",
     "ipfs-http-client": "^56.0.1",
     "next": "12.1.5",
@@ -21,8 +22,8 @@
     "react": "18.1.0",
     "react-dom": "18.1.0",
     "react-syntax-highlighter": "^15.5.0",
-    "rwtp": "^0.6.2",
-    "wagmi": "^0.3.1"
+    "rwtp": "^0.7.2",
+    "wagmi": "^0.3.4"
   },
   "devDependencies": {
     "@types/node": "17.0.30",
