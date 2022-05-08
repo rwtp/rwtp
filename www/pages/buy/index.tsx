@@ -8,7 +8,7 @@ import { request } from 'graphql-request';
 
 const fetcher = (query: any, variables: any) =>
   request(
-    'https://api.studio.thegraph.com/query/26326/justin-test-rwtp/v0.0.4',
+    'https://api.thegraph.com/subgraphs/name/chitalian/real-world-trade-protocol-rinkeby',
     query,
     variables
   );
@@ -84,24 +84,29 @@ function Results() {
   const { data } = useGraph(`{
         sellOrders(first: 5) {
           address
+          title
+          description
+          sellersStake
+          stakeSuggested
+          priceSuggested
+
         }
       }`);
 
   if (!data) {
     return null;
   }
-
   const orders = data.sellOrders.map((sellOrder: any) => {
     return (
       <OrderView
         key={sellOrder.address}
         order={{
           address: sellOrder.address,
-          title: 'Some title about the product',
-          description: 'Some description about the product',
-          sellersStake: 10,
-          buyersStake: 10,
-          price: 0,
+          title: sellOrder.title,
+          description: sellOrder.description,
+          sellersStake: +sellOrder.sellersStake,
+          buyersStake: +sellOrder.stakeSuggested,
+          price: +sellOrder.priceSuggested,
           token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
           encryptionPublicKey: '',
         }}
