@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import './interfaces/IOrderBook.sol';
+import 'forge-std/console.sol';
 
 contract SellOrder {
     /// @dev Don't allow purchases from self
@@ -323,6 +324,14 @@ contract SellOrder {
         // If both parties canceled, then return the stakes, and the payment to the buyer
         // and set the offer to closed
         if (offer.sellerCanceled && offer.buyerCanceled) {
+            // Transfer the stake to the buyer along with their payment
+            bool result0 = token.transfer(buyer_, offer.stake + offer.price);
+            assert(result0);
+
+            // Transfer the stake to the seller
+            bool result1 = token.transfer(seller, orderStake);
+            assert(result1);
+
             // Null out the offer
             offers[buyer_] = Offer(
                 State.Closed,
@@ -333,17 +342,6 @@ contract SellOrder {
                 false,
                 false
             );
-
-            // Transfer the stake to the buyer along with their payment
-            bool result0 = token.transfer(
-                msg.sender,
-                offer.stake + offer.price
-            );
-            assert(result0);
-
-            // Transfer the stake to the seller
-            bool result1 = token.transfer(seller, orderStake);
-            assert(result1);
         }
 
         emit OfferCanceled(offer.sellerCanceled, offer.buyerCanceled);

@@ -5,7 +5,6 @@ import 'forge-std/Test.sol';
 import './ERC20Mock.sol';
 import '../src/SellOrder.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
-import 'forge-std/console.sol';
 import '../src/OrderBook.sol';
 
 contract SellOrderTest is Test {
@@ -295,20 +294,25 @@ contract CancelationTest is Test {
     function testBuyerCancels() public {
         address buyer = address(0x4634567890123456784012345678901234567821);
 
-        // Submit an offer
         token.transfer(buyer, 100);
+        token.transfer(seller, 50);
+
+        uint256 originalBuyer = token.balanceOf(buyer);
+        uint256 originalSeller = token.balanceOf(seller);
+
+        // Submit an offer
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 100);
         sellOrder.submitOffer(100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
-        token.transfer(seller, 50);
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
         sellOrder.commit(buyer);
         vm.stopPrank();
 
+        // buyer canceled
         vm.prank(buyer);
         sellOrder.cancel(buyer);
 
@@ -321,6 +325,81 @@ contract CancelationTest is Test {
             bool sellerCanceled,
             bool buyerCanceled
         ) = sellOrder.offers(buyer);
+        require(buyerCanceled, 'buyer did not cancel');
+        require(!sellerCanceled, 'sellerCanceled canceled');
+
+        // seller canceled
+        vm.prank(seller);
+        sellOrder.cancel(buyer);
+
+        require(
+            token.balanceOf(buyer) == originalBuyer,
+            'buyer should be cleared'
+        );
+        require(
+            token.balanceOf(seller) == originalSeller,
+            'seller should be cleared'
+        );
+
+        (SellOrder.State offerState2, , , , , , ) = sellOrder.offers(buyer);
+        require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
+    }
+
+    function buyAndCommit(address buyer) public {
+        token.transfer(buyer, 100);
+        token.transfer(seller, 50);
+
+        uint256 originalBuyer = token.balanceOf(buyer);
+        uint256 originalSeller = token.balanceOf(seller);
+
+        // Submit an offer
+        vm.startPrank(buyer);
+        token.approve(address(sellOrder), 100);
+        sellOrder.submitOffer(100, 0, 'ipfs://somedata');
+        vm.stopPrank();
+
+        // Commit to the offer
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 50);
+        sellOrder.commit(buyer);
+        vm.stopPrank();
+    }
+
+    function testFailIfSellerCancelsAfterCanceled() public {
+        address buyer = address(0x3634567890123456784012345678901234567822);
+        buyAndCommit(buyer);
+
+        vm.prank(seller);
+        sellOrder.cancel(buyer);
+        vm.prank(buyer);
+        sellOrder.cancel(buyer);
+
+        vm.prank(seller);
+        sellOrder.cancel(buyer);
+    }
+
+    function testFailIfBuyerCancelsAfterCancelTwice() public {
+        address buyer = address(0x3634567890123456784012345678901234567822);
+        buyAndCommit(buyer);
+
+        vm.prank(seller);
+        sellOrder.cancel(buyer);
+        vm.prank(buyer);
+        sellOrder.cancel(buyer);
+
+        vm.prank(buyer);
+        sellOrder.cancel(buyer);
+    }
+
+    function testFailIfTryingToCancelSomeoneElsesOrder() public {
+        address buyer = address(0x3634567890123456784012345678901234567822);
+        buyAndCommit(buyer);
+
+        address meanieMcNoGooderFace = address(
+            0x1634567890123456784012345678901234569824
+        );
+        vm.prank(meanieMcNoGooderFace);
+        sellOrder.cancel(buyer);
     }
 }
 
