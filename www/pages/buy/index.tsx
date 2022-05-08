@@ -66,7 +66,10 @@ function OrderView(props: { order: SellOrder }) {
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
         <Tag type="danger">Risky</Tag>
-        <a className="underline font-serif" href="#">
+        <a
+          className="underline font-serif"
+          href={`/sell/${props.order.address}`}
+        >
           {props.order.title}
         </a>
         <div className="h-px bg-black w-full flex-1" />
@@ -93,7 +96,7 @@ function Results() {
       <OrderView
         key={sellOrder.address}
         order={{
-          address: '0x0000000000000000000000000000000000000000',
+          address: sellOrder.address,
           title: 'Some title about the product',
           description: 'Some description about the product',
           sellersStake: 10,
