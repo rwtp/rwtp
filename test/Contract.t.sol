@@ -342,26 +342,26 @@ contract CancelationTest is Test {
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
     }
 
-    function buyAndCommit(address buyer) public {
+    function buyAndCommit(address buyer, uint32 index) public {
         token.transfer(buyer, 100);
         token.transfer(seller, 50);
 
         // Submit an offer
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 100);
-        sellOrder.submitOffer(0, 100, 0, 'ipfs://somedata');
+        sellOrder.submitOffer(index, 100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
-        sellOrder.commit(buyer, 0);
+        sellOrder.commit(buyer, index);
         vm.stopPrank();
     }
 
     function testFailIfSellerCancelsAfterCanceled() public {
         address buyer = address(0x3634567890123456784012345678901234567822);
-        buyAndCommit(buyer);
+        buyAndCommit(buyer, 0);
 
         vm.prank(seller);
         sellOrder.cancel(buyer, 0);
@@ -374,7 +374,7 @@ contract CancelationTest is Test {
 
     function testFailIfBuyerCancelsAfterCancelTwice() public {
         address buyer = address(0x3634567890123456784012345678901234567822);
-        buyAndCommit(buyer);
+        buyAndCommit(buyer, 0);
 
         vm.prank(seller);
         sellOrder.cancel(buyer, 0);
@@ -387,13 +387,32 @@ contract CancelationTest is Test {
 
     function testFailIfTryingToCancelSomeoneElsesOrder() public {
         address buyer = address(0x3634567890123456784012345678901234567822);
-        buyAndCommit(buyer);
+        buyAndCommit(buyer, 0);
 
         address meanieMcNoGooderFace = address(
             0x1634567890123456784012345678901234569824
         );
         vm.prank(meanieMcNoGooderFace);
         sellOrder.cancel(buyer, 0);
+    }
+
+    function testMultipleOffers() public {
+        address buyer = address(0x3634567890123456784012345678901234567822);
+        buyAndCommit(buyer, 0);
+        buyAndCommit(buyer, 1);
+
+        (SellOrder.State offerState0, , , , , , ) = sellOrder.offers(buyer, 0);
+        (SellOrder.State offerState1, , , , , , ) = sellOrder.offers(buyer, 1);
+
+        require(
+            offerState0 == SellOrder.State.Committed,
+            'state is not Committed'
+        );
+
+        require(
+            offerState1 == SellOrder.State.Committed,
+            'state is not Committed'
+        );
     }
 }
 
