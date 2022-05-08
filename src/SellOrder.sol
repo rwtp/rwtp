@@ -23,21 +23,26 @@ contract SellOrder {
     );
 
     /// @dev Emitted when `buyer` withdrew and offer.
-    event OfferWithdrawn(address indexed buyer);
+    event OfferWithdrawn(address indexed buyer, uint32 indexed index);
 
     /// @dev Emitted when `buyer`'s offer was commited too.
-    event OfferCommitted(address indexed buyer);
+    event OfferCommitted(address indexed buyer, uint32 indexed index);
 
     /// @dev Emitted when `buyer` withdrew and offer.
-    event OfferConfirmed(address indexed buyer);
+    event OfferConfirmed(address indexed buyer, uint32 indexed index);
 
     /// @dev Emitted when `buyer` withdrew and offer.
-    event OfferEnforced(address indexed buyer);
+    event OfferEnforced(address indexed buyer, uint32 indexed index);
 
     /// @dev Someone requested a cancellation of the sell order. The order is
     ///      is only "really" canceled if both sellerCanceled and buyerCanceled is
     ///      true.
-    event OfferCanceled(bool sellerCanceled, bool buyerCanceled);
+    event OfferCanceled(
+        address indexed buyer,
+        uint32 indexed index,
+        bool sellerCanceled,
+        bool buyerCanceled
+    );
 
     /// @dev The sell order's URI changed
     event OrderURIChanged(string previous, string next);
@@ -85,7 +90,14 @@ contract SellOrder {
     }
 
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
-    mapping(address => Offer) public offers;
+    ///     a "uint32" here means you can have 2^32 open offers from any given address.
+    ///     uint32 was chosen over uint8 to support the use case of a program that's buying
+    ///     on behalf of a large number of users.
+    ///
+    ///     If, for some reason, ~2 billion open offers does not support your use case, you
+    ///     could just create another address for your buyer (shard), implement a queue,
+    ///     or we could just release a new version.
+    mapping(address => mapping(uint32 => Offer)) public offers;
 
     /// @dev The denominator of parts per million
     uint256 constant ONE_MILLION = 1000000;
@@ -118,9 +130,13 @@ contract SellOrder {
     }
 
     /// @dev reverts if the function is not at the expected state
-    modifier onlyState(address buyer_, State expected) {
-        if (offers[buyer_].state != expected) {
-            revert InvalidState(expected, offers[buyer_].state);
+    modifier onlyState(
+        address buyer_,
+        uint32 index,
+        State expected
+    ) {
+        if (offers[buyer_][index].state != expected) {
+            revert InvalidState(expected, offers[buyer_][index].state);
         }
 
         _;
@@ -137,15 +153,16 @@ contract SellOrder {
 
     /// @dev creates an offer
     function submitOffer(
+        uint32 index,
         uint128 price,
         uint128 stake,
         string memory uri
-    ) external virtual onlyState(msg.sender, State.Closed) {
+    ) external virtual onlyState(msg.sender, index, State.Closed) {
         if (msg.sender == seller) {
             revert BuyerCannotBeSeller();
         }
 
-        Offer storage offer = offers[msg.sender];
+        Offer storage offer = offers[msg.sender][index];
         offer.state = State.Open;
         offer.price = price;
         offer.stake = stake;
@@ -162,17 +179,17 @@ contract SellOrder {
     }
 
     /// @dev allows a buyer to withdraw the offer
-    function withdrawOffer()
+    function withdrawOffer(uint32 index)
         external
         virtual
-        onlyState(msg.sender, State.Open)
+        onlyState(msg.sender, index, State.Open)
     {
-        Offer memory offer = offers[msg.sender];
+        Offer memory offer = offers[msg.sender][index];
 
         bool result = token.transfer(msg.sender, offer.stake + offer.price);
         assert(result);
 
-        offers[msg.sender] = Offer(
+        offers[msg.sender][index] = Offer(
             State.Closed,
             0,
             0,
@@ -182,14 +199,14 @@ contract SellOrder {
             false
         );
 
-        emit OfferWithdrawn(msg.sender);
+        emit OfferWithdrawn(msg.sender, index);
     }
 
     /// @dev Commits a seller to an offer
-    function commit(address buyer_)
+    function commit(address buyer_, uint32 index)
         external
         virtual
-        onlyState(buyer_, State.Open)
+        onlyState(buyer_, index, State.Open)
         onlySeller
     {
         // Deposit the stake required to commit to the offer
@@ -199,18 +216,22 @@ contract SellOrder {
         assert(result);
 
         // Update the status of the buyer's offer
-        Offer storage offer = offers[buyer_];
+        Offer storage offer = offers[buyer_][index];
         offer.acceptedAt = uint64(block.timestamp);
         offer.state = State.Committed;
 
-        emit OfferCommitted(buyer_);
+        emit OfferCommitted(buyer_, index);
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm() external virtual onlyState(msg.sender, State.Committed) {
+    function confirm(uint32 index)
+        external
+        virtual
+        onlyState(msg.sender, index, State.Committed)
+    {
         // Close the offer
-        Offer memory offer = offers[msg.sender];
-        offers[msg.sender] = Offer(
+        Offer memory offer = offers[msg.sender][index];
+        offers[msg.sender][index] = Offer(
             State.Closed,
             0,
             0,
@@ -239,20 +260,20 @@ contract SellOrder {
         );
         assert(result2);
 
-        emit OfferConfirmed(msg.sender);
+        emit OfferConfirmed(msg.sender, index);
     }
 
     /// @dev Allows anyone to enforce an offer.
-    function enforce(address buyer_)
+    function enforce(address buyer_, uint32 index)
         external
         virtual
-        onlyState(buyer_, State.Committed)
+        onlyState(buyer_, index, State.Committed)
     {
-        Offer memory offer = offers[buyer_];
+        Offer memory offer = offers[buyer_][index];
         require(block.timestamp > timeout + offer.acceptedAt);
 
         // Close the offer
-        offers[buyer_] = Offer(
+        offers[buyer_][index] = Offer(
             State.Closed,
             0,
             0,
@@ -280,17 +301,17 @@ contract SellOrder {
         );
         assert(result2);
 
-        emit OfferEnforced(buyer_);
+        emit OfferEnforced(buyer_, index);
     }
 
     /// @dev Allows either the buyer or the seller to cancel the offer.
     ///      Only a committed offer can be canceled
-    function cancel(address buyer_)
+    function cancel(address buyer_, uint32 index)
         external
         virtual
-        onlyState(buyer_, State.Committed)
+        onlyState(buyer_, index, State.Committed)
     {
-        Offer storage offer = offers[buyer_];
+        Offer storage offer = offers[buyer_][index];
         if (msg.sender == buyer_) {
             // The buyer is canceling their offer
             offer.buyerCanceled = true;
@@ -314,7 +335,7 @@ contract SellOrder {
             assert(result1);
 
             // Null out the offer
-            offers[buyer_] = Offer(
+            offers[buyer_][index] = Offer(
                 State.Closed,
                 0,
                 0,
@@ -325,6 +346,11 @@ contract SellOrder {
             );
         }
 
-        emit OfferCanceled(offer.sellerCanceled, offer.buyerCanceled);
+        emit OfferCanceled(
+            buyer_,
+            index,
+            offer.sellerCanceled,
+            offer.buyerCanceled
+        );
     }
 }

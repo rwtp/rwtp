@@ -57,10 +57,11 @@ contract SellOrderTest is Test {
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(10, 10, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 10, 10, 'ipfs://somedata');
         vm.stopPrank();
         (, uint256 offer2price, uint256 offer2stake, , , , ) = sellOrder.offers(
-            buyer
+            buyer,
+            0
         );
         require(offer2price == 10, 'offer price2 is not 10');
         require(offer2stake == 10, 'offer stake2 is not 10');
@@ -70,24 +71,24 @@ contract SellOrderTest is Test {
         token.transfer(seller, 50);
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
-        sellOrder.commit(buyer);
+        sellOrder.commit(buyer, 0);
         vm.stopPrank();
 
         // Submit an offer from buyer
         vm.startPrank(seller);
         vm.expectRevert();
-        sellOrder.enforce(buyer);
+        sellOrder.enforce(buyer, 0);
         vm.stopPrank();
 
         vm.warp(51); // warp to block 51 (should still fail)
         vm.startPrank(seller);
         vm.expectRevert();
-        sellOrder.enforce(buyer);
+        sellOrder.enforce(buyer, 0);
         vm.stopPrank();
 
         vm.warp(200); // warp to block 200 (should succeed)
         vm.startPrank(seller);
-        sellOrder.enforce(buyer);
+        sellOrder.enforce(buyer, 0);
         vm.stopPrank();
     }
 
@@ -108,13 +109,13 @@ contract SellOrderTest is Test {
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
 
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
     }
 
@@ -138,10 +139,11 @@ contract SellOrderTest is Test {
         token.transfer(buyer1, 20);
         vm.startPrank(buyer1);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
         (, uint256 offer1Price, uint256 offer1Stake, , , , ) = sellOrder.offers(
-            buyer1
+            buyer1,
+            0
         );
         require(offer1Price == 15, 'offer price1 is not 15');
         require(offer1Stake == 5, 'offer stake1 is not 5');
@@ -154,10 +156,11 @@ contract SellOrderTest is Test {
         token.transfer(buyer2, 20);
         vm.startPrank(buyer2);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(10, 10, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 10, 10, 'ipfs://somedata');
         vm.stopPrank();
         (, uint256 offer2price, uint256 offer2stake, , , , ) = sellOrder.offers(
-            buyer2
+            buyer2,
+            0
         );
         require(offer2price == 10, 'offer price2 is not 10');
         require(offer2stake == 10, 'offer stake2 is not 10');
@@ -166,10 +169,10 @@ contract SellOrderTest is Test {
         token.transfer(seller, 50);
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
-        sellOrder.commit(buyer2);
+        sellOrder.commit(buyer2, 0);
         vm.stopPrank();
 
-        (SellOrder.State offerState1, , , , , , ) = sellOrder.offers(buyer2);
+        (SellOrder.State offerState1, , , , , , ) = sellOrder.offers(buyer2, 0);
         require(
             offerState1 == SellOrder.State.Committed,
             'state is not committed'
@@ -181,9 +184,9 @@ contract SellOrderTest is Test {
 
         // Confirm the order
         vm.prank(buyer2);
-        sellOrder.confirm();
+        sellOrder.confirm(0);
 
-        (SellOrder.State offerState2, , , , , , ) = sellOrder.offers(buyer2);
+        (SellOrder.State offerState2, , , , , , ) = sellOrder.offers(buyer2, 0);
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
 
         require(
@@ -214,7 +217,7 @@ contract SellOrderTest is Test {
         token.transfer(seller, 20);
         vm.startPrank(seller);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
     }
 
@@ -239,19 +242,19 @@ contract SellOrderTest is Test {
         token.transfer(buyer1, 100);
         vm.startPrank(buyer1);
         token.approve(address(sellOrder), 100);
-        sellOrder.submitOffer(100, 0, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
         token.transfer(seller, 50);
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
-        sellOrder.commit(buyer1);
+        sellOrder.commit(buyer1, 0);
         vm.stopPrank();
 
         // Confirm the order
         vm.prank(buyer1);
-        sellOrder.confirm();
+        sellOrder.confirm(0);
 
         // Check that the order book got 1 token
         require(
@@ -302,28 +305,29 @@ contract CancelationTest is Test {
         // Submit an offer
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 100);
-        sellOrder.submitOffer(100, 0, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
-        sellOrder.commit(buyer);
+        sellOrder.commit(buyer, 0);
         vm.stopPrank();
 
         // buyer canceled
         vm.prank(buyer);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
 
         (, , , , , bool sellerCanceled, bool buyerCanceled) = sellOrder.offers(
-            buyer
+            buyer,
+            0
         );
         require(buyerCanceled, 'buyer did not cancel');
         require(!sellerCanceled, 'sellerCanceled canceled');
 
         // seller canceled
         vm.prank(seller);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
 
         require(
             token.balanceOf(buyer) == originalBuyer,
@@ -334,7 +338,7 @@ contract CancelationTest is Test {
             'seller should be cleared'
         );
 
-        (SellOrder.State offerState2, , , , , , ) = sellOrder.offers(buyer);
+        (SellOrder.State offerState2, , , , , , ) = sellOrder.offers(buyer, 0);
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
     }
 
@@ -345,13 +349,13 @@ contract CancelationTest is Test {
         // Submit an offer
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 100);
-        sellOrder.submitOffer(100, 0, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
         vm.startPrank(seller);
         token.approve(address(sellOrder), 50);
-        sellOrder.commit(buyer);
+        sellOrder.commit(buyer, 0);
         vm.stopPrank();
     }
 
@@ -360,12 +364,12 @@ contract CancelationTest is Test {
         buyAndCommit(buyer);
 
         vm.prank(seller);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
         vm.prank(buyer);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
 
         vm.prank(seller);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
     }
 
     function testFailIfBuyerCancelsAfterCancelTwice() public {
@@ -373,12 +377,12 @@ contract CancelationTest is Test {
         buyAndCommit(buyer);
 
         vm.prank(seller);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
         vm.prank(buyer);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
 
         vm.prank(buyer);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
     }
 
     function testFailIfTryingToCancelSomeoneElsesOrder() public {
@@ -389,7 +393,7 @@ contract CancelationTest is Test {
             0x1634567890123456784012345678901234569824
         );
         vm.prank(meanieMcNoGooderFace);
-        sellOrder.cancel(buyer);
+        sellOrder.cancel(buyer, 0);
     }
 }
 
