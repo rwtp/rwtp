@@ -5,6 +5,9 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import './interfaces/IOrderBook.sol';
 
 contract SellOrder {
+    /// @dev Don't allow purchases from self
+    error BuyerCannotBeSeller();
+
     /// @dev msg.sender is not the seller
     error MustBeSeller();
 
@@ -30,6 +33,11 @@ contract SellOrder {
 
     /// @dev Emitted when `buyer` withdrew and offer.
     event OfferEnforced(address indexed buyer);
+
+    /// @dev Someone requested a cancellation of the sell order. The order is
+    ///      is only "really" canceled if both sellerCanceled and buyerCanceled is
+    ///      true.
+    event OfferCanceled(bool sellerCanceled, bool buyerCanceled);
 
     /// @dev The sell order's URI changed
     event OrderURIChanged(string previous, string next);
@@ -60,16 +68,20 @@ contract SellOrder {
     }
 
     struct Offer {
+        /// @dev the state of the offer
+        State state;
         /// @dev the amount the buyer is willing to pay
         uint256 price;
         /// @dev the amount the buyer is willing to stake
         uint256 stake;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
-        /// @dev the state of the offer
-        State state;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
         uint256 acceptedAt;
+        /// @dev canceled by the seller
+        bool sellerCanceled;
+        /// @dev canceled by the buyer
+        bool buyerCanceled;
     }
 
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
@@ -129,10 +141,22 @@ contract SellOrder {
         uint256 stake,
         string memory uri
     ) external virtual onlyState(msg.sender, State.Closed) {
+        if (msg.sender == seller) {
+            revert BuyerCannotBeSeller();
+        }
+
         uint256 allowance = token.allowance(msg.sender, address(this));
         require(allowance >= stake + price, 'Insufficient allowance');
 
-        offers[msg.sender] = Offer(price, stake, uri, State.Open, 0);
+        offers[msg.sender] = Offer(
+            State.Open,
+            price,
+            stake,
+            uri,
+            0,
+            false,
+            false
+        );
 
         bool result = token.transferFrom(
             msg.sender,
@@ -155,7 +179,15 @@ contract SellOrder {
         bool result = token.transfer(msg.sender, offer.stake + offer.price);
         assert(result);
 
-        offers[msg.sender] = Offer(0, 0, offer.uri, State.Closed, 0);
+        offers[msg.sender] = Offer(
+            State.Closed,
+            0,
+            0,
+            offer.uri,
+            0,
+            false,
+            false
+        );
 
         emit OfferWithdrawn(msg.sender);
     }
@@ -176,11 +208,13 @@ contract SellOrder {
         // Update the status of the buyer's offer
         Offer memory offer = offers[buyer_];
         offers[buyer_] = Offer(
+            State.Committed,
             offer.price,
             offer.stake,
             offer.uri,
-            State.Committed,
-            block.timestamp
+            block.timestamp,
+            false,
+            false
         );
 
         emit OfferCommitted(buyer_);
@@ -191,11 +225,13 @@ contract SellOrder {
         // Close the offer
         Offer memory offer = offers[msg.sender];
         offers[msg.sender] = Offer(
-            0,
-            0,
-            offer.uri,
             State.Closed,
-            block.timestamp
+            0,
+            0,
+            '',
+            block.timestamp,
+            false,
+            false
         );
 
         // Return the stake to the buyer
@@ -234,7 +270,15 @@ contract SellOrder {
         require(block.timestamp > timeout + offer.acceptedAt);
 
         // Close the offer
-        offers[buyer_] = Offer(0, 0, offer.uri, State.Closed, block.timestamp);
+        offers[buyer_] = Offer(
+            State.Closed,
+            0,
+            0,
+            '',
+            block.timestamp,
+            false,
+            false
+        );
 
         // Transfer the payment to the seller
         bool result0 = token.transfer(seller, offer.price);
@@ -255,5 +299,53 @@ contract SellOrder {
         assert(result2);
 
         emit OfferEnforced(buyer_);
+    }
+
+    /// @dev Allows either the buyer or the seller to cancel the offer.
+    ///      Only a committed offer can be canceled
+    function cancel(address buyer_)
+        external
+        virtual
+        onlyState(buyer_, State.Committed)
+    {
+        Offer storage offer = offers[buyer_];
+        if (msg.sender == buyer_) {
+            // The buyer is canceling their offer
+            offer.buyerCanceled = true;
+        } else {
+            // The seller is canceling their offer
+            if (msg.sender != seller) {
+                revert MustBeSeller();
+            }
+            offer.sellerCanceled = true;
+        }
+
+        // If both parties canceled, then return the stakes, and the payment to the buyer
+        // and set the offer to closed
+        if (offer.sellerCanceled && offer.buyerCanceled) {
+            // Null out the offer
+            offers[buyer_] = Offer(
+                State.Closed,
+                0,
+                0,
+                '',
+                block.timestamp,
+                false,
+                false
+            );
+
+            // Transfer the stake to the buyer along with their payment
+            bool result0 = token.transfer(
+                msg.sender,
+                offer.stake + offer.price
+            );
+            assert(result0);
+
+            // Transfer the stake to the seller
+            bool result1 = token.transfer(seller, orderStake);
+            assert(result1);
+        }
+
+        emit OfferCanceled(offer.sellerCanceled, offer.buyerCanceled);
     }
 }
