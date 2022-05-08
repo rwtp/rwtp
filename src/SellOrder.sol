@@ -19,8 +19,8 @@ contract SellOrder {
         address indexed buyer,
         uint32 indexed index,
         uint32 quantity,
-        uint128 price,
-        uint128 stake,
+        uint128 pricePerUnit,
+        uint128 stakePerUnit,
         string uri
     );
 
