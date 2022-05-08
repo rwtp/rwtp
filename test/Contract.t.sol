@@ -57,12 +57,10 @@ contract SellOrderTest is Test {
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(0, 10, 10, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 10, 10, 'ipfs://somedata');
         vm.stopPrank();
-        (, uint256 offer2price, uint256 offer2stake, , , , ) = sellOrder.offers(
-            buyer,
-            0
-        );
+        (, uint256 offer2price, uint256 offer2stake, , , , , ) = sellOrder
+            .offers(buyer, 0);
         require(offer2price == 10, 'offer price2 is not 10');
         require(offer2stake == 10, 'offer stake2 is not 10');
 
@@ -109,13 +107,13 @@ contract SellOrderTest is Test {
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
 
         token.transfer(buyer, 20);
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
     }
 
@@ -139,12 +137,10 @@ contract SellOrderTest is Test {
         token.transfer(buyer1, 20);
         vm.startPrank(buyer1);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
-        (, uint256 offer1Price, uint256 offer1Stake, , , , ) = sellOrder.offers(
-            buyer1,
-            0
-        );
+        (, uint256 offer1Price, uint256 offer1Stake, , , , , ) = sellOrder
+            .offers(buyer1, 0);
         require(offer1Price == 15, 'offer price1 is not 15');
         require(offer1Stake == 5, 'offer stake1 is not 5');
         require(
@@ -156,12 +152,10 @@ contract SellOrderTest is Test {
         token.transfer(buyer2, 20);
         vm.startPrank(buyer2);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(0, 10, 10, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 10, 10, 'ipfs://somedata');
         vm.stopPrank();
-        (, uint256 offer2price, uint256 offer2stake, , , , ) = sellOrder.offers(
-            buyer2,
-            0
-        );
+        (, uint256 offer2price, uint256 offer2stake, , , , , ) = sellOrder
+            .offers(buyer2, 0);
         require(offer2price == 10, 'offer price2 is not 10');
         require(offer2stake == 10, 'offer stake2 is not 10');
 
@@ -172,7 +166,10 @@ contract SellOrderTest is Test {
         sellOrder.commit(buyer2, 0);
         vm.stopPrank();
 
-        (SellOrder.State offerState1, , , , , , ) = sellOrder.offers(buyer2, 0);
+        (SellOrder.State offerState1, , , , , , , ) = sellOrder.offers(
+            buyer2,
+            0
+        );
         require(
             offerState1 == SellOrder.State.Committed,
             'state is not committed'
@@ -186,7 +183,10 @@ contract SellOrderTest is Test {
         vm.prank(buyer2);
         sellOrder.confirm(0);
 
-        (SellOrder.State offerState2, , , , , , ) = sellOrder.offers(buyer2, 0);
+        (SellOrder.State offerState2, , , , , , , ) = sellOrder.offers(
+            buyer2,
+            0
+        );
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
 
         require(
@@ -217,7 +217,7 @@ contract SellOrderTest is Test {
         token.transfer(seller, 20);
         vm.startPrank(seller);
         token.approve(address(sellOrder), 20);
-        sellOrder.submitOffer(0, 15, 5, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 15, 5, 'ipfs://somedata');
         vm.stopPrank();
     }
 
@@ -242,7 +242,7 @@ contract SellOrderTest is Test {
         token.transfer(buyer1, 100);
         vm.startPrank(buyer1);
         token.approve(address(sellOrder), 100);
-        sellOrder.submitOffer(0, 100, 0, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
@@ -305,7 +305,7 @@ contract CancelationTest is Test {
         // Submit an offer
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 100);
-        sellOrder.submitOffer(0, 100, 0, 'ipfs://somedata');
+        sellOrder.submitOffer(0, 1, 100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
@@ -318,10 +318,8 @@ contract CancelationTest is Test {
         vm.prank(buyer);
         sellOrder.cancel(buyer, 0);
 
-        (, , , , , bool sellerCanceled, bool buyerCanceled) = sellOrder.offers(
-            buyer,
-            0
-        );
+        (, , , , , bool sellerCanceled, bool buyerCanceled, ) = sellOrder
+            .offers(buyer, 0);
         require(buyerCanceled, 'buyer did not cancel');
         require(!sellerCanceled, 'sellerCanceled canceled');
 
@@ -338,7 +336,10 @@ contract CancelationTest is Test {
             'seller should be cleared'
         );
 
-        (SellOrder.State offerState2, , , , , , ) = sellOrder.offers(buyer, 0);
+        (SellOrder.State offerState2, , , , , , , ) = sellOrder.offers(
+            buyer,
+            0
+        );
         require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
     }
 
@@ -349,7 +350,7 @@ contract CancelationTest is Test {
         // Submit an offer
         vm.startPrank(buyer);
         token.approve(address(sellOrder), 100);
-        sellOrder.submitOffer(index, 100, 0, 'ipfs://somedata');
+        sellOrder.submitOffer(index, 1, 100, 0, 'ipfs://somedata');
         vm.stopPrank();
 
         // Commit to the offer
@@ -401,8 +402,14 @@ contract CancelationTest is Test {
         buyAndCommit(buyer, 0);
         buyAndCommit(buyer, 1);
 
-        (SellOrder.State offerState0, , , , , , ) = sellOrder.offers(buyer, 0);
-        (SellOrder.State offerState1, , , , , , ) = sellOrder.offers(buyer, 1);
+        (SellOrder.State offerState0, , , , , , , ) = sellOrder.offers(
+            buyer,
+            0
+        );
+        (SellOrder.State offerState1, , , , , , , ) = sellOrder.offers(
+            buyer,
+            1
+        );
 
         require(
             offerState0 == SellOrder.State.Committed,
@@ -413,6 +420,80 @@ contract CancelationTest is Test {
             offerState1 == SellOrder.State.Committed,
             'state is not Committed'
         );
+    }
+}
+
+contract QuantityTest is Test {
+    SellOrder sellOrder;
+    address DAO = address(0x4234567890123456784012345678901234567821);
+    address seller = address(0x1234567890123456784012345678901234567829);
+    ERC20Mock token;
+    OrderBook book;
+    uint128 sellersStake = 5;
+
+    function setUp() public {
+        vm.prank(DAO);
+        book = new OrderBook();
+        token = new ERC20Mock('wETH', 'WETH', address(this), 20000);
+
+        // Create a sell order
+        sellOrder = book.createSellOrder(
+            seller,
+            token,
+            sellersStake, // stake
+            'ipfs://metadata',
+            100
+        );
+    }
+
+    function testPurchasingWithQuantity() public {
+        address buyer = address(0x2934567890123456784012345678901234567234);
+
+        uint32 quantity = 10;
+        uint32 price = 5;
+        uint32 stake = 2;
+        uint32 index = 0;
+
+        token.transfer(buyer, (price + stake) * quantity);
+        token.transfer(seller, sellersStake * quantity);
+
+        uint256 originalBuyer = token.balanceOf(buyer);
+        uint256 originalSeller = token.balanceOf(seller);
+
+        // Submit an offer
+        vm.startPrank(buyer);
+        token.approve(address(sellOrder), quantity * (price + stake));
+        sellOrder.submitOffer(index, quantity, price, stake, 'ipfs://somedata');
+        vm.stopPrank();
+
+        // Commit to the offer
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), sellersStake * quantity);
+        sellOrder.commit(buyer, index);
+        vm.stopPrank();
+
+        // Confirm the offer
+        vm.startPrank(buyer);
+        sellOrder.confirm(index);
+        vm.stopPrank();
+
+        require(
+            token.balanceOf(buyer) == (stake * quantity),
+            'buyer should be cleared'
+        );
+
+        // Check the buyer and seller got paid
+        require(
+            token.balanceOf(seller) - originalSeller == ((price) * quantity),
+            'seller should be paid'
+        );
+
+        // Check the state
+        (SellOrder.State offerState, , , , , , , ) = sellOrder.offers(
+            buyer,
+            index
+        );
+        require(offerState == SellOrder.State.Closed, 'state is not Closed');
     }
 }
 

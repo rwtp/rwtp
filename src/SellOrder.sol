@@ -17,8 +17,10 @@ contract SellOrder {
     /// @dev Emitted when `buyer` submits and offer.
     event OfferSubmitted(
         address indexed buyer,
-        uint128 indexed price,
-        uint128 indexed stake,
+        uint32 indexed index,
+        uint32 quantity,
+        uint128 price,
+        uint128 stake,
         string uri
     );
 
@@ -76,9 +78,9 @@ contract SellOrder {
         /// @dev the state of the offer
         State state;
         /// @dev the amount the buyer is willing to pay
-        uint128 price;
+        uint128 pricePerUnit;
         /// @dev the amount the buyer is willing to stake
-        uint128 stake;
+        uint128 stakePerUnit;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
@@ -87,6 +89,9 @@ contract SellOrder {
         bool sellerCanceled;
         /// @dev canceled by the buyer
         bool buyerCanceled;
+        /// @dev Allows a buyer to purchase multiple units.
+        /// The seller will need to stake quantity*stake to accept.
+        uint32 quantity;
     }
 
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
@@ -154,8 +159,9 @@ contract SellOrder {
     /// @dev creates an offer
     function submitOffer(
         uint32 index,
-        uint128 price,
-        uint128 stake,
+        uint32 quantity,
+        uint128 pricePerUnit,
+        uint128 stakePerUnit,
         string memory uri
     ) external virtual onlyState(msg.sender, index, State.Closed) {
         if (msg.sender == seller) {
@@ -164,18 +170,26 @@ contract SellOrder {
 
         Offer storage offer = offers[msg.sender][index];
         offer.state = State.Open;
-        offer.price = price;
-        offer.stake = stake;
+        offer.pricePerUnit = pricePerUnit;
+        offer.stakePerUnit = stakePerUnit;
         offer.uri = uri;
+        offer.quantity = quantity;
 
         bool result = token.transferFrom(
             msg.sender,
             address(this),
-            stake + price
+            (stakePerUnit + pricePerUnit) * quantity
         );
         require(result, 'Transfer failed');
 
-        emit OfferSubmitted(msg.sender, price, stake, uri);
+        emit OfferSubmitted(
+            msg.sender,
+            index,
+            quantity,
+            pricePerUnit,
+            stakePerUnit,
+            uri
+        );
     }
 
     /// @dev allows a buyer to withdraw the offer
@@ -186,7 +200,10 @@ contract SellOrder {
     {
         Offer memory offer = offers[msg.sender][index];
 
-        bool result = token.transfer(msg.sender, offer.stake + offer.price);
+        bool result = token.transfer(
+            msg.sender,
+            (offer.stakePerUnit + offer.pricePerUnit) * offer.quantity
+        );
         assert(result);
 
         offers[msg.sender][index] = Offer(
@@ -196,7 +213,8 @@ contract SellOrder {
             offer.uri,
             0,
             false,
-            false
+            false,
+            0
         );
 
         emit OfferWithdrawn(msg.sender, index);
@@ -212,13 +230,18 @@ contract SellOrder {
         // Deposit the stake required to commit to the offer
         uint256 allowance = token.allowance(msg.sender, address(this));
         require(allowance >= orderStake);
-        bool result = token.transferFrom(msg.sender, address(this), orderStake);
-        assert(result);
 
         // Update the status of the buyer's offer
         Offer storage offer = offers[buyer_][index];
         offer.acceptedAt = uint64(block.timestamp);
         offer.state = State.Committed;
+
+        bool result = token.transferFrom(
+            msg.sender,
+            address(this),
+            offer.quantity * orderStake
+        );
+        assert(result);
 
         emit OfferCommitted(buyer_, index);
     }
@@ -238,19 +261,27 @@ contract SellOrder {
             '',
             uint64(block.timestamp),
             false,
-            false
+            false,
+            0
         );
 
         // Return the stake to the buyer
-        bool result0 = token.transfer(msg.sender, offer.stake);
+        bool result0 = token.transfer(
+            msg.sender,
+            offer.stakePerUnit * offer.quantity
+        );
         assert(result0);
 
-        uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
+        uint256 total = offer.pricePerUnit * offer.quantity;
+        uint256 toOrderBook = (total * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
-        uint256 toSeller = offer.price - toOrderBook;
+        uint256 toSeller = total - toOrderBook;
 
         // Transfer payment to the seller, along with their stake
-        bool result1 = token.transfer(seller, toSeller + orderStake);
+        bool result1 = token.transfer(
+            seller,
+            toSeller + (orderStake * offer.quantity)
+        );
         assert(result1);
 
         // Transfer payment to the order book
@@ -280,24 +311,28 @@ contract SellOrder {
             '',
             uint64(block.timestamp),
             false,
-            false
+            false,
+            0
         );
 
         // Transfer the payment to the seller
-        bool result0 = token.transfer(seller, offer.price);
+        bool result0 = token.transfer(
+            seller,
+            (offer.pricePerUnit * offer.quantity)
+        );
         assert(result0);
 
         // Transfer the buyer's stake to address(dead).
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            offer.stake
+            (offer.stakePerUnit * offer.quantity)
         );
         assert(result1);
 
         // Transfer the seller's stake to address(dead).
         bool result2 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            orderStake
+            orderStake * offer.quantity
         );
         assert(result2);
 
@@ -327,11 +362,14 @@ contract SellOrder {
         // and set the offer to closed
         if (offer.sellerCanceled && offer.buyerCanceled) {
             // Transfer the stake to the buyer along with their payment
-            bool result0 = token.transfer(buyer_, offer.stake + offer.price);
+            bool result0 = token.transfer(
+                buyer_,
+                (offer.stakePerUnit + offer.pricePerUnit) * offer.quantity
+            );
             assert(result0);
 
             // Transfer the stake to the seller
-            bool result1 = token.transfer(seller, orderStake);
+            bool result1 = token.transfer(seller, orderStake * offer.quantity);
             assert(result1);
 
             // Null out the offer
@@ -342,7 +380,8 @@ contract SellOrder {
                 '',
                 uint64(block.timestamp),
                 false,
-                false
+                false,
+                0
             );
         }
 
