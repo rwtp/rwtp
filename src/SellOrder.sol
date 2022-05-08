@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import './interfaces/IOrderBook.sol';
-import 'forge-std/console.sol';
 
 contract SellOrder {
     /// @dev Don't allow purchases from self
