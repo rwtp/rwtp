@@ -85,9 +85,8 @@ contract SellOrderTest is Test {
         sellOrder.enforce(buyer);
         vm.stopPrank();
 
-        vm.warp(81); // warp to block 81 (should succeed)
+        vm.warp(200); // warp to block 200 (should succeed)
         vm.startPrank(seller);
-        vm.expectRevert();
         sellOrder.enforce(buyer);
         vm.stopPrank();
     }
@@ -316,15 +315,9 @@ contract CancelationTest is Test {
         vm.prank(buyer);
         sellOrder.cancel(buyer);
 
-        (
-            SellOrder.State offerState,
-            ,
-            ,
-            ,
-            ,
-            bool sellerCanceled,
-            bool buyerCanceled
-        ) = sellOrder.offers(buyer);
+        (, , , , , bool sellerCanceled, bool buyerCanceled) = sellOrder.offers(
+            buyer
+        );
         require(buyerCanceled, 'buyer did not cancel');
         require(!sellerCanceled, 'sellerCanceled canceled');
 
@@ -348,9 +341,6 @@ contract CancelationTest is Test {
     function buyAndCommit(address buyer) public {
         token.transfer(buyer, 100);
         token.transfer(seller, 50);
-
-        uint256 originalBuyer = token.balanceOf(buyer);
-        uint256 originalSeller = token.balanceOf(seller);
 
         // Submit an offer
         vm.startPrank(buyer);

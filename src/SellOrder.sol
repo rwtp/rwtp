@@ -17,8 +17,8 @@ contract SellOrder {
     /// @dev Emitted when `buyer` submits and offer.
     event OfferSubmitted(
         address indexed buyer,
-        uint256 indexed price,
-        uint256 indexed stake,
+        uint128 indexed price,
+        uint128 indexed stake,
         string uri
     );
 
@@ -71,13 +71,13 @@ contract SellOrder {
         /// @dev the state of the offer
         State state;
         /// @dev the amount the buyer is willing to pay
-        uint256 price;
+        uint128 price;
         /// @dev the amount the buyer is willing to stake
-        uint256 stake;
+        uint128 stake;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
-        uint256 acceptedAt;
+        uint64 acceptedAt;
         /// @dev canceled by the seller
         bool sellerCanceled;
         /// @dev canceled by the buyer
@@ -137,26 +137,19 @@ contract SellOrder {
 
     /// @dev creates an offer
     function submitOffer(
-        uint256 price,
-        uint256 stake,
+        uint128 price,
+        uint128 stake,
         string memory uri
     ) external virtual onlyState(msg.sender, State.Closed) {
         if (msg.sender == seller) {
             revert BuyerCannotBeSeller();
         }
 
-        uint256 allowance = token.allowance(msg.sender, address(this));
-        require(allowance >= stake + price, 'Insufficient allowance');
-
-        offers[msg.sender] = Offer(
-            State.Open,
-            price,
-            stake,
-            uri,
-            0,
-            false,
-            false
-        );
+        Offer storage offer = offers[msg.sender];
+        offer.state = State.Open;
+        offer.price = price;
+        offer.stake = stake;
+        offer.uri = uri;
 
         bool result = token.transferFrom(
             msg.sender,
@@ -206,16 +199,9 @@ contract SellOrder {
         assert(result);
 
         // Update the status of the buyer's offer
-        Offer memory offer = offers[buyer_];
-        offers[buyer_] = Offer(
-            State.Committed,
-            offer.price,
-            offer.stake,
-            offer.uri,
-            block.timestamp,
-            false,
-            false
-        );
+        Offer storage offer = offers[buyer_];
+        offer.acceptedAt = uint64(block.timestamp);
+        offer.state = State.Committed;
 
         emit OfferCommitted(buyer_);
     }
@@ -229,7 +215,7 @@ contract SellOrder {
             0,
             0,
             '',
-            block.timestamp,
+            uint64(block.timestamp),
             false,
             false
         );
@@ -238,24 +224,20 @@ contract SellOrder {
         bool result0 = token.transfer(msg.sender, offer.stake);
         assert(result0);
 
-        // Return the stake to the seller
-        bool result1 = token.transfer(seller, orderStake);
-        assert(result1);
-
         uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
         uint256 toSeller = offer.price - toOrderBook;
 
-        // Transfer payment to the seller
-        bool result2 = token.transfer(seller, toSeller);
-        assert(result2);
+        // Transfer payment to the seller, along with their stake
+        bool result1 = token.transfer(seller, toSeller + orderStake);
+        assert(result1);
 
         // Transfer payment to the order book
-        bool result3 = token.transfer(
+        bool result2 = token.transfer(
             IOrderBook(orderBook).owner(),
             toOrderBook
         );
-        assert(result3);
+        assert(result2);
 
         emit OfferConfirmed(msg.sender);
     }
@@ -275,7 +257,7 @@ contract SellOrder {
             0,
             0,
             '',
-            block.timestamp,
+            uint64(block.timestamp),
             false,
             false
         );
@@ -337,7 +319,7 @@ contract SellOrder {
                 0,
                 0,
                 '',
-                block.timestamp,
+                uint64(block.timestamp),
                 false,
                 false
             );
