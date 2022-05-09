@@ -457,7 +457,6 @@ contract QuantityTest is Test {
         token.transfer(buyer, (price + stake) * quantity);
         token.transfer(seller, sellersStake * quantity);
 
-        uint256 originalBuyer = token.balanceOf(buyer);
         uint256 originalSeller = token.balanceOf(seller);
 
         // Submit an offer
