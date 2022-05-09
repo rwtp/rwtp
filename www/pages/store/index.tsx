@@ -65,7 +65,9 @@ function OrderView(props: { order: SellOrder }) {
   return (
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
-        <Tag type="danger">Risky</Tag>
+        {props.order.sellersStake <= props.order.price * 0.5 && (
+          <Tag type="danger">Risky</Tag>
+        )}
         <a
           className="underline font-serif"
           href={`/sell/${props.order.address}`}
@@ -96,23 +98,25 @@ function Results() {
   if (!data) {
     return null;
   }
-  const orders = data.sellOrders.map((sellOrder: any) => {
-    return (
-      <OrderView
-        key={sellOrder.address}
-        order={{
-          address: sellOrder.address,
-          title: sellOrder.title,
-          description: sellOrder.description,
-          sellersStake: +sellOrder.sellersStake,
-          buyersStake: +sellOrder.stakeSuggested,
-          price: +sellOrder.priceSuggested,
-          token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
-          encryptionPublicKey: '',
-        }}
-      />
-    );
-  });
+  const orders = data.sellOrders
+    .filter((s: any) => !!s.title) // filter ones without titles
+    .map((sellOrder: any) => {
+      return (
+        <OrderView
+          key={sellOrder.address}
+          order={{
+            address: sellOrder.address,
+            title: sellOrder.title,
+            description: sellOrder.description,
+            sellersStake: +sellOrder.sellersStake,
+            buyersStake: +sellOrder.stakeSuggested,
+            price: +sellOrder.priceSuggested,
+            token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
+            encryptionPublicKey: '',
+          }}
+        />
+      );
+    });
 
   return <>{orders}</>;
 }
