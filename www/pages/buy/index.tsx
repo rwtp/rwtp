@@ -70,11 +70,13 @@ function OrderView(props: { order: SellOrder }) {
           className="underline font-serif"
           href={`/sell/${props.order.address}`}
         >
-          {props.order.title}
+          <span className="flex gap-2">{props.order.title}</span>
         </a>
         <div className="h-px bg-black w-full flex-1" />
-        <Tag type="info">Deposit $2</Tag>
-        <Tag type="info">Price $20</Tag>
+          <span className="flex gap-2">{props.order.description}</span>
+        <div className="h-px bg-black w-full flex-1" />
+        <Tag type="info">Deposit ${props.order.buyersStake} </Tag>
+        <Tag type="info">Price ${props.order.price} </Tag>
       </div>
     </div>
   );
@@ -82,37 +84,40 @@ function OrderView(props: { order: SellOrder }) {
 
 function Results() {
   const { data } = useGraph(`{
-        sellOrders(first: 5) {
+        sellOrders(first: 10) {
           address
           title
           description
           sellersStake
           stakeSuggested
           priceSuggested
-
+          error
         }
       }`);
 
   if (!data) {
     return null;
   }
-  const orders = data.sellOrders.map((sellOrder: any) => {
-    return (
-      <OrderView
-        key={sellOrder.address}
-        order={{
-          address: sellOrder.address,
-          title: sellOrder.title,
-          description: sellOrder.description,
-          sellersStake: +sellOrder.sellersStake,
-          buyersStake: +sellOrder.stakeSuggested,
-          price: +sellOrder.priceSuggested,
-          token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
-          encryptionPublicKey: '',
-        }}
-      />
-    );
-  });
+  const orders = data.sellOrders
+    .filter((sellOrder: any) => !sellOrder.error)
+    .map((sellOrder: any) => {
+      return (
+        <OrderView
+          key={sellOrder.address}
+          order={{
+            address: sellOrder.address,
+            title: sellOrder.title,
+            description: sellOrder.description,
+            sellersStake: +sellOrder.sellersStake,
+            buyersStake: +sellOrder.stakeSuggested,
+            price: +sellOrder.priceSuggested,
+            token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
+            encryptionPublicKey: '',
+          }}
+        />
+      );
+    }
+  );
 
   return <>{orders}</>;
 }
