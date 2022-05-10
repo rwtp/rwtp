@@ -80,19 +80,15 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     });
     await approveTx.wait();
 
-    // const tx = await methods.submitOffer(
-    //   0,
-    //   quantity,
-    //   price,
-    //   stake,
-    //   'ipfs://' + cid,
-    //   {
-    //     gasLimit: 1000000,
-    //   }
-    // );
+    const tx = await sellOrderMethods.submitOffer.writeAsync({
+      args: [0, quantity, price, stake, 'ipfs://' + cid],
+      overrides: {
+        gasLimit: 200000,
+      },
+    });
 
-    // const receipt = await tx.wait();
-    // console.log(receipt);
+    const receipt = await tx.wait();
+    console.log(receipt);
   }
 
   return (

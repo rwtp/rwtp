@@ -55,12 +55,17 @@ export function useSellOrder(address: string) {
 }
 
 export function useSellOrderMethods(address: string) {
-  const sellOrder = useContract({
-    addressOrName: address,
-    contractInterface: SellOrder.abi,
-  });
+  const submitOffer = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: SellOrder.abi,
+    },
+    'submitOffer'
+  );
 
-  return sellOrder;
+  return {
+    submitOffer,
+  };
 }
 
 export function useSellOrderSubmitOffer(address: string) {
