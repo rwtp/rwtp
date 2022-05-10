@@ -6,66 +6,17 @@ import { SellOrder } from 'rwtp';
 import Image from 'next/image';
 import { encryptMessage } from '../../lib/encryption';
 import { fromBn } from 'evm-bn';
-
-interface Metadata {
-  title: string;
-  description: string;
-  encryptionPublicKey: string;
-  priceSuggested: string;
-  stakeSuggested: string;
-}
-
-function useReadOnlySellOrder(pubkey: string) {
-  const [sellOrder, setSellOrder] = useState<{
-    contract: ethers.Contract;
-    metadata: Metadata;
-    hasOrdered: boolean;
-  }>();
-
-  useEffect(() => {
-    if (!pubkey) return;
-
-    async function load() {
-      const provider = new ethers.providers.Web3Provider(
-        window.ethereum as any
-      );
-
-      // Load the contract
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        pubkey as string,
-        SellOrder.abi,
-        signer
-      );
-
-      const cid = (await contract.orderURI()).replace('ipfs://', '');
-      const order = await contract.offers(await signer.getAddress());
-
-      const uri = `https://ipfs.infura.io/ipfs/` + cid;
-      const resp = await fetch(uri);
-      const metadata = await resp.json();
-
-      setSellOrder({
-        contract,
-        metadata,
-        hasOrdered: order && order.state != 0,
-      });
-    }
-    load().catch(console.error);
-  }, [pubkey]);
-
-  return sellOrder;
-}
+import { useSellOrder } from '../../lib/useSellOrder';
 
 export default function Pubkey() {
   const router = useRouter();
   const pubkey = router.query.pubkey as string;
-  const readOnlySellOrder = useReadOnlySellOrder(pubkey);
+  const sellOrder = useSellOrder(pubkey);
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
 
   async function onBuy() {
-    if (!readOnlySellOrder || !email || !shippingAddress) return;
+    if (!sellOrder || !email || !shippingAddress) return;
 
     // Load metamask
     const provider = new ethers.providers.Web3Provider(window.ethereum as any);
@@ -81,7 +32,7 @@ export default function Pubkey() {
     await writableSellOrder.deployed();
 
     const encryptedMessage = encryptMessage(
-      readOnlySellOrder.metadata.encryptionPublicKey,
+      sellOrder.metadata.,
       JSON.stringify({
         email: email,
         shippingAddress: shippingAddress,
