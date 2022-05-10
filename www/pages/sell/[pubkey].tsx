@@ -13,8 +13,38 @@ import {
 import { useTokenMethods } from '../../lib/tokens';
 import { postToIPFS } from '../../lib/ipfs';
 import { fromBn, toBn } from 'evm-bn';
-import { useAccount } from 'wagmi';
+import { useAccount, useClient } from 'wagmi';
 import { ArrowLeftIcon } from '@heroicons/react/solid';
+
+function ConnectWalletButton(props: {
+  children: React.ReactNode;
+  onClick: () => void;
+  className: string;
+}) {
+  return (
+    <ConnectButton.Custom>
+      {({ account, mounted, chain, openConnectModal, openChainModal }) => {
+        function onClick() {
+          if (!mounted || !account || !chain) {
+            openConnectModal();
+          }
+
+          if (chain?.unsupported) {
+            openChainModal();
+          }
+
+          props.onClick();
+        }
+
+        return (
+          <button className={props.className} onClick={onClick}>
+            {props.children}
+          </button>
+        );
+      }}
+    </ConnectButton.Custom>
+  );
+}
 
 function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const tokenMethods = useTokenMethods(sellOrder.token.address);
@@ -120,13 +150,13 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
             </label>
 
             <div className="mt-4">
-              <button
+              <ConnectWalletButton
                 className="bg-black text-white px-4 py-2 rounded w-full justify-between flex"
                 onClick={() => onBuy().catch(console.error)}
               >
                 <div>Buy</div>
                 <div>{fromBn(price, sellOrder.token.decimals)}</div>
-              </button>
+              </ConnectWalletButton>
               <div className="text-sm mt-4 text-gray-500">
                 If this item doesn't ship to you, the seller be fined{' '}
                 <span className="font-bold">

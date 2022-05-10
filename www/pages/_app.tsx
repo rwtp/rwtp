@@ -13,7 +13,7 @@ import { chain, createClient, WagmiProvider } from 'wagmi';
 
 const { chains, provider } = configureChains(
   [chain.mainnet, chain.polygon, chain.optimism, chain.rinkeby],
-  [apiProvider.alchemy(process.env.ALCHEMY_ID), apiProvider.fallback()]
+  [apiProvider.fallback()]
 );
 
 const { connectors } = getDefaultWallets({
