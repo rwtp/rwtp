@@ -238,13 +238,6 @@ function StickerStore() {
       </div>
       <div className="bg-white border border-black rounded ">
         <div className="px-4 py-2 bg-gray-50 border-b border-black">
-          <div className="font-mono text-xs pt-2">
-            <div suppressHydrationWarning>
-              {' '}
-              Available for {days} days {hours} hours {minutes} minutes{' '}
-              {seconds} seconds
-            </div>
-          </div>
           <div className="font-bold pb-2">Buy Stickers</div>
           <div className="text-sm pb-2">
             We'll deliver limited-edition stickers to your doorstep via the
