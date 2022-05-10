@@ -2432,6 +2432,16 @@ eth-sig-util@^1.4.2:
     ethereumjs-abi "git+https://github.com/ethereumjs/ethereumjs-abi.git"
     ethereumjs-util "^5.1.1"
 
+eth-sig-util@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/eth-sig-util/-/eth-sig-util-3.0.1.tgz#8753297c83a3f58346bd13547b59c4b2cd110c96"
+  integrity sha512-0Us50HiGGvZgjtWTyAI/+qTzYPMLy5Q451D0Xy68bxq1QMWdoOddDwGvsqcFT27uohKgalM9z/yxplyt+mY2iQ==
+  dependencies:
+    ethereumjs-abi "^0.6.8"
+    ethereumjs-util "^5.1.1"
+    tweetnacl "^1.0.3"
+    tweetnacl-util "^0.15.0"
+
 ethereum-cryptography@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/ethereum-cryptography/-/ethereum-cryptography-0.1.3.tgz#8d6143cfc3d74bf79bbd8edecdf29e4ae20dd191"
@@ -4327,13 +4337,16 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rwtp@^0.7.2:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.7.2.tgz#4e4f241288168efa76c9854eb34873423f85645c"
-  integrity sha512-cepFrGolFeZF/F33hdqUGZ+vICXnkAibQ26NI/llwz7rVmH2Ja7drTzjcqOt3UFkY4g7zrA4wW8APQEcn1K/5w==
+rwtp@^0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.8.1.tgz#529f5c347b70ce9dbffd9c0b2963800fe5c3eebf"
+  integrity sha512-aS09JG9Khe91wRfvvmtpsF+KB6FwTS0aisePolz/7DHc/Xke4lFXOCbpi+3x2uRUUVBTyiZQUFtM9tKFT33+cA==
   dependencies:
     "@openzeppelin/contracts" "^4.6.0"
+    "@rainbow-me/rainbowkit" "^0.1.0"
+    eth-sig-util "^3.0.1"
     evm-bn "^1.1.1"
+    tweetnacl "^1.0.3"
 
 rxjs@^6.6.3:
   version "6.6.7"
@@ -4679,7 +4692,7 @@ tsutils@^3.21.0:
   dependencies:
     tslib "^1.8.1"
 
-tweetnacl-util@^0.15.1:
+tweetnacl-util@^0.15.0, tweetnacl-util@^0.15.1:
   version "0.15.1"
   resolved "https://registry.yarnpkg.com/tweetnacl-util/-/tweetnacl-util-0.15.1.tgz#b80fcdb5c97bcc508be18c44a4be50f022eea00b"
   integrity sha512-RKJBIj8lySrShN4w6i/BonWp2Z/uxwC3h4y7xsRrpP59ZboCd0GpEVsOnMDYLMmKBpYhb5TgHzZXy7wTfYFBRw==
