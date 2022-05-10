@@ -1,14 +1,12 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { NextPageContext } from 'next';
 import { useRouter } from 'next/router';
-import { ethers, BigNumber, providers } from 'ethers';
-import { Suspense, useEffect, useState } from 'react';
+import { BigNumber } from 'ethers';
+import { Suspense, useState } from 'react';
 import Image from 'next/image';
 import {
   SellOrderData,
   useSellOrder,
   useSellOrderMethods,
-  useSellOrderSubmitOffer,
 } from '../../lib/useSellOrder';
 import { useTokenMethods } from '../../lib/tokens';
 import { postToIPFS } from '../../lib/ipfs';
