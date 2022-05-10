@@ -1,174 +1,178 @@
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { NextPageContext } from 'next';
 import { useRouter } from 'next/router';
 import { ethers, BigNumber, providers } from 'ethers';
-import { useEffect, useState } from 'react';
-import { SellOrder } from 'rwtp';
+import { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { encryptMessage } from '../../lib/encryption';
-import { fromBn } from 'evm-bn';
-import { useSellOrder } from '../../lib/useSellOrder';
+import {
+  SellOrderData,
+  useSellOrder,
+  useSellOrderMethods,
+  useSellOrderSubmitOffer,
+} from '../../lib/useSellOrder';
+import { useTokenMethods } from '../../lib/tokens';
+import { postToIPFS } from '../../lib/ipfs';
+import { fromBn, toBn } from 'evm-bn';
+import { useAccount } from 'wagmi';
+import { ArrowLeftIcon } from '@heroicons/react/solid';
 
-export default function Pubkey() {
-  const router = useRouter();
-  const pubkey = router.query.pubkey as string;
-  const sellOrder = useSellOrder(pubkey);
+function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
+  const tokenMethods = useTokenMethods(sellOrder.token.address);
+  const sellOrderMethods = useSellOrderMethods(sellOrder.address);
+
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
 
+  const quantity = 1;
+  const price = sellOrder.priceSuggested
+    ? BigNumber.from(sellOrder.priceSuggested)
+    : BigNumber.from(0);
+  const stake = sellOrder.stakeSuggested
+    ? BigNumber.from(sellOrder.stakeSuggested)
+    : BigNumber.from(0);
+
   async function onBuy() {
-    if (!sellOrder || !email || !shippingAddress) return;
+    if (!email || !shippingAddress) return;
 
-    // Load metamask
-    const provider = new ethers.providers.Web3Provider(window.ethereum as any);
-    await provider.send('eth_requestAccounts', []); // <- this prompts user to connect metamask
-    const signer = provider.getSigner();
-
-    const writableSellOrder = new ethers.Contract(
-      pubkey as string,
-      SellOrder.abi,
-      signer
-    );
-
-    await writableSellOrder.deployed();
-
-    const encryptedMessage = encryptMessage(
-      sellOrder.metadata.,
-      JSON.stringify({
-        email: email,
-        shippingAddress: shippingAddress,
-      })
-    );
-
-    // Post shipping metadata
-    const result = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        data: encryptedMessage,
-      }),
+    const cid = await postToIPFS({
+      // A random number makes it so the same shipping information
+      // doesn't encrypt to the same string, which could then be
+      // used as PII to stalk or harm a buyer.
+      nonce: Math.random(),
+      email,
+      shippingAddress,
     });
-    const { cid } = await result.json();
 
-    // Approve token transfer
-    const erc20ABI = [
-      'function approve(address spender, uint256 amount)',
-      'function decimals() public view returns (uint8)',
-    ];
-    const token = await writableSellOrder.token();
-    const erc20 = new ethers.Contract(token, erc20ABI, signer);
-    const tokenTx = await erc20.approve(
-      readOnlySellOrder.contract.address,
-      BigNumber.from(readOnlySellOrder.metadata.priceSuggested).add(
-        BigNumber.from(readOnlySellOrder.metadata.stakeSuggested)
-      ),
-      {
-        gasLimit: 10000000,
-      }
-    );
+    console.log(tokenMethods.approve);
 
-    const tokenRcpt = await tokenTx.wait();
-    if (tokenRcpt.status != 1) {
-      console.log('Error approving tokens');
-      return;
-    }
+    const approveTx = await tokenMethods.approve.writeAsync({
+      args: [sellOrder.address, price.add(stake).mul(quantity)],
+    });
+    await approveTx.wait();
 
-    const orderTx = await writableSellOrder.submitOffer(
-      BigNumber.from(readOnlySellOrder.metadata.priceSuggested),
-      BigNumber.from(readOnlySellOrder.metadata.stakeSuggested),
-      'ipfs://' + cid,
-      {
-        gasLimit: 10000000,
-      }
-    );
+    // const tx = await methods.submitOffer(
+    //   0,
+    //   quantity,
+    //   price,
+    //   stake,
+    //   'ipfs://' + cid,
+    //   {
+    //     gasLimit: 1000000,
+    //   }
+    // );
 
-    const orderRcpt = await orderTx.wait();
-    if (orderRcpt.status != 1) {
-      console.log('Error submitting order');
-      return;
-    }
-
-    router.push('/orders/' + pubkey);
-  }
-
-  if (!readOnlySellOrder) {
-    return <div>Loading...</div>;
-  }
-
-  if (readOnlySellOrder.hasOrdered) {
-    return (
-      <div>
-        You have already ordered this item.{' '}
-        <a
-          href={`/orders/${readOnlySellOrder.contract.address}`}
-          className="underline"
-        >
-          See your order here.
-        </a>
-      </div>
-    );
+    // const receipt = await tx.wait();
+    // console.log(receipt);
   }
 
   return (
-    <div className="h-full flex w-full">
-      <div className="flex w-full border-l border-r mx-auto">
-        <div className="flex-1 justify-center flex flex-col px-8 bg-gray-50 items-center">
-          <div>
-            <div className="flex mb-2 ">
-              <div className="border flex border-black">
-                <Image width={256} height={256} src="/rwtp.png" />
+    <div className="h-full w-full flex flex-col">
+      <div className="h-full flex w-full">
+        <div className="flex w-full border-l border-r mx-auto">
+          <div className="flex-1 justify-center flex flex-col bg-gray-50 items-center">
+            <div>
+              <div className="flex">
+                <a
+                  href="/store"
+                  className="flex gap-2 justify-between items-center py-1 hover:opacity-50 transition-all text-sm text-gray-700"
+                >
+                  <ArrowLeftIcon className="h-4 w-4" />
+                  <div>Back</div>
+                </a>
+              </div>
+
+              <h1 className="pt-2 text-sm pt-12 text-gray-700">
+                {sellOrder.title}
+              </h1>
+              <p className="pb-2 text-xl mt-2">
+                {fromBn(price, sellOrder.token.decimals)}{' '}
+                {sellOrder.token.symbol}
+              </p>
+
+              <div className="flex mb-2 pt-12 ">
+                <div className="border rounded bg-white">
+                  <Image width={256} height={256} src="/rwtp.png" />
+                </div>
               </div>
             </div>
-
-            <h1 className="font-bold pt-2">
-              {readOnlySellOrder.metadata.title}
-            </h1>
-            <p className="pb-2">{readOnlySellOrder.metadata.description}</p>
           </div>
-        </div>
-        <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 border-l ">
-          <label className="flex flex-col mt-2">
-            <div className="text-xs font-bold py-1">Shipping Address</div>
-            <input
-              type={'text'}
-              className={'px-2 py-2 border rounded'}
-              name="address"
-              placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-              onChange={(e) => setShippingAddress(e.target.value)}
-            />
-          </label>
+          <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
+            <label className="flex flex-col mt-2">
+              <div className="text-xs font-bold py-1">Shipping Address</div>
+              <input
+                type={'text'}
+                className={'px-2 py-2 border rounded'}
+                name="address"
+                placeholder="100 Saddle Point; San Fransokyo, CA 94112"
+                onChange={(e) => setShippingAddress(e.target.value)}
+              />
+            </label>
 
-          <label className="flex flex-col  mt-2">
-            <div className="text-xs font-bold py-1">Email</div>
-            <input
-              type={'text'}
-              className={'px-2 py-2 border rounded'}
-              name="address"
-              placeholder="you@ethereum.org"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
+            <label className="flex flex-col  mt-2">
+              <div className="text-xs font-bold py-1">Email</div>
+              <input
+                type={'text'}
+                className={'px-2 py-2 border rounded'}
+                name="address"
+                placeholder="you@ethereum.org"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
 
-          <div className="mt-4">
-            <button
-              className="bg-black text-white px-4 py-2 rounded w-full justify-between flex"
-              onClick={() => onBuy().catch(console.error)}
-            >
-              <div>Buy</div>
-              <div>
-                {fromBn(
-                  BigNumber.from(readOnlySellOrder.metadata.priceSuggested)
-                )}
+            <div className="mt-4">
+              <button
+                className="bg-black text-white px-4 py-2 rounded w-full justify-between flex"
+                onClick={() => onBuy().catch(console.error)}
+              >
+                <div>Buy</div>
+                <div>{fromBn(price, sellOrder.token.decimals)}</div>
+              </button>
+              <div className="text-sm mt-4 text-gray-500">
+                If this item doesn't ship to you, the seller be fined{' '}
+                <span className="font-bold">
+                  {fromBn(
+                    toBn(sellOrder.sellersStake, sellOrder.token.decimals),
+                    sellOrder.token.decimals
+                  )}{' '}
+                  {sellOrder.token.symbol}.
+                </span>
               </div>
-            </button>
-            <div className="text-sm mt-4 text-gray-500">
-              If this item doesn't ship to you, the seller be fined{' '}
-              <span className="font-bold">10 USDC.</span>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function Loading() {
+  return <div className="bg-gray-50 animate-pulse h-screen w-screen"></div>;
+}
+
+function PageWithPubkey(props: { pubkey: string }) {
+  const sellOrder = useSellOrder(props.pubkey);
+  const { data } = useAccount();
+
+  if (!sellOrder.data) return <Loading />;
+
+  // if (!data) {
+  //   return <div>Connect wallet</div>;
+  // }
+
+  return <BuyPage sellOrder={sellOrder.data} />;
+}
+
+export default function Page() {
+  const router = useRouter();
+  const pubkey = router.query.pubkey as string;
+
+  if (!pubkey) {
+    return <Suspense fallback={<Loading />}></Suspense>;
+  }
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <PageWithPubkey pubkey={pubkey} />
+    </Suspense>
   );
 }

@@ -1,63 +1,66 @@
-import {
-  useContract,
-  useContractRead,
-  useContractWrite,
-  useProvider,
-} from 'wagmi';
+import { useContract, useContractWrite, useSigner } from 'wagmi';
 import { useSubgraph } from './useSubgraph';
-import create from 'zustand';
 import { SellOrder } from 'rwtp';
 import { BigNumber } from 'ethers';
 
-export function useSellOrder(address: string) {
-  const metadata = useSubgraph([
-    `{
-      query metadata($id:ID ){
-        sellOrder(id:$id) {
-          address
-          title
-          description
-          sellersStake
-          encryptionPublicKey
-        }
-      }
-    `,
-    { id: address },
-  ]);
+const SELL_ORDER_QUERY = `
+query metadata($id:ID ){
+  sellOrder(id:$id) {
+    address
+    title
+    description
+    sellersStake
+    priceSuggested
+    stakeSuggested
+    encryptionPublicKey
+    sellersStake
+    seller
+    token {
+      decimals
+      symbol
+      name
+      address
+    }
+  }
+}
+`;
 
-  const contract = {
-    addressOrName: address,
-    contractInterface: SellOrder.abi,
+export interface SellOrderData {
+  address: string;
+  title: string;
+  description: string;
+  sellersStake: string;
+  priceSuggested: string;
+  stakeSuggested: string;
+  encryptionPublicKey: string;
+  seller: string;
+  token: {
+    decimals: number;
+    symbol: string;
+    name: string;
+    address: string;
   };
+}
 
-  const token = useContractRead(contract, 'token', {
-    cacheOnBlock: true,
-  });
-  const seller = useContractRead(contract, 'seller', {
-    cacheOnBlock: true,
-  });
-  const timeout = useContractRead(contract, 'timeout', {
-    cacheOnBlock: true,
-  });
-  const orderStake = useContractRead(contract, 'orderStake', {
-    cacheOnBlock: true,
-  });
-  const orderBook = useContractRead(contract, 'orderBook', {
-    cacheOnBlock: true,
-  });
-  const orderURI = useContractRead(contract, 'orderBook', {
-    cacheOnBlock: true,
-  });
+// Returns information about a sell order
+export function useSellOrder(address: string) {
+  const metadata = useSubgraph<{
+    sellOrder: SellOrderData;
+  }>([SELL_ORDER_QUERY, { id: address }]);
 
   return {
-    metadata,
-    token,
-    seller,
-    timeout,
-    orderStake,
-    orderBook,
-    orderURI,
+    ...metadata,
+    data: metadata.data?.sellOrder,
   };
+}
+
+export function useSellOrderMethods(address: string) {
+  const sellOrder = useContract({
+    addressOrName: address,
+    contractInterface: SellOrder.abi,
+  });
+
+  return sellOrder;
 }
 
 export function useSellOrderSubmitOffer(address: string) {

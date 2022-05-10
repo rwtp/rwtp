@@ -13,6 +13,8 @@ const fetcher = (query: any, variables: any) =>
     variables
   );
 
-export function useSubgraph(args: string | [string, any]) {
-  return useSWR(args, fetcher);
+export function useSubgraph<T>(args: string | [string, any]) {
+  return useSWR<T>(args, fetcher, {
+    suspense: true,
+  });
 }
