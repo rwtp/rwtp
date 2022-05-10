@@ -26,11 +26,11 @@ function ConnectWalletButton(props: {
       {({ account, mounted, chain, openConnectModal, openChainModal }) => {
         function onClick() {
           if (!mounted || !account || !chain) {
-            openConnectModal();
+            return openConnectModal();
           }
 
           if (chain?.unsupported) {
-            openChainModal();
+            return openChainModal();
           }
 
           props.onClick();
@@ -38,7 +38,7 @@ function ConnectWalletButton(props: {
 
         return (
           <button className={props.className} onClick={onClick}>
-            {props.children}
+            {account && mounted && chain ? props.children : 'Connect Wallet'}
           </button>
         );
       }}
