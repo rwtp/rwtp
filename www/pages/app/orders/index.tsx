@@ -4,8 +4,7 @@ import {
   SellOrderData,
   useSellOrder,
   useSellOrders,
-} from '../../lib/useSellOrder';
-import { useSubgraph } from '../../lib/useSubgraph';
+} from '../../../lib/useSellOrder';
 
 function Layout(props: { children: React.ReactNode }) {
   return (
@@ -60,7 +59,7 @@ function OrderView(props: { order: SellOrder }) {
         )}
         <a
           className="underline font-serif"
-          href={`/sell/${props.order.address}`}
+          href={`/app/orders/${props.order.address}/checkout`}
         >
           {props.order.title}
         </a>
