@@ -1,13 +1,8 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import {
-  useContractEvent,
-  useContractWrite,
-  useProvider,
-  useSigner,
-} from 'wagmi';
+import { useContractWrite, useSigner } from 'wagmi';
 import { OrderBook } from 'rwtp';
-import { useEffect, useState } from 'react';
-import { ArrowRightIcon, ExclamationIcon } from '@heroicons/react/solid';
+import { useState } from 'react';
+import { ArrowRightIcon } from '@heroicons/react/solid';
 import { ethers } from 'ethers';
 import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';

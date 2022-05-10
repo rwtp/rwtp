@@ -7,9 +7,9 @@ import {
   SellOrderData,
   useSellOrder,
   useSellOrderMethods,
-} from '../../lib/useSellOrder';
-import { useTokenMethods } from '../../lib/tokens';
-import { postToIPFS } from '../../lib/ipfs';
+} from '../../../lib/useSellOrder';
+import { useTokenMethods } from '../../../lib/tokens';
+import { postToIPFS } from '../../../lib/ipfs';
 import { fromBn, toBn } from 'evm-bn';
 import { useAccount, useClient } from 'wagmi';
 import { ArrowLeftIcon } from '@heroicons/react/solid';
