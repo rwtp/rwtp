@@ -12,10 +12,11 @@
     "node": ">=10"
   },
   "scripts": {
+    "preinstall": "forge install",
     "start": "tsdx watch",
-    "build": "tsdx build --entry ts/index.ts",
+    "build": "forge build && tsdx build --entry ts/index.ts",
     "lint": "tsdx lint",
-    "prepare": "tsdx build --entry ts/index.ts",
+    "prepare": "forge build && tsdx build --entry ts/index.ts",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
