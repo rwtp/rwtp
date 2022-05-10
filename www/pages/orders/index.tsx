@@ -1,5 +1,10 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import cn from 'classnames';
+import {
+  SellOrderData,
+  useSellOrder,
+  useSellOrders,
+} from '../../lib/useSellOrder';
 import { useSubgraph } from '../../lib/useSubgraph';
 
 function Layout(props: { children: React.ReactNode }) {
@@ -68,22 +73,16 @@ function OrderView(props: { order: SellOrder }) {
 }
 
 function Results() {
-  const { data } = useSubgraph(`{
-        sellOrders(first: 5) {
-          address
-          title
-          description
-          sellersStake
-          stakeSuggested
-          priceSuggested
+  const sellOrders = useSellOrders({
+    first: 10,
+    skip: 0,
+  });
 
-        }
-      }`);
-
-  if (!data) {
+  if (!sellOrders.data) {
     return null;
   }
-  const orders = data.sellOrders
+
+  const orders = sellOrders.data
     .filter((s: any) => !!s.title) // filter ones without titles
     .map((sellOrder: any) => {
       return (
@@ -96,7 +95,7 @@ function Results() {
             sellersStake: +sellOrder.sellersStake,
             buyersStake: +sellOrder.stakeSuggested,
             price: +sellOrder.priceSuggested,
-            token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
+            token: sellOrder.token.address,
             encryptionPublicKey: '',
           }}
         />

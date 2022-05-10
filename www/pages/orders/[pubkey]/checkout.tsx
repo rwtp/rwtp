@@ -71,8 +71,6 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
       shippingAddress,
     });
 
-    console.log(tokenMethods.approve);
-
     const approveTx = await tokenMethods.approve.writeAsync({
       args: [sellOrder.address, price.add(stake).mul(quantity)],
     });

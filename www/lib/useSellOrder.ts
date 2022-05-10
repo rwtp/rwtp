@@ -3,28 +3,6 @@ import { useSubgraph } from './useSubgraph';
 import { SellOrder } from 'rwtp';
 import { BigNumber } from 'ethers';
 
-const SELL_ORDER_QUERY = `
-query metadata($id:ID ){
-  sellOrder(id:$id) {
-    address
-    title
-    description
-    sellersStake
-    priceSuggested
-    stakeSuggested
-    encryptionPublicKey
-    sellersStake
-    seller
-    token {
-      decimals
-      symbol
-      name
-      address
-    }
-  }
-}
-`;
-
 export interface SellOrderData {
   address: string;
   title: string;
@@ -42,11 +20,71 @@ export interface SellOrderData {
   };
 }
 
+export function useSellOrders(args: { first: number; skip: number }) {
+  const metadata = useSubgraph<{
+    sellOrders: SellOrderData[];
+  }>([
+    `
+    query metadata($first:Int, $skip:Int ){
+      sellOrders(first:$first, skip:$skip) {
+        address
+        title
+        description
+        sellersStake
+        priceSuggested
+        stakeSuggested
+        encryptionPublicKey
+        sellersStake
+        seller
+        token {
+          decimals
+          symbol
+          name
+          address
+        }
+      }
+  }
+  `,
+    {
+      skip: args.skip,
+      first: args.first,
+    },
+  ]);
+
+  return {
+    ...metadata,
+    data: metadata.data?.sellOrders,
+  };
+}
+
 // Returns information about a sell order
 export function useSellOrder(address: string) {
   const metadata = useSubgraph<{
     sellOrder: SellOrderData;
-  }>([SELL_ORDER_QUERY, { id: address }]);
+  }>([
+    `
+  query metadata($id:ID ){
+    sellOrder(id:$id) {
+      address
+      title
+      description
+      sellersStake
+      priceSuggested
+      stakeSuggested
+      encryptionPublicKey
+      sellersStake
+      seller
+      token {
+        decimals
+        symbol
+        name
+        address
+      }
+    }
+  }
+  `,
+    { id: address },
+  ]);
 
   return {
     ...metadata,
