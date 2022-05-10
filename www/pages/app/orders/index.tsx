@@ -15,7 +15,7 @@ import {
 function Layout(props: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex px-4 pb-8 pt-8 justify-between items-center w-full">
+      <div className="flex px-4 pb-8 pt-4 justify-between items-center w-full">
         <Image width={24} height={24} src="/transitionLogo.png" />
 
         <div>
@@ -84,6 +84,7 @@ function Layout(props: { children: React.ReactNode }) {
             }}
           </ConnectButton.Custom>
         </div>
+
         {/* <div className="">
           <button className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center">
             Sell Something
