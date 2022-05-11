@@ -7,6 +7,7 @@ import { ethers } from 'ethers';
 import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
+import { ConnectWalletLayout } from '../../../../components/Layout';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -20,20 +21,6 @@ async function postToIPFS(data: any) {
   });
   const { cid } = await result.json();
   return cid;
-}
-
-function Layout(props: { children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col">
-      <div className="flex px-4 py-4 justify-between items-center w-full bg-gray-50 border-b">
-        <div>
-          <ConnectButton />
-        </div>
-        <div className=""></div>
-      </div>
-      {props.children}
-    </div>
-  );
 }
 
 export default function Page() {
@@ -104,7 +91,7 @@ export default function Page() {
 
   if (sellOrder) {
     return (
-      <Layout>
+      <ConnectWalletLayout>
         <div className="flex flex-col p-8 h-full mt-12">
           <div className="flex-col max-w-xl mx-auto my-auto h-full">
             <h1 className="text-xl font-bold mb-1 flex items-center">
@@ -135,19 +122,18 @@ export default function Page() {
             </div>
           </div>
         </div>
-      </Layout>
+      </ConnectWalletLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="px-4 py-4">
-        <div className="font-bold mb-8 pb-4 text-xl border-b">
-          Create a new sell order
-        </div>
+    <ConnectWalletLayout>
+      <div className="px-4 py-4 max-w-6xl mx-auto">
+        <div className="font-serif pb-2 text-2xl">New Sell Order</div>
+        <p className="mb-8">Sell anything, from a pack of gum to a ferrari.</p>
         <div className="flex flex-col">
           <label className="flex flex-col">
-            <strong className="mb-1">Title</strong>
+            <strong className="mb-1 text-sm">Title</strong>
             <input
               className="border px-4 py-2 mb-2"
               onChange={(e) =>
@@ -158,7 +144,7 @@ export default function Page() {
             />
           </label>
           <label className="flex flex-col">
-            <strong className="mb-1">Description</strong>
+            <strong className="mb-1 text-sm">Description</strong>
             <textarea
               className="border px-4 py-2 mb-2"
               placeholder="Description"
@@ -171,7 +157,7 @@ export default function Page() {
 
           <div className="flex">
             <label className="flex flex-1 flex-col">
-              <strong className="mb-1">Seller's Stake</strong>
+              <strong className="mb-1 text-sm">Seller's Stake</strong>
               <input
                 className="border px-4 py-2 mb-2"
                 type="number"
@@ -187,7 +173,7 @@ export default function Page() {
             </label>
 
             <label className="flex flex-1 flex-col">
-              <strong className="mb-1">Buyer's Stake</strong>
+              <strong className="mb-1 text-sm">Buyer's Stake</strong>
               <input
                 className="border-r border-t border-b px-4 py-2 mb-2"
                 type="number"
@@ -205,7 +191,7 @@ export default function Page() {
 
           <div className="flex">
             <label className="flex flex-col">
-              <strong className="mb-1">Price</strong>
+              <strong className="mb-1 text-sm">Price</strong>
               <input
                 className="border-l border-t border-b px-4 py-2 mb-2"
                 type="number"
@@ -220,7 +206,7 @@ export default function Page() {
               />
             </label>
             <label className="flex flex-1 flex-col">
-              <strong className="mb-1">Token</strong>
+              <strong className="mb-1 text-sm">Token</strong>
               <input
                 className="border px-4 py-2 mb-2"
                 type="string"
@@ -235,13 +221,13 @@ export default function Page() {
         </div>
         <div className="mt-8">
           <button
-            className="border border-blue-900 flex items-center px-4 py-1 rounded bg-blue-500 text-white hover:bg-blue-400 transition-all"
+            className="flex items-center px-4 py-2 rounded bg-black text-white border-black hover:opacity-50 transition-all"
             onClick={() => createSellOrder().catch(console.error)}
           >
             Publish new sell order <ArrowRightIcon className="w-4 h-4 ml-4" />
           </button>
         </div>
       </div>
-    </Layout>
+    </ConnectWalletLayout>
   );
 }
