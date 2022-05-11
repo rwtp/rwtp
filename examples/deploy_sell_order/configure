@@ -1,0 +1,11 @@
+set -e
+rm -r node_modules
+cd ../../
+forge build
+yarn build
+yarn pack --filename strangemood.tgz
+mv strangemood.tgz examples/new-dao
+cd examples/new-dao
+tar -xf strangemood.tgz
+rm strangemood.tgz
+mv package strangemood
