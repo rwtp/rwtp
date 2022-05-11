@@ -84,15 +84,18 @@ function Layout(props: { children: React.ReactNode }) {
             }}
           </ConnectButton.Custom>
         </div>
-
-        {/* <div className="">
-          <button className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center">
-            Sell Something
-            <LightningBoltIcon className="h-4 w-4 ml-2" />
-          </button>
-        </div> */}
       </div>
       {props.children}
+
+      <div className="bg-black text-gray-300 text-sm px-4 py-2">
+        <a className="underline" href="https://github.com/rwtp/rwtp">
+          Edit this website
+        </a>
+
+        <a className="underline" href="https://discord.gg/ekBqgYG2GW">
+          Discord
+        </a>
+      </div>
     </div>
   );
 }

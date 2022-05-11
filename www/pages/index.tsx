@@ -427,7 +427,7 @@ const Home: NextPage = () => {
             <div className="flex ">
               <a
                 className="font-mono flex underline ml-2"
-                href="https://discord.gg/evqa7Evuw6"
+                href="https://discord.gg/ekBqgYG2GW"
               >
                 discord
               </a>
