@@ -20,7 +20,7 @@
     "graphql": "^16.4.0",
     "graphql-request": "^4.2.0",
     "ipfs-http-client": "^56.0.1",
-    "next": "12.1.5",
+    "next": "^12.1.6",
     "node-abort-controller": "^3.0.1",
     "react": "18.1.0",
     "react-dom": "18.1.0",

@@ -6,6 +6,7 @@ import {
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import cn from 'classnames';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   SellOrderData,
   useSellOrder,
@@ -86,16 +87,6 @@ function Layout(props: { children: React.ReactNode }) {
         </div>
       </div>
       {props.children}
-
-      <div className="bg-black text-gray-300 text-sm px-4 py-2">
-        <a className="underline" href="https://github.com/rwtp/rwtp">
-          Edit this website
-        </a>
-
-        <a className="underline" href="https://discord.gg/ekBqgYG2GW">
-          Discord
-        </a>
-      </div>
     </div>
   );
 }
@@ -191,6 +182,15 @@ export default function Page() {
         <h1 className="font-serif text-2xl pb-2">Recent Sell Orders</h1>
         <p className="pb-8">This list may be incomplete.</p>
         <Results />
+      </div>
+      <div className="bg-black text-gray-300 text-sm px-4 py-2">
+        {/* <Link href={'https://github.com/rwtp/rwtp'}>
+          <a className="underline">Edit this website</a>
+        </Link>
+
+        <Link href={'https://discord.gg/ekBqgYG2GW'}>
+          <a className="underline">Discord</a>
+        </Link> */}
       </div>
     </Layout>
   );
