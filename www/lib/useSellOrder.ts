@@ -140,3 +140,84 @@ export function useSellOrderSubmitOffer(address: string) {
     isLoading,
   };
 }
+
+export function useSellOrderOffersFrom(sellOrder: string, buyer: string) {
+  const metadata = useSubgraph<{
+    sellOrder: {
+      id: string;
+      address: string;
+      offers: Array<{
+        index: string;
+        stakePerUnit: string;
+        pricePerUnit: string;
+        uri: string;
+        quantity: string;
+      }>;
+    };
+  }>([
+    `
+    query data($order: ID, $buyer: ID){
+      sellOrder(id: $order) {
+        id
+        address
+        offers(where:{buyerAddress:$buyer}) {
+          index
+          stakePerUnit
+          pricePerUnit
+          uri
+          quantity
+        }
+      }
+    }
+  `,
+    {
+      order: sellOrder,
+      buyer: buyer,
+    },
+  ]);
+
+  return {
+    ...metadata,
+    data: metadata.data?.sellOrder,
+  };
+}
+
+export function useSellOrderOffers(sellOrder: string) {
+  const metadata = useSubgraph<{
+    sellOrder: {
+      id: string;
+      address: string;
+      offers: Array<{
+        index: string;
+        stakePerUnit: string;
+        pricePerUnit: string;
+        uri: string;
+        quantity: string;
+      }>;
+    };
+  }>([
+    `
+    query data($order: ID){
+      sellOrder(id: $order) {
+        id
+        address
+        offers {
+          index
+          stakePerUnit
+          pricePerUnit
+          uri
+          quantity
+        }
+      }
+    }
+  `,
+    {
+      order: sellOrder,
+    },
+  ]);
+
+  return {
+    ...metadata,
+    data: metadata.data?.sellOrder,
+  };
+}

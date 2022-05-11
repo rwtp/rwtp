@@ -33,7 +33,7 @@ function Tag(props: {
   return (
     <div
       className={cn({
-        'border text-sm px-2 py-px': true,
+        'border text-sm px-2 py-px rounded': true,
         'bg-green-50 border-green-200': props.type === 'success',
         'bg-sky-50 border-sky-200': props.type === 'info',
         'bg-yellow-50 border-yellow-200': props.type === 'warning',
@@ -49,12 +49,12 @@ function OrderView(props: { order: SellOrder }) {
   return (
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
-        {props.order.sellersStake <= props.order.price * 0.5 && (
+        {/* {props.order.sellersStake <= props.order.price * 0.5 && (
           <Tag type="danger">Risky</Tag>
-        )}
+        )} */}
         <a
           className="underline font-serif"
-          href={`/app/orders/${props.order.address}/checkout`}
+          href={`/app/orders/${props.order.address}`}
         >
           {props.order.title}
         </a>

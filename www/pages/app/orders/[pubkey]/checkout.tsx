@@ -95,7 +95,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
             <div>
               <div className="flex">
                 <a
-                  href="/store"
+                  href="/app/orders"
                   className="flex gap-2 justify-between items-center py-1 hover:opacity-50 transition-all text-sm text-gray-700"
                 >
                   <ArrowLeftIcon className="h-4 w-4" />
@@ -173,7 +173,6 @@ function Loading() {
 
 function PageWithPubkey(props: { pubkey: string }) {
   const sellOrder = useSellOrder(props.pubkey);
-  const { data } = useAccount();
 
   if (!sellOrder.data) return <Loading />;
 

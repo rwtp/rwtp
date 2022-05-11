@@ -13,7 +13,11 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex px-4 pb-8 pt-4 justify-between items-center w-full">
-        <Image width={24} height={24} src="/transitionLogo.png" />
+        <Link href="/app/orders">
+          <a className="/">
+            <Image width={24} height={24} src="/transitionLogo.png" />
+          </a>
+        </Link>
 
         <div className="flex items-center gap-2">
           <div>
