@@ -86,7 +86,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
             </Link>
           )}
           {offers.data?.offers.map((o) => (
-            <Offer offer={o} sellOrder={sellOrder} />
+            <Offer key={o.index + o.uri} offer={o} sellOrder={sellOrder} />
           ))}
         </div>
         <Footer />
