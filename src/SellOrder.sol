@@ -273,7 +273,7 @@ contract SellOrder {
         virtual
     {
         require(buyers.length == indices.length);
-        for (uint i = 0; i < buyers.length; i++) {
+        for (uint256 i = 0; i < buyers.length; i++) {
             commit(buyers[i], indices[i]);
         }
     }
