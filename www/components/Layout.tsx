@@ -89,7 +89,17 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
-      <div>{props.children}</div>
+      <div className="h-full">{props.children}</div>
+    </div>
+  );
+}
+
+export function Footer() {
+  return (
+    <div className="flex px-4 py-2 bg-black text-sm text-gray-200 gap-2">
+      <div className="flex gap-2 text-center w-full">
+        RWTP is currently unaudited protocol; use at your own risk.
+      </div>
     </div>
   );
 }

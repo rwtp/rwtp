@@ -8,7 +8,8 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import cn from 'classnames';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ConnectWalletLayout } from '../../../components/Layout';
+import { Suspense } from 'react';
+import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import {
   SellOrderData,
   useSellOrder,
@@ -49,9 +50,6 @@ function OrderView(props: { order: SellOrder }) {
   return (
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
-        {/* {props.order.sellersStake <= props.order.price * 0.5 && (
-          <Tag type="danger">Risky</Tag>
-        )} */}
         <a
           className="underline font-serif"
           href={`/app/orders/${props.order.address}`}
@@ -73,7 +71,7 @@ function Results() {
   });
 
   if (!sellOrders.data) {
-    return null;
+    return <div></div>;
   }
 
   const orders = sellOrders.data
@@ -96,26 +94,32 @@ function Results() {
       );
     });
 
-  return <>{orders}</>;
+  return <div>{orders}</div>;
 }
 
 export default function Page() {
   return (
     <ConnectWalletLayout>
-      <div className="h-full p-4 max-w-6xl mx-auto">
-        <div className="pb-8">
-          <h1 className="font-serif text-2xl pb-1">Sell Orders</h1>
-          <p className="pb-4">This list may be incomplete.</p>
-          <div className="flex">
-            <Link href="/app/seller/orders/new">
-              <a className=" border rounded border-black text-sm px-4 py-2 flex items-center hover:opacity-50">
-                New Sell Order
-                <ArrowRightIcon className="h-4 w-4 ml-2" />
-              </a>
-            </Link>
+      <div className="h-full flex flex-col">
+        <Suspense fallback={<div></div>}>
+          <div className="h-full p-4 max-w-6xl mx-auto w-full flex-1">
+            <div className="pb-8">
+              <h1 className="font-serif text-2xl pb-1">Sell Orders</h1>
+              <p className="pb-4">This list may be incomplete.</p>
+              <div className="flex">
+                <Link href="/app/seller/orders/new">
+                  <a className=" border rounded border-black text-sm px-4 py-2 flex items-center hover:opacity-50">
+                    New Sell Order
+                    <ArrowRightIcon className="h-4 w-4 ml-2" />
+                  </a>
+                </Link>
+              </div>
+            </div>
+            <Results />
           </div>
-        </div>
-        <Results />
+        </Suspense>
+
+        <Footer />
       </div>
     </ConnectWalletLayout>
   );
