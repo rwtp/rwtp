@@ -11,8 +11,8 @@ import {
 import { useTokenMethods } from '../../../../lib/tokens';
 import { postToIPFS } from '../../../../lib/ipfs';
 import { fromBn, toBn } from 'evm-bn';
-import { useAccount, useClient } from 'wagmi';
-import { ArrowLeftIcon } from '@heroicons/react/solid';
+import { ArrowLeftIcon, FingerPrintIcon } from '@heroicons/react/solid';
+import { ConnectWalletLayout } from '../../../../components/Layout';
 
 function ConnectWalletButton(props: {
   children: React.ReactNode;
@@ -36,7 +36,13 @@ function ConnectWalletButton(props: {
 
         return (
           <button className={props.className} onClick={onClick}>
-            {account && mounted && chain ? props.children : 'Connect Wallet'}
+            {account && mounted && chain ? (
+              props.children
+            ) : (
+              <>
+                Connect Wallet <FingerPrintIcon className="h-4 w-4 ml-2" />
+              </>
+            )}
           </button>
         );
       }}
@@ -47,6 +53,7 @@ function ConnectWalletButton(props: {
 function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const tokenMethods = useTokenMethods(sellOrder.token.address);
   const sellOrderMethods = useSellOrderMethods(sellOrder.address);
+  const router = useRouter();
 
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
@@ -84,86 +91,88 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     });
 
     const receipt = await tx.wait();
-    console.log(receipt);
+    router.push(`/app/orders/${receipt}`);
   }
 
   return (
-    <div className="h-full w-full flex flex-col">
-      <div className="h-full flex w-full">
-        <div className="flex w-full border-l border-r mx-auto">
-          <div className="flex-1 justify-center flex flex-col bg-gray-50 items-center">
-            <div>
-              <div className="flex">
-                <a
-                  href="/app/orders"
-                  className="flex gap-2 justify-between items-center py-1 hover:opacity-50 transition-all text-sm text-gray-700"
-                >
-                  <ArrowLeftIcon className="h-4 w-4" />
-                  <div>Back</div>
-                </a>
-              </div>
+    <ConnectWalletLayout>
+      <div className="h-full w-full flex flex-col border-t">
+        <div className="h-full flex w-full">
+          <div className="flex w-full border-l border-r mx-auto">
+            <div className="flex-1 justify-center flex flex-col bg-gray-50 items-center">
+              <div>
+                <div className="flex">
+                  <a
+                    href="/app/orders"
+                    className="flex gap-2 justify-between items-center py-1 hover:opacity-50 transition-all text-sm text-gray-700"
+                  >
+                    <ArrowLeftIcon className="h-4 w-4" />
+                    <div>Back</div>
+                  </a>
+                </div>
 
-              <h1 className="pt-2 text-sm pt-12 text-gray-700">
-                {sellOrder.title}
-              </h1>
-              <p className="pb-2 text-xl mt-2">
-                {fromBn(price, sellOrder.token.decimals)}{' '}
-                {sellOrder.token.symbol}
-              </p>
+                <h1 className="pt-2 text-sm pt-12 text-gray-700">
+                  {sellOrder.title}
+                </h1>
+                <p className="pb-2 text-xl mt-2">
+                  {fromBn(price, sellOrder.token.decimals)}{' '}
+                  {sellOrder.token.symbol}
+                </p>
 
-              <div className="flex mb-2 pt-12 ">
-                <div className="border rounded bg-white">
-                  <Image width={256} height={256} src="/rwtp.png" />
+                <div className="flex mb-2 pt-12 ">
+                  <div className="border rounded bg-white">
+                    <Image width={256} height={256} src="/rwtp.png" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-            <label className="flex flex-col mt-2">
-              <div className="text-xs font-bold py-1">Shipping Address</div>
-              <input
-                type={'text'}
-                className={'px-2 py-2 border rounded'}
-                name="address"
-                placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-                onChange={(e) => setShippingAddress(e.target.value)}
-              />
-            </label>
+            <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
+              <label className="flex flex-col mt-2">
+                <div className="text-xs font-bold py-1">Shipping Address</div>
+                <input
+                  type={'text'}
+                  className={'px-2 py-2 border rounded'}
+                  name="address"
+                  placeholder="100 Saddle Point; San Fransokyo, CA 94112"
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                />
+              </label>
 
-            <label className="flex flex-col  mt-2">
-              <div className="text-xs font-bold py-1">Email</div>
-              <input
-                type={'text'}
-                className={'px-2 py-2 border rounded'}
-                name="address"
-                placeholder="you@ethereum.org"
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
+              <label className="flex flex-col  mt-2">
+                <div className="text-xs font-bold py-1">Email</div>
+                <input
+                  type={'text'}
+                  className={'px-2 py-2 border rounded'}
+                  name="address"
+                  placeholder="you@ethereum.org"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
 
-            <div className="mt-4">
-              <ConnectWalletButton
-                className="bg-black text-white px-4 py-2 rounded w-full justify-between flex"
-                onClick={() => onBuy().catch(console.error)}
-              >
-                <div>Buy</div>
-                <div>{fromBn(price, sellOrder.token.decimals)}</div>
-              </ConnectWalletButton>
-              <div className="text-sm mt-4 text-gray-500">
-                If this item doesn't ship to you, the seller be fined{' '}
-                <span className="font-bold">
-                  {fromBn(
-                    toBn(sellOrder.sellersStake, sellOrder.token.decimals),
-                    sellOrder.token.decimals
-                  )}{' '}
-                  {sellOrder.token.symbol}.
-                </span>
+              <div className="mt-4">
+                <ConnectWalletButton
+                  className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
+                  onClick={() => onBuy().catch(console.error)}
+                >
+                  <div>Buy</div>
+                  <div>{fromBn(price, sellOrder.token.decimals)}</div>
+                </ConnectWalletButton>
+                <div className="text-sm mt-4 text-gray-500">
+                  If this item doesn't ship to you, the seller be fined{' '}
+                  <span className="font-bold">
+                    {fromBn(
+                      toBn(sellOrder.sellersStake, sellOrder.token.decimals),
+                      sellOrder.token.decimals
+                    )}{' '}
+                    {sellOrder.token.symbol}.
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ConnectWalletLayout>
   );
 }
 

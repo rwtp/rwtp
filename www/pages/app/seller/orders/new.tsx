@@ -1,4 +1,3 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useContractWrite, useSigner } from 'wagmi';
 import { OrderBook } from 'rwtp';
 import { useState } from 'react';
@@ -39,7 +38,8 @@ export default function Page() {
 
   const book = useContractWrite(
     {
-      addressOrName: OrderBook.address,
+      addressOrName:
+        '0x236487c12483526d5dA3Bf23dbd0961f41F32095' || OrderBook.address, // TODO, go back to orderbook.address
       contractInterface: OrderBook.abi,
     },
     'createSellOrder'

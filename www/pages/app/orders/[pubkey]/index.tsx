@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from '@heroicons/react/solid';
+import { ArrowRightIcon, ChevronRightIcon } from '@heroicons/react/solid';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense } from 'react';
@@ -10,6 +10,7 @@ import {
   useSellOrder,
   useSellOrderMethods,
   useSellOrderOffers,
+  useSellOrderOffersFrom,
 } from '../../../../lib/useSellOrder';
 
 function Offer(props: {
@@ -81,13 +82,26 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
             <h2 className="font-serif text-lg pb-2">Your Purchase</h2>
           )}
           {offers.data?.offers && offers.data?.offers.length == 0 && (
-            <Link href={`/app/orders/${sellOrder.address}/checkout`}>
-              <a className="bg-black text-white px-4 py-2 rounded">Order Now</a>
-            </Link>
+            <div className="flex">
+              <Link href={`/app/orders/${sellOrder.address}/checkout`}>
+                <a className="bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center">
+                  Order Now <ArrowRightIcon className="h-4 w-4 ml-2" />
+                </a>
+              </Link>
+            </div>
           )}
-          {offers.data?.offers.map((o) => (
+          {offers.data?.offers.map((o: any) => (
             <Offer key={o.index + o.uri} offer={o} sellOrder={sellOrder} />
           ))}
+          {offers.data?.offers && offers.data?.offers.length > 0 && (
+            <div className="flex">
+              <Link href={`/app/orders/${sellOrder.address}/checkout`}>
+                <a className="bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center">
+                  Buy Again <ArrowRightIcon className="h-4 w-4 ml-2" />
+                </a>
+              </Link>
+            </div>
+          )}
         </div>
         <Footer />
       </div>

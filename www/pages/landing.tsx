@@ -15,7 +15,7 @@ export default function Landing() {
           className="absolute -z-50"
           style={{
             left: '-50%',
-            top: '0%',
+            top: '25%',
           }}
         >
           <Image src="/HighlightBackground.png" height={1500} width={1500} />
@@ -104,7 +104,11 @@ book.createSellOrder(
         <h2 className="text-3xl font-serif pb-2">
           Sell to a global market without a platform.
         </h2>
-        <p>RWTP requires no third-party or oracle to validate purchases.</p>
+        <p>
+          RWTP requires no third-party or oracle to validate purchases. Instead,
+          a buyer and a seller put down a deposit. If the deal fails, both
+          deposits are destroyed.{' '}
+        </p>
       </div>
     </div>
   );

@@ -1,20 +1,14 @@
-import {
-  ArrowRightIcon,
-  FingerPrintIcon,
-  LightningBoltIcon,
-  SwitchHorizontalIcon,
-} from '@heroicons/react/solid';
+import { FingerPrintIcon, SwitchHorizontalIcon } from '@heroicons/react/solid';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import cn from 'classnames';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export function ConnectWalletLayout(props: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex px-4 pb-8 pt-4 justify-between items-center w-full">
+      <div className="flex px-4 py-4 justify-between items-center w-full">
         <Link href="/app/orders">
-          <a className="/">
+          <a href="/" className="flex items-center justify-center">
             <Image width={24} height={24} src="/transitionLogo.png" />
           </a>
         </Link>
