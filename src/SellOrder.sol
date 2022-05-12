@@ -14,6 +14,9 @@ contract SellOrder {
     /// @dev A function is run at the wrong time in the lifecycle
     error InvalidState(State expected, State received);
 
+    /// @dev The order is not accepting new offers
+    error OrderInactive();
+
     /// @dev Emitted when `buyer` submits and offer.
     event OfferSubmitted(
         address indexed buyer,
@@ -66,6 +69,9 @@ contract SellOrder {
 
     /// @dev the URI where metadata about this SellOrder can be found
     string private _uri;
+
+    /// @dev if false, the order is not open for new offers.
+    bool public active;
 
     /// @dev The state of an offer
     enum State {
@@ -121,6 +127,7 @@ contract SellOrder {
         orderStake = orderStake_;
         _uri = uri_;
         timeout = timeout_;
+        active = true;
     }
 
     /// @dev returns the URI of the sell order, containing it's metadata
@@ -132,6 +139,11 @@ contract SellOrder {
     function setURI(string memory uri_) external virtual onlySeller {
         _uri = uri_;
         emit OrderURIChanged(_uri, uri_);
+    }
+
+    /// @dev Sets "active". If false, the order is not open for new offers.
+    function setActive(bool active_) external virtual onlySeller {
+        active = active_;
     }
 
     /// @dev reverts if the function is not at the expected state
@@ -156,6 +168,15 @@ contract SellOrder {
         _;
     }
 
+    /// @dev reverts if not active
+    modifier onlyActive() {
+        if (!active) {
+            revert OrderInactive();
+        }
+
+        _;
+    }
+
     /// @dev creates an offer
     function submitOffer(
         uint32 index,
@@ -163,7 +184,7 @@ contract SellOrder {
         uint128 pricePerUnit,
         uint128 stakePerUnit,
         string memory uri
-    ) external virtual onlyState(msg.sender, index, State.Closed) {
+    ) external virtual onlyState(msg.sender, index, State.Closed) onlyActive {
         if (msg.sender == seller) {
             revert BuyerCannotBeSeller();
         }

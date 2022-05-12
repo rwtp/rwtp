@@ -421,6 +421,28 @@ contract CancelationTest is Test {
             'state is not Committed'
         );
     }
+
+    function testFailInactiveOrder() public {
+        vm.prank(seller);
+        sellOrder.setActive(false);
+
+        address buyer = address(0x3634567890123456784012345678901234567822);
+        buyAndCommit(buyer, 0);
+    }
+
+    function testFailIfNotSellerCallsSetActive() public {
+        sellOrder.setActive(false);
+    }
+
+    function testCanSetActiveAndInactive() public {
+        vm.prank(seller);
+        sellOrder.setActive(false);
+        require(!sellOrder.active(), 'sell order is active');
+
+        vm.prank(seller);
+        sellOrder.setActive(true);
+        require(sellOrder.active(), 'sell order is inactive');
+    }
 }
 
 contract QuantityTest is Test {
