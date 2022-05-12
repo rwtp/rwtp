@@ -61,20 +61,29 @@ export default function Landing() {
           Build automated companies, decentralized e-commerce, low-cost futures
           markets, and (maybe) more.
         </p>
-        <div className="my-4 bg-gray-900 py-4 px-4 rounded">
-          <SyntaxHighlighter useInlineStyles={false} language="javascript">
+        <div className="my-4 bg-gray-900 py-4 px-4 rounded flex whitespace-pre-wrap text-xs scroll-auto">
+          <SyntaxHighlighter
+            useInlineStyles={false}
+            language="javascript"
+            customStyle={{
+              whiteSpace: 'pre-wrap',
+              overflow: 'scroll',
+            }}
+          >
             {`
 import { ethers } from 'ethers';
 import { OrderBook } from 'rwtp';
 
 // Connect to Ethereum
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-const book = new ethers.Contract(OrderBook.address, OrderBook.abi, provider);
+const provider = new ethers
+  .providers.Web3Provider(window.ethereum);
+const book = new ethers
+  .Contract(OrderBook.address, OrderBook.abi, provider);
 
 // Create a sell order
 book.createSellOrder(
     provider.address, 
-    "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC 
+    usdcAddress,
     100 // 100 USDC staked
 );
 `.trim()}
