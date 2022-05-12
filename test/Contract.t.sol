@@ -268,6 +268,94 @@ contract SellOrderTest is Test {
             'seller did not get 1 token'
         );
     }
+
+    function testCommitBatch() public {
+        // Setup
+        ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 200);
+        address seller = address(0x1234567890123456784012345678901234567829);
+        address buyer1 = address(0x2234567890123456754012345678901234567821);
+        address buyer2 = address(0x5234567890123456754012345678901234567822);
+
+        // Create a sell order
+        SellOrder sellOrder = book.createSellOrder(
+            seller,
+            token,
+            50,
+            'ipfs://metadata',
+            100
+        );
+
+        // Submit an offer from buyer1
+        token.transfer(buyer1, 20);
+        vm.startPrank(buyer1);
+        token.approve(address(sellOrder), 20);
+        sellOrder.submitOffer(0, 1, 15, 5, 'ipfs://somedata');
+        vm.stopPrank();
+        (, uint256 offer1Price, uint256 offer1Stake, , , , , ) = sellOrder
+            .offers(buyer1, 0);
+        require(offer1Price == 15, 'offer price1 is not 15');
+        require(offer1Stake == 5, 'offer stake1 is not 5');
+        require(
+            token.balanceOf(address(sellOrder)) >= 20,
+            'transfer did not occur '
+        );
+
+        // Submit an offer from buyer2
+        token.transfer(buyer2, 20);
+        vm.startPrank(buyer2);
+        token.approve(address(sellOrder), 20);
+        sellOrder.submitOffer(0, 1, 10, 10, 'ipfs://somedata');
+        vm.stopPrank();
+        (, uint256 offer2price, uint256 offer2stake, , , , , ) = sellOrder
+            .offers(buyer2, 0);
+        require(offer2price == 10, 'offer price2 is not 10');
+        require(offer2stake == 10, 'offer stake2 is not 10');
+
+        // Confirm both buyers' offers
+        token.transfer(seller, 100);
+        vm.startPrank(seller);
+        token.approve(address(sellOrder), 100);
+        address[] memory buyers = new address[](2);
+        uint32[] memory offerIndices = new uint32[](2);
+        buyers[0] = buyer1;
+        offerIndices[0] = 0;
+        buyers[1] = buyer2;
+        offerIndices[1] = 0;
+        sellOrder.commitBatch(buyers, offerIndices);
+        vm.stopPrank();
+
+        (SellOrder.State offerState1, , , , , , , ) = sellOrder.offers(
+            buyer2,
+            0
+        );
+        require(
+            offerState1 == SellOrder.State.Committed,
+            'state is not committed'
+        );
+        require(
+            token.balanceOf(address(sellOrder)) == 140,
+            'Sell order does not have 140 tokens'
+        );
+
+        // Confirm the order
+        vm.prank(buyer2);
+        sellOrder.confirm(0);
+
+        (SellOrder.State offerState2, , , , , , , ) = sellOrder.offers(
+            buyer2,
+            0
+        );
+        require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
+
+        require(
+            token.balanceOf(sellOrder.seller()) == 60, // 60 = payment + stake
+            'seller did not get paid'
+        );
+        require(
+            token.balanceOf(buyer2) == 10, // stake
+            'buyer did not get their stake back'
+        );
+    }
 }
 
 contract CancelationTest is Test {

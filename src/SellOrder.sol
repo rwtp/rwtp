@@ -243,7 +243,7 @@ contract SellOrder {
 
     /// @dev Commits a seller to an offer
     function commit(address buyer_, uint32 index)
-        external
+        public
         virtual
         onlyState(buyer_, index, State.Open)
         onlySeller
@@ -265,6 +265,17 @@ contract SellOrder {
         assert(result);
 
         emit OfferCommitted(buyer_, index);
+    }
+
+    /// @dev Marks all provided offers as confirmed
+    function commitBatch(address[] calldata buyers, uint32[] calldata indices)
+        external
+        virtual
+    {
+        require(buyers.length == indices.length);
+        for (uint i = 0; i < buyers.length; i++) {
+            commit(buyers[i], indices[i]);
+        }
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
