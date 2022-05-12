@@ -9,30 +9,42 @@ SyntaxHighlighter.registerLanguage('typescript', typescript);
 
 export default function Landing() {
   return (
-    <div className="max-w-5xl mx-auto w-full pb-12">
-      <div className="h-screen flex flex-col justify-between px-4 pt-4">
-        <div className="flex justify-between">
-          <Image src="/rwtp.png" width={32} height={32} />
+    <div className="max-w-6xl mx-auto w-full pb-12 relative">
+      <div className="h-screen flex flex-col justify-between pt-4 relative">
+        <div
+          className="absolute -z-50"
+          style={{
+            left: '-50%',
+            top: '0%',
+          }}
+        >
+          <Image src="/HighlightBackground.png" height={1500} width={1500} />
+        </div>
+        <div className="flex justify-between px-4 z-50 relative">
+          <Image src="/transitionLogo.png" width={24} height={24} />
           <div className="gap-4 flex items-center">
-            <Image src={'/github.svg'} width={16} height={16} />
-            <Image src={'/twitter.svg'} width={16} height={16} />
-            <div className="text-sm">Docs</div>
+            <a href="https://github.com/rwtp/rwtp">
+              <Image src={'/github.svg'} width={16} height={16} />
+            </a>
+            <a href="https://twitter.com/realworldtrade">
+              <Image src={'/twitter.svg'} width={16} height={16} />
+            </a>
           </div>
         </div>
 
-        <div className="">
+        <div className="px-4">
           <div className="pb-24">
-            <h1 className="text-3xl font-serif pb-2">
+            <h1 className="text-4xl font-serif pb-2">
               Real World Trade Protocol
             </h1>
-            <p className="">
-              RWTP is a peer-to-peer protocol for buying and selling real world
-              goods on Ethereum.
+            <p className="text-lg text-gray-800">
+              A peer-to-peer protocol for buying and selling real-world goods on
+              Ethereum.
             </p>
             <div className="flex">
-              <div className="border border-black rounded px-4 py-1 mt-4 mr-2">
-                Learn More
-              </div>
+              <a className="border border-b-2 bg-white border-gray-600 rounded px-4 py-1 mt-4 mr-2 items-center cursor-pointer flex hover:border-blue-500 hover:text-black transition-all ">
+                Sell to the world <ArrowRightIcon className="h-4 w-4 ml-2" />
+              </a>
             </div>
           </div>
 
