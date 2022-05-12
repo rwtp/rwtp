@@ -98,7 +98,6 @@ function Results() {
 }
 
 export default function Page() {
-  // test vercel build
   return (
     <ConnectWalletLayout>
       <div className="h-full flex flex-col">
