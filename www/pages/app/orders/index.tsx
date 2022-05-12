@@ -71,7 +71,7 @@ function Results() {
   });
 
   if (!sellOrders.data) {
-    return <div></div>;
+    return null;
   }
 
   const orders = sellOrders.data
@@ -94,7 +94,7 @@ function Results() {
       );
     });
 
-  return <div>{orders}</div>;
+  return <>{orders}</>;
 }
 
 export default function Page() {

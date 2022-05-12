@@ -39,7 +39,7 @@ export default function Page() {
   const book = useContractWrite(
     {
       addressOrName:
-        '0x236487c12483526d5dA3Bf23dbd0961f41F32095' || OrderBook.address, // TODO, go back to orderbook.address
+        '0x0e18a94e59ba260090cd2a1b9d81222b0e0a6abe' || OrderBook.address, // TODO, go back to orderbook.address
       contractInterface: OrderBook.abi,
     },
     'createSellOrder'
@@ -114,7 +114,7 @@ export default function Page() {
               <button
                 className="underline rounded px-4 py-2 flex items-center"
                 onClick={() => {
-                  router.push('/sell/' + sellOrder);
+                  router.push('/app/orders/' + sellOrder);
                 }}
               >
                 I wrote down the key <ArrowRightIcon className="w-4 h-4 ml-2" />
