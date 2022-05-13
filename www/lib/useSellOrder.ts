@@ -101,6 +101,14 @@ export function useSellOrderMethods(address: string) {
     'submitOffer'
   );
 
+  const cancel = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: SellOrder.abi,
+    },
+    'cancel'
+  );
+
   const confirm = useContractWrite(
     {
       addressOrName: address,
@@ -130,6 +138,7 @@ export function useSellOrderMethods(address: string) {
     confirm,
     commit,
     commitBatch,
+    cancel,
   };
 }
 

@@ -2,6 +2,7 @@ import {
   ArrowRightIcon,
   CheckCircleIcon,
   ChevronRightIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/react/solid';
 import { BigNumber } from 'ethers';
 import { fromBn } from 'evm-bn';
@@ -16,7 +17,6 @@ import {
   useSellOrder,
   useSellOrderMethods,
   useSellOrderOffers,
-  useSellOrderOffersFrom,
 } from '../../../../lib/useSellOrder';
 import cn from 'classnames';
 
@@ -29,85 +29,113 @@ function Offer(props: {
     offerState: 'Closed' | 'Open' | 'Committed';
   };
   sellOrder: SellOrderData;
+  onConfirm: (index: string) => Promise<any>;
+  onCancel: (index: string) => Promise<any>;
 }) {
-  const methods = useSellOrderMethods(props.sellOrder.address);
+  const state = props.offer.offerState;
 
-  async function onConfirm() {
-    const confirmTx = await methods.confirm.writeAsync({
-      args: [props.offer.index],
-      overrides: {
-        gasLimit: 100000,
-      },
-    });
-
-    await confirmTx.wait();
-    console.log('confirmed');
-  }
+  const confirmOrderScreen = (
+    <div className="flex flex-col mt-2">
+      <span className="text-sm mb-4 text-gray-500">
+        Did you get your order?
+      </span>
+      <div className="flex">
+        <div className="relative flex ">
+          <div
+            className="absolute w-4 h-4 bg-blue-500 rounded-full animate-pulse "
+            style={{
+              top: '-0.5rem',
+              right: '-0.5rem',
+            }}
+          />
+          <button
+            className="bg-black text-white px-4 py-2 rounded flex items-center justify-between"
+            onClick={() =>
+              props.onConfirm(props.offer.index).catch(console.error)
+            }
+          >
+            Confirm Order <CheckCircleIcon className="h-4 w-4 ml-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <FadeIn className="flex flex-col py-4 mb-12">
-      <div className="flex flex-col">
-        <div className="text-gray-500 text-xs">Ordered on</div>
-        <div className="text-lg font-serif">{new Date().toDateString()}</div>
-      </div>
-      <div className="flex gap-4 justify-between max-w-6xl items-center my-4">
-        <div className="flex-1">
-          <div className="text-gray-500 text-xs">Quantity</div>
-          <div className="text-lg font-mono">1</div>
-        </div>
-        <div className="flex-1">
-          <div className="text-gray-500 text-xs">Price</div>
-          <div className="text-lg font-mono">
-            {fromBn(
-              BigNumber.from(props.offer.pricePerUnit),
-              props.sellOrder.token.decimals
-            )}{' '}
-            <span className="text-sm">{props.sellOrder.token.symbol}</span>
+      <div className="bg-white border">
+        <div className="flex px-4 pt-4">
+          <div className="flex flex-col">
+            <div className="text-gray-500 text-xs">Ordered on</div>
+            <div className="text-lg font-serif">
+              {new Date().toDateString()}
+            </div>
           </div>
         </div>
-        <div className="flex-1">
-          <div className="text-gray-500 text-xs">Your deposit</div>
-          <div className="text-lg font-mono">
-            {fromBn(
-              BigNumber.from(props.offer.stakePerUnit),
-              props.sellOrder.token.decimals
-            )}{' '}
-            <span className="text-sm">{props.sellOrder.token.symbol}</span>
+        <div className="flex gap-4 justify-between py-4 px-4">
+          <div className="flex-1">
+            <div className="text-gray-500 text-xs">Quantity</div>
+            <div className="text-lg font-mono">1</div>
+          </div>
+          <div className="flex-1">
+            <div className="text-gray-500 text-xs">Price</div>
+            <div className="text-lg font-mono">
+              {fromBn(
+                BigNumber.from(props.offer.pricePerUnit),
+                props.sellOrder.token.decimals
+              )}{' '}
+              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="text-gray-500 text-xs">Your deposit</div>
+            <div className="text-lg font-mono">
+              {fromBn(
+                BigNumber.from(props.offer.stakePerUnit),
+                props.sellOrder.token.decimals
+              )}{' '}
+              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="text-gray-500 text-xs">Seller's Deposit</div>
+            <div className="text-lg font-mono">
+              {fromBn(
+                BigNumber.from(props.sellOrder.sellersStake),
+                props.sellOrder.token.decimals
+              )}{' '}
+              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+            </div>
           </div>
         </div>
-        <div className="flex-1">
-          <div className="text-gray-500 text-xs">Seller's Deposit</div>
-          <div className="text-lg font-mono">
-            {fromBn(
-              BigNumber.from(props.sellOrder.sellersStake),
-              props.sellOrder.token.decimals
-            )}{' '}
-            <span className="text-sm">{props.sellOrder.token.symbol}</span>
+        <div className="flex gap-2 items-center p-4 border-t px-4">
+          <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+            Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
           </div>
-        </div>
-      </div>
-      <div className="flex flex-col mt-2">
-        <span className="text-sm mb-4 text-gray-500">
-          Did you get your order?
-        </span>
-        <div className="flex">
-          <div className="relative flex ">
-            <div
-              className="absolute w-4 h-4 bg-blue-500 rounded-full animate-pulse "
-              style={{
-                top: '-0.5rem',
-                right: '-0.5rem',
-              }}
-            />
-            <button
-              className="bg-black text-white px-4 py-2 rounded flex items-center justify-between"
-              onClick={() => onConfirm().catch(console.error)}
-            >
-              Confirm Order <CheckCircleIcon className="h-4 w-4 ml-4" />
-            </button>
+          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+          <div
+            className={cn({
+              'text-xs flex  py-2 border-gray-600 text-gray-600': true,
+              'opacity-50': true,
+            })}
+          >
+            Offer Accepted{' '}
+            {state === 'Committed' ? (
+              <CheckCircleIcon className="h-4 w-4 ml-2" />
+            ) : (
+              <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+            )}
           </div>
-          <div className="relative flex ml-8">
-            <button className="underline text-gray-600">Cancel Order</button>
+          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+          <div
+            className={cn({
+              'text-xs flex ': true,
+              'bg-black rounded text-white px-4 py-2': false,
+              'opacity-50 border-gray-600 text-gray-600': true,
+            })}
+          >
+            Confirm Order{' '}
+            <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
           </div>
         </div>
       </div>
@@ -119,6 +147,32 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const tokenMethods = useTokenMethods(sellOrder.token.address);
   const sellOrderMethods = useSellOrderMethods(sellOrder.address);
   const offers = useSellOrderOffers(sellOrder.address);
+
+  const methods = useSellOrderMethods(sellOrder.address);
+
+  async function onConfirm(index: string) {
+    const confirmTx = await methods.confirm.writeAsync({
+      args: [index],
+      overrides: {
+        gasLimit: 100000,
+      },
+    });
+
+    await confirmTx.wait();
+    console.log('confirmed');
+  }
+
+  async function onCancel(index: string) {
+    const cancelTx = await methods.cancel.writeAsync({
+      args: [index],
+      overrides: {
+        gasLimit: 100000,
+      },
+    });
+
+    await cancelTx.wait();
+    console.log('canceld');
+  }
 
   return (
     <ConnectWalletLayout>
@@ -152,13 +206,18 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
               </a>
             </Link>
           </div>
-          <div className="text-sm text-gray-400">Purchases in progress</div>
         </div>
 
         <div className="border-t flex-1 bg-gray-50">
           <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-2">
             {offers.data?.offers.map((o: any) => (
-              <Offer key={o.index + o.uri} offer={o} sellOrder={sellOrder} />
+              <Offer
+                key={o.index + o.uri}
+                offer={o}
+                sellOrder={sellOrder}
+                onConfirm={onConfirm}
+                onCancel={onCancel}
+              />
             ))}
             {offers.data && offers.data?.offers.length === 0 && (
               <div className="mt-2 text-sm text-gray-400">
