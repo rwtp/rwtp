@@ -18,6 +18,7 @@ import {
   useSellOrderOffers,
   useSellOrderOffersFrom,
 } from '../../../../lib/useSellOrder';
+import cn from 'classnames';
 
 function Offer(props: {
   offer: {
@@ -118,6 +119,8 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const sellOrderMethods = useSellOrderMethods(sellOrder.address);
   const offers = useSellOrderOffers(sellOrder.address);
 
+  const hasOrderedBefore = !!offers.data?.offers;
+
   return (
     <ConnectWalletLayout>
       <div className="flex flex-col w-full h-full">
@@ -140,7 +143,12 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
 
           <div className="flex mb-16">
             <Link href={`/app/orders/${sellOrder.address}/checkout`}>
-              <a className="bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center">
+              <a
+                className={cn({
+                  'bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center':
+                    true,
+                })}
+              >
                 Order Now <ArrowRightIcon className="h-4 w-4 ml-2" />
               </a>
             </Link>

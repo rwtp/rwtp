@@ -51,12 +51,9 @@ function OrderView(props: { order: SellOrder }) {
   return (
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
-        <a
-          className="underline font-serif"
-          href={`/app/orders/${props.order.address}`}
-        >
-          {props.order.title}
-        </a>
+        <Link href={`/app/orders/${props.order.address}`}>
+          <a className="underline font-serif">{props.order.title}</a>
+        </Link>
         <div className="h-px bg-black w-full flex-1" />
         <Tag type="info">Deposit $2</Tag>
         <Tag type="info">Price $20</Tag>
