@@ -1,11 +1,8 @@
 import Link from 'next/link';
-import { Suspense } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
-import {
-  ConnectWalletLayout,
-  Footer,
-  TabBar,
-} from '../../../components/Layout';
+import { Suspense, useState } from 'react';
+import { ConnectWalletLayout, Footer } from '../../../components/Layout';
+import Tag from '../../../components/Tag';
 import Tag from '../../../components/Tag';
 import { useSellOrders } from '../../../lib/useSellOrder';
 
@@ -35,10 +32,13 @@ function OrderView(props: { order: SellOrder }) {
   );
 }
 
-function Results() {
+function Results(props: {
+  searchText: string;
+}) {
   const sellOrders = useSellOrders({
     first: 10,
     skip: 0,
+    searchText: props.searchText,
   });
 
   if (!sellOrders.data) {
@@ -69,18 +69,23 @@ function Results() {
 }
 
 export default function Page() {
+  const [searchText, setSearchText] = useState("");
   return (
     <ConnectWalletLayout>
       <div className="h-full flex flex-col">
-        <Suspense fallback={<div></div>}>
-          <div className="h-full p-4 max-w-6xl mx-auto w-full flex-1 mt-8">
-            <div className="pb-8">
-              <h1 className="font-serif text-2xl pb-1">For Sale</h1>
-              <p className="pb-4">This list may be incomplete.</p>
-            </div>
-            <Results />
+        <div className="h-full p-4 max-w-6xl mx-auto w-full flex-1 mt-8">
+          <div className="pb-8">
+            <h1 className="font-serif text-2xl pb-1">For Sale</h1>
+            <p className="pb-4">This list may be incomplete.</p>
           </div>
-        </Suspense>
+          <div>
+            <span className="pr-2">Search:</span>
+            <input style={{borderWidth: 1, borderBottomColor: 'black'}} type="text" name="name" onChange={(inputEvent) => {setSearchText(inputEvent.target.value)}} />
+          </div>
+          <Suspense fallback={<div></div>}>
+            <Results searchText={searchText}/>
+          </Suspense>
+        </div>
         <Footer />
       </div>
     </ConnectWalletLayout>
