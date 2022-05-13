@@ -1,4 +1,6 @@
 import { ArrowRightIcon, ChevronRightIcon } from '@heroicons/react/solid';
+import { BigNumber } from 'ethers';
+import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense } from 'react';
@@ -32,7 +34,10 @@ function Offer(props: {
       <div className="flex-1">
         <div className="text-gray-500 text-xs">PRICE</div>
         <div className="text-lg font-mono">
-          {props.offer.pricePerUnit}{' '}
+          {fromBn(
+            BigNumber.from(props.offer.pricePerUnit),
+            props.sellOrder.token.decimals
+          )}{' '}
           <span className="text-sm">{props.sellOrder.token.symbol}</span>
         </div>
       </div>
@@ -40,7 +45,10 @@ function Offer(props: {
       <div className="flex-1">
         <div className="text-gray-500 text-xs">YOUR DEPOSIT</div>
         <div className="text-lg font-mono">
-          {props.offer.stakePerUnit}{' '}
+          {fromBn(
+            BigNumber.from(props.offer.stakePerUnit),
+            props.sellOrder.token.decimals
+          )}{' '}
           <span className="text-sm">{props.sellOrder.token.symbol}</span>
         </div>
       </div>
@@ -48,7 +56,10 @@ function Offer(props: {
       <div className="flex-1">
         <div className="text-gray-500 text-xs">SELLER'S DEPOSIT</div>
         <div className="text-lg font-mono">
-          {props.sellOrder.sellersStake}{' '}
+          {fromBn(
+            BigNumber.from(props.sellOrder.sellersStake),
+            props.sellOrder.token.decimals
+          )}{' '}
           <span className="text-sm">{props.sellOrder.token.symbol}</span>
         </div>
       </div>
