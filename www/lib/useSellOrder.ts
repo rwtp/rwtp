@@ -220,6 +220,7 @@ export function useSellOrderOffers(sellOrder: string) {
         pricePerUnit: string;
         uri: string;
         quantity: string;
+        offerState: 'Closed' | 'Open' | 'Committed';
       }>;
     };
   }>([
@@ -234,7 +235,7 @@ export function useSellOrderOffers(sellOrder: string) {
           pricePerUnit
           uri
           quantity
-        
+          offerState
         }
       }
     }

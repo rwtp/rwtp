@@ -26,6 +26,7 @@ function Offer(props: {
     pricePerUnit: string;
     stakePerUnit: string;
     index: string;
+    offerState: 'Closed' | 'Open' | 'Committed';
   };
   sellOrder: SellOrderData;
 }) {
@@ -119,8 +120,6 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const sellOrderMethods = useSellOrderMethods(sellOrder.address);
   const offers = useSellOrderOffers(sellOrder.address);
 
-  const hasOrderedBefore = !!offers.data?.offers;
-
   return (
     <ConnectWalletLayout>
       <div className="flex flex-col w-full h-full">
@@ -153,6 +152,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
               </a>
             </Link>
           </div>
+          <div className="text-sm text-gray-400">Purchases in progress</div>
         </div>
 
         <div className="border-t flex-1 bg-gray-50">
@@ -160,6 +160,11 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
             {offers.data?.offers.map((o: any) => (
               <Offer key={o.index + o.uri} offer={o} sellOrder={sellOrder} />
             ))}
+            {offers.data && offers.data?.offers.length === 0 && (
+              <div className="mt-2 text-sm text-gray-400">
+                No currently open purchases were found.
+              </div>
+            )}
           </div>
         </div>
 
