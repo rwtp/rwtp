@@ -44,5 +44,16 @@ export default async function handler(
   }
   const addResult = await ipfs.add(input);
 
+  console.log("uploading to the graph ipfs node");
+  const graphIpfs = create({
+    host: 'api.thegraph.com',
+    apiPath: 'ipfs/api/v0',
+    protocol: 'https',
+    port: 443,
+
+  });
+  const graphIpfsResult = await graphIpfs.add(input);
+  console.log("uploaded to the graph ipfs node {}", graphIpfsResult);
+
   res.status(200).json({ cid: addResult.cid.toString() });
 }
