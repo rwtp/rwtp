@@ -1,16 +1,17 @@
 import { useAccount } from 'wagmi';
-import {
-  OfferData,
-  useOffers,
-} from '../../lib/useOffer';
+import { OfferData, useOffers } from '../../lib/useOffer';
 import Tag from '../../components/Tag';
 
 function OfferList() {
   const signer = useAccount();
 
-  const address = (signer && signer.data) ? signer.data.address : undefined;
+  const address = signer && signer.data ? signer.data.address : undefined;
 
-  const offerList = (address) ? (<OfferListForSeller seller={address} />) : (<div>Connect your wallet to view offers</div>);
+  const offerList = address ? (
+    <OfferListForSeller seller={address} />
+  ) : (
+    <div>Connect your wallet to view offers</div>
+  );
 
   return offerList;
 }
@@ -22,33 +23,36 @@ function OfferListForSeller(props: { seller: string }) {
     seller: props.seller,
   });
 
-  if (!offers || !offers.data) {
+  if (!offers.data) {
+    return null;
+  }
+
+  if (offers.data && offers.data.length == 0) {
     return <div>No offers found.</div>;
   }
 
-  return (<Results offers={offers.data} />);
+  return <Results offers={offers.data} />;
 }
 
 function Results(props: { offers: any }) {
-  const offersView = props.offers
-    .map((offer: any) => {
-      return (
-        <OfferView
-          key={offer.id}
-          offer={{
-            id: offer.id,
-            buyer: offer.buyer,
-            seller: offer.seller,
-            index: offer.index,
-            quantity: offer.quantity,
-            pricePerUnit: offer.pricePerUnit,
-            stakePerUnit: offer.stakePerUnit,
-            uri: offer.uri,
-            createdAt: offer.createdAt,
-          }}
-        />
-      );
-    });
+  const offersView = props.offers.map((offer: any) => {
+    return (
+      <OfferView
+        key={offer.id}
+        offer={{
+          id: offer.id,
+          buyer: offer.buyer,
+          seller: offer.seller,
+          index: offer.index,
+          quantity: offer.quantity,
+          pricePerUnit: offer.pricePerUnit,
+          stakePerUnit: offer.stakePerUnit,
+          uri: offer.uri,
+          createdAt: offer.createdAt,
+        }}
+      />
+    );
+  });
 
   return <div>{offersView}</div>;
 }
