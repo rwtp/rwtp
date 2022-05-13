@@ -1,4 +1,8 @@
-import { ArrowRightIcon, ChevronRightIcon } from '@heroicons/react/solid';
+import {
+  ArrowRightIcon,
+  CheckCircleIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/solid';
 import { BigNumber } from 'ethers';
 import { fromBn } from 'evm-bn';
 import Link from 'next/link';
@@ -25,7 +29,7 @@ function Offer(props: {
   sellOrder: SellOrderData;
 }) {
   return (
-    <div className="flex flex-col py-4">
+    <div className="flex flex-col py-4 mb-12">
       <div className="flex flex-col">
         <div className="text-gray-500 text-xs">Ordered on</div>
         <div className="text-lg font-serif">{new Date().toDateString()}</div>
@@ -66,6 +70,28 @@ function Offer(props: {
           </div>
         </div>
       </div>
+      <div className="flex flex-col mt-2">
+        <span className="text-sm mb-4 text-gray-500">
+          Did you get your order?
+        </span>
+        <div className="flex">
+          <div className="relative flex ">
+            <div
+              className="absolute w-4 h-4 bg-blue-500 rounded-full animate-pulse "
+              style={{
+                top: '-0.5rem',
+                right: '-0.5rem',
+              }}
+            />
+            <button className="bg-black text-white px-4 py-2 rounded flex items-center justify-between">
+              Confirm Order <CheckCircleIcon className="h-4 w-4 ml-4" />
+            </button>
+          </div>
+          <div className="relative flex ml-8">
+            <button className="underline text-gray-600">Cancel Order</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -95,15 +121,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
           <h1 className="font-serif text-3xl pb-1 pt-12">{sellOrder.title}</h1>
           <p className="pb-4">{sellOrder.description}</p>
 
-          {/* 
-          {offers.data?.offers && offers.data?.offers.length >= 2 && (
-            <h2 className="font-serif text-xl pb-2">Your Purchases</h2>
-          )}
-          {offers.data?.offers && offers.data?.offers.length == 1 && (
-            <h2 className="font-serif text-xl pb-2">Your Purchase</h2>
-          )} */}
-
-          <div className="flex pb-12">
+          <div className="flex mb-16">
             <Link href={`/app/orders/${sellOrder.address}/checkout`}>
               <a className="bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center">
                 Order Now <ArrowRightIcon className="h-4 w-4 ml-2" />

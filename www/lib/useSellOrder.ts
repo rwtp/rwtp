@@ -207,6 +207,7 @@ export function useSellOrderOffers(sellOrder: string) {
           pricePerUnit
           uri
           quantity
+        
         }
       }
     }
