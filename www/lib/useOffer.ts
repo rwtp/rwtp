@@ -1,18 +1,22 @@
 import { useSubgraph } from './useSubgraph';
 
 export interface OfferData {
-  id: string
-  buyer: string
-  seller: string
-  index: number
-  quantity: number
-  pricePerUnit: number
-  stakePerUnit: number
-  uri: string
-  createdAt: number
+  id: string;
+  buyer: string;
+  seller: string;
+  index: number;
+  quantity: number;
+  pricePerUnit: number;
+  stakePerUnit: number;
+  uri: string;
+  createdAt: number;
 }
 
-export function useOffers(args: { first: number; skip: number, seller: string }) {
+export function useOffers(args: {
+  first: number;
+  skip: number;
+  seller: string;
+}) {
   const metadata = useSubgraph<{
     offers: OfferData[];
   }>([
@@ -38,6 +42,8 @@ export function useOffers(args: { first: number; skip: number, seller: string })
       seller: args.seller,
     },
   ]);
+
+  console.log(metadata);
 
   return {
     ...metadata,

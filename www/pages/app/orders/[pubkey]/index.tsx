@@ -26,16 +26,16 @@ function Offer(props: {
     pricePerUnit: string;
     stakePerUnit: string;
     index: string;
-    offerState: 'Closed' | 'Open' | 'Committed';
+    state: 'Closed' | 'Open' | 'Committed';
   };
   sellOrder: SellOrderData;
   onConfirm: (index: string) => Promise<any>;
   onCancel: (index: string) => Promise<any>;
 }) {
-  const state = props.offer.offerState;
+  const state = props.offer.state;
 
   return (
-    <FadeIn className="flex flex-col py-4 mb-12">
+    <FadeIn className="flex flex-col py-4">
       <div className="bg-white border">
         <div className="flex px-4 pt-4">
           <div className="flex flex-col">
@@ -219,6 +219,7 @@ function Loading() {
 function PageWithPubkey(props: { pubkey: string }) {
   const sellOrder = useSellOrder(props.pubkey);
 
+  // loading
   if (!sellOrder.data) return <Loading />;
 
   return <SellOrderPage sellOrder={sellOrder.data} />;

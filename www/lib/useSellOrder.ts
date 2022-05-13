@@ -229,7 +229,7 @@ export function useSellOrderOffers(sellOrder: string) {
         pricePerUnit: string;
         uri: string;
         quantity: string;
-        offerState: 'Closed' | 'Open' | 'Committed';
+        state: 'Closed' | 'Open' | 'Committed';
       }>;
     };
   }>([
@@ -244,7 +244,7 @@ export function useSellOrderOffers(sellOrder: string) {
           pricePerUnit
           uri
           quantity
-          offerState
+          state
         }
       }
     }
@@ -257,5 +257,48 @@ export function useSellOrderOffers(sellOrder: string) {
   return {
     ...metadata,
     data: metadata.data?.sellOrder,
+  };
+}
+
+export function useAllSellOrderOffers(seller: string) {
+  const metadata = useSubgraph<{
+    sellOrders: Array<{
+      id: string;
+      address: string;
+      offers: Array<{
+        index: string;
+        stakePerUnit: string;
+        pricePerUnit: string;
+        uri: string;
+        quantity: string;
+        state: 'Closed' | 'Open' | 'Committed';
+      }>;
+    }>;
+  }>([
+    `
+    query data($seller: ID){
+      sellOrders(where:{seller:$seller}) {
+        id
+        address
+    		seller
+        offers {
+          index
+          stakePerUnit
+          pricePerUnit
+          uri
+          quantity
+          state
+        }
+      }
+    }
+  `,
+    {
+      seller,
+    },
+  ]);
+
+  return {
+    ...metadata,
+    data: metadata.data?.sellOrders,
   };
 }
