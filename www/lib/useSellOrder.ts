@@ -54,7 +54,6 @@ function useSellOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
 }
 
 function useSellOrdersWithSearch(first: number, skip: number, searchText: string) {
-  console.log("useSellOrdersWithSearch: ", searchText);
   let res = useSellOrdersWrapperWithMetaData<{ sellOrderSearch: SellOrderData[]; }>(
     `
       sellOrderSearch(first:$first, skip:$skip, text:"${searchText}") {
