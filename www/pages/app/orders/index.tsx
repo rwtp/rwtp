@@ -9,6 +9,7 @@ import cn from 'classnames';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { FadeIn } from '../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import {
   SellOrderData,
@@ -94,7 +95,7 @@ function Results() {
       );
     });
 
-  return <>{orders}</>;
+  return <FadeIn>{orders}</FadeIn>;
 }
 
 export default function Page() {

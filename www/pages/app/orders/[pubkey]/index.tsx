@@ -8,7 +8,7 @@ import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense } from 'react';
-import { useAccount } from 'wagmi';
+import { FadeIn } from '../../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../../components/Layout';
 import { useTokenMethods } from '../../../../lib/tokens';
 import {
@@ -28,8 +28,22 @@ function Offer(props: {
   };
   sellOrder: SellOrderData;
 }) {
+  const methods = useSellOrderMethods(props.sellOrder.address);
+
+  async function onConfirm() {
+    const confirmTx = await methods.confirm.writeAsync({
+      args: [props.offer.index],
+      overrides: {
+        gasLimit: 100000,
+      },
+    });
+
+    await confirmTx.wait();
+    console.log('confirmed');
+  }
+
   return (
-    <div className="flex flex-col py-4 mb-12">
+    <FadeIn className="flex flex-col py-4 mb-12">
       <div className="flex flex-col">
         <div className="text-gray-500 text-xs">Ordered on</div>
         <div className="text-lg font-serif">{new Date().toDateString()}</div>
@@ -83,7 +97,10 @@ function Offer(props: {
                 right: '-0.5rem',
               }}
             />
-            <button className="bg-black text-white px-4 py-2 rounded flex items-center justify-between">
+            <button
+              className="bg-black text-white px-4 py-2 rounded flex items-center justify-between"
+              onClick={() => onConfirm().catch(console.error)}
+            >
               Confirm Order <CheckCircleIcon className="h-4 w-4 ml-4" />
             </button>
           </div>
@@ -92,7 +109,7 @@ function Offer(props: {
           </div>
         </div>
       </div>
-    </div>
+    </FadeIn>
   );
 }
 
@@ -129,15 +146,15 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
             </Link>
           </div>
         </div>
-        {offers.data?.offers && offers.data?.offers.length !== 0 && (
-          <div className="border-t flex-1 bg-gray-50">
-            <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-2">
-              {offers.data?.offers.map((o: any) => (
-                <Offer key={o.index + o.uri} offer={o} sellOrder={sellOrder} />
-              ))}
-            </div>
+
+        <div className="border-t flex-1 bg-gray-50">
+          <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-2">
+            {offers.data?.offers.map((o: any) => (
+              <Offer key={o.index + o.uri} offer={o} sellOrder={sellOrder} />
+            ))}
           </div>
-        )}
+        </div>
+
         <Footer />
       </div>
     </ConnectWalletLayout>

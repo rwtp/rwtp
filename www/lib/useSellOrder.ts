@@ -101,8 +101,35 @@ export function useSellOrderMethods(address: string) {
     'submitOffer'
   );
 
+  const confirm = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: SellOrder.abi,
+    },
+    'confirm'
+  );
+
+  const commit = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: SellOrder.abi,
+    },
+    'commit'
+  );
+
+  const commitBatch = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: SellOrder.abi,
+    },
+    'commitBatch'
+  );
+
   return {
     submitOffer,
+    confirm,
+    commit,
+    commitBatch,
   };
 }
 

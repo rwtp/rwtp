@@ -14,7 +14,5 @@ const fetcher = (query: any, variables: any) =>
   );
 
 export function useSubgraph<T>(args: string | [string, any]) {
-  return useSWR<T>(args, fetcher, {
-    suspense: true,
-  });
+  return useSWR<T>(args, fetcher);
 }

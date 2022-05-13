@@ -2,6 +2,7 @@ import { FingerPrintIcon, SwitchHorizontalIcon } from '@heroicons/react/solid';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
 import Link from 'next/link';
+import { FadeIn } from './FadeIn';
 
 export function ConnectWalletLayout(props: { children: React.ReactNode }) {
   return (
@@ -61,7 +62,7 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
                 );
 
                 return (
-                  <div className="flex items-center gap-2">
+                  <FadeIn className="flex items-center gap-2">
                     <button
                       className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
                       onClick={() => openChainModal()}
@@ -76,7 +77,7 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
                       {account.ensName ? account.ensName : keyDetails}
                       <FingerPrintIcon className="h-4 w-4 ml-2" />
                     </button>
-                  </div>
+                  </FadeIn>
                 );
               }}
             </ConnectButton.Custom>
