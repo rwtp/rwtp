@@ -86,12 +86,12 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     const tx = await sellOrderMethods.submitOffer.writeAsync({
       args: [0, quantity, price, stake, 'ipfs://' + cid],
       overrides: {
-        gasLimit: 200000,
+        gasLimit: 1000000,
       },
     });
 
     const receipt = await tx.wait();
-    router.push(`/app/orders/${receipt}`);
+    router.push(`/app/orders/${sellOrder.address}`);
   }
 
   return (
