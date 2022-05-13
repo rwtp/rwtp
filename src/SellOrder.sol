@@ -280,7 +280,7 @@ contract SellOrder {
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
     function confirm(uint32 index)
-        external
+        public
         virtual
         onlyState(msg.sender, index, State.Committed)
     {
@@ -326,9 +326,19 @@ contract SellOrder {
         emit OfferConfirmed(msg.sender, index);
     }
 
+    /// @dev Marks all provided offers as completed
+    function confirmBatch(uint32[] calldata indices)
+        external
+        virtual
+    {
+        for (uint256 i = 0; i < indices.length; i++) {
+            confirm(indices[i]);
+        }
+    }
+
     /// @dev Allows anyone to enforce an offer.
     function enforce(address buyer_, uint32 index)
-        external
+        public
         virtual
         onlyState(buyer_, index, State.Committed)
     {
@@ -371,10 +381,21 @@ contract SellOrder {
         emit OfferEnforced(buyer_, index);
     }
 
+    /// @dev Enforces all provided offers
+    function enforceBatch(address[] calldata buyers, uint32[] calldata indices)
+        external
+        virtual
+    {
+        require(buyers.length == indices.length);
+        for (uint256 i = 0; i < buyers.length; i++) {
+            enforce(buyers[i], indices[i]);
+        }
+    }
+
     /// @dev Allows either the buyer or the seller to cancel the offer.
     ///      Only a committed offer can be canceled
     function cancel(address buyer_, uint32 index)
-        external
+        public
         virtual
         onlyState(buyer_, index, State.Committed)
     {
@@ -423,5 +444,16 @@ contract SellOrder {
             offer.sellerCanceled,
             offer.buyerCanceled
         );
+    }
+
+    /// @dev Cancels all provided offers
+    function cancelBatch(address[] calldata buyers, uint32[] calldata indices)
+        external
+        virtual
+    {
+        require(buyers.length == indices.length);
+        for (uint256 i = 0; i < buyers.length; i++) {
+            cancel(buyers[i], indices[i]);
+        }
     }
 }
