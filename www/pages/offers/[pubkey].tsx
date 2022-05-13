@@ -12,7 +12,6 @@ import {
   MailIcon,
   HomeIcon,
 } from '@heroicons/react/solid';
-import { Footer } from '../../components/Footer';
 
 interface Offer {
   buyer: string;

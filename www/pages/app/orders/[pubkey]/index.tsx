@@ -34,33 +34,6 @@ function Offer(props: {
 }) {
   const state = props.offer.offerState;
 
-  const confirmOrderScreen = (
-    <div className="flex flex-col mt-2">
-      <span className="text-sm mb-4 text-gray-500">
-        Did you get your order?
-      </span>
-      <div className="flex">
-        <div className="relative flex ">
-          <div
-            className="absolute w-4 h-4 bg-blue-500 rounded-full animate-pulse "
-            style={{
-              top: '-0.5rem',
-              right: '-0.5rem',
-            }}
-          />
-          <button
-            className="bg-black text-white px-4 py-2 rounded flex items-center justify-between"
-            onClick={() =>
-              props.onConfirm(props.offer.index).catch(console.error)
-            }
-          >
-            Confirm Order <CheckCircleIcon className="h-4 w-4 ml-4" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <FadeIn className="flex flex-col py-4 mb-12">
       <div className="bg-white border">
@@ -116,7 +89,7 @@ function Offer(props: {
           <div
             className={cn({
               'text-xs flex  py-2 border-gray-600 text-gray-600': true,
-              'opacity-50': true,
+              'opacity-50': state !== 'Committed',
             })}
           >
             Offer Accepted{' '}
@@ -127,16 +100,22 @@ function Offer(props: {
             )}
           </div>
           <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          <div
-            className={cn({
-              'text-xs flex ': true,
-              'bg-black rounded text-white px-4 py-2': false,
-              'opacity-50 border-gray-600 text-gray-600': true,
-            })}
-          >
-            Confirm Order{' '}
-            <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
-          </div>
+          {state !== 'Committed' && (
+            <div
+              className={
+                'opacity-50 border-gray-600 text-gray-600 flex items-center text-xs'
+              }
+            >
+              Order Delivered{' '}
+              <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+            </div>
+          )}
+
+          {state === 'Committed' && (
+            <button className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50">
+              Confirm Order
+            </button>
+          )}
         </div>
       </div>
     </FadeIn>
