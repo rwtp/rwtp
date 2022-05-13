@@ -161,7 +161,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
                   If this item doesn't ship to you, the seller be fined{' '}
                   <span className="font-bold">
                     {fromBn(
-                      toBn(sellOrder.sellersStake, sellOrder.token.decimals),
+                      BigNumber.from(sellOrder.sellersStake),
                       sellOrder.token.decimals
                     )}{' '}
                     {sellOrder.token.symbol}.
