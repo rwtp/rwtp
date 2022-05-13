@@ -1,0 +1,15 @@
+# Real World Trade Protocol
+
+RWTP is a peer-to-peer protocol for buying and selling physical goods in untrusted situations.
+
+## Motiviation
+
+By default, a buyer on the internet does not know if, when they order a package, the package will actually be delivered. A nefarious no-good evil-doer could simply claim to be selling laptops, take your $1000, and then never actually ship you a laptop. To prevent fraud, buyers today may use credit-card charge backs.
+
+However, cryptocurrencies do not have chargebacks; sending money to the wrong address is final. So buying real-world goods with cryptocurrencies, especially from unknown parties is dangerous.
+
+One solution is for buyers to only purchase from trusted addresses. The seller may be able to sign a message like "I am Amazon.com" and put that message in a `txt` DNS record and call it a day. However, this solution restricts the ability for new entrants to sell on the internet. The buyer has no way to distinguish between an honest, but new seller, and a scammer. So instead, the new seller is better off selling via a centralized platform such as Amazon.
+
+## Two-sided deposits
+
+To solve the problem of fraud, Real World Trade Protocol requires both the buyer and the seller to put down a deposit. If either party believes the deal failed, both the buyer and the seller lose their deposit.

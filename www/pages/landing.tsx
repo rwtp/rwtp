@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import solidity from 'react-syntax-highlighter/dist/cjs/languages/prism/solidity';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
+import { InformationPageHeader } from '../components/Layout';
 
 SyntaxHighlighter.registerLanguage('solidity', solidity);
 SyntaxHighlighter.registerLanguage('typescript', typescript);
@@ -11,6 +12,7 @@ export default function Landing() {
   return (
     <div className="max-w-6xl mx-auto w-full pb-12 relative">
       <div className="h-screen flex flex-col justify-between pt-4 relative">
+        <InformationPageHeader />
         <div
           className="absolute -z-50"
           style={{
@@ -19,17 +21,6 @@ export default function Landing() {
           }}
         >
           <Image src="/HighlightBackground.png" height={1500} width={1500} />
-        </div>
-        <div className="flex justify-between px-4 z-50 relative">
-          <Image src="/transitionLogo.png" width={24} height={24} />
-          <div className="gap-4 flex items-center">
-            <a href="https://github.com/rwtp/rwtp">
-              <Image src={'/github.svg'} width={16} height={16} />
-            </a>
-            <a href="https://twitter.com/realworldtrade">
-              <Image src={'/twitter.svg'} width={16} height={16} />
-            </a>
-          </div>
         </div>
 
         <div className="px-4">

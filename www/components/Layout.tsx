@@ -4,6 +4,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FadeIn } from './FadeIn';
 
+export function InformationPageHeader() {
+  return (
+    <div className="flex justify-between px-4 z-50 relative">
+      <Image src="/transitionLogo.png" width={24} height={24} />
+      <div className="gap-4 flex items-center">
+        <a href="https://github.com/rwtp/rwtp">
+          <Image src={'/github.svg'} width={16} height={16} />
+        </a>
+        <a href="https://twitter.com/realworldtrade">
+          <Image src={'/twitter.svg'} width={16} height={16} />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function ConnectWalletLayout(props: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-full">
