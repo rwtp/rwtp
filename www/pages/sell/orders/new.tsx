@@ -6,7 +6,7 @@ import { ethers } from 'ethers';
 import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
-import { ConnectWalletLayout } from '../../../../components/Layout';
+import { ConnectWalletLayout } from '../../../components/Layout';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -114,7 +114,7 @@ export default function Page() {
               <button
                 className="underline rounded px-4 py-2 flex items-center"
                 onClick={() => {
-                  router.push('/app/orders/' + sellOrder);
+                  router.push('/buy/orders/' + sellOrder);
                 }}
               >
                 I wrote down the key <ArrowRightIcon className="w-4 h-4 ml-2" />

@@ -262,25 +262,24 @@ export function useSellOrderOffers(sellOrder: string) {
 
 export function useAllSellOrderOffers(seller: string) {
   const metadata = useSubgraph<{
-    sellOrders: Array<{
-      id: string;
-      address: string;
-      offers: Array<{
-        index: string;
-        stakePerUnit: string;
-        pricePerUnit: string;
-        uri: string;
-        quantity: string;
-        state: 'Closed' | 'Open' | 'Committed';
-      }>;
-    }>;
+    sellOrders: Array<
+      SellOrderData & {
+        offers: Array<{
+          index: string;
+          stakePerUnit: string;
+          pricePerUnit: string;
+          uri: string;
+          quantity: string;
+          createdAt: string;
+          buyer: string;
+          state: 'Closed' | 'Open' | 'Committed';
+        }>;
+      }
+    >;
   }>([
     `
     query data($seller: ID){
       sellOrders(where:{seller:$seller}) {
-        id
-        address
-    		seller
         offers {
           index
           stakePerUnit
@@ -288,6 +287,24 @@ export function useAllSellOrderOffers(seller: string) {
           uri
           quantity
           state
+          buyer
+          createdAt
+        }
+        id
+        address
+        title
+        description
+        sellersStake
+        priceSuggested
+        stakeSuggested
+        encryptionPublicKey
+        sellersStake
+        seller
+        token {
+          decimals
+          symbol
+          name
+          address
         }
       }
     }

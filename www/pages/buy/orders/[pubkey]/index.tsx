@@ -158,7 +158,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
           <div className="pb-4 text-sm flex items-center text-gray-600">
-            <a className="underline" href="/app/orders">
+            <a className="underline" href="/buy/orders">
               Sell Orders
             </a>
             <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
@@ -174,7 +174,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
           <p className="pb-4">{sellOrder.description}</p>
 
           <div className="flex mb-16">
-            <Link href={`/app/orders/${sellOrder.address}/checkout`}>
+            <Link href={`/buy/orders/${sellOrder.address}/checkout`}>
               <a
                 className={cn({
                   'bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center':
@@ -218,6 +218,14 @@ function Loading() {
 
 function PageWithPubkey(props: { pubkey: string }) {
   const sellOrder = useSellOrder(props.pubkey);
+
+  if (sellOrder.error) {
+    return (
+      <div>
+        <pre>{JSON.stringify(sellOrder.error)}</pre>
+      </div>
+    );
+  }
 
   // loading
   if (!sellOrder.data) return <Loading />;

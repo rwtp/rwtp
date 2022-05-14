@@ -91,7 +91,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     });
 
     const receipt = await tx.wait();
-    router.push(`/app/orders/${sellOrder.address}`);
+    router.push(`/buy/orders/${sellOrder.address}`);
   }
 
   return (
@@ -103,7 +103,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
               <div>
                 <div className="flex">
                   <a
-                    href="/app/orders"
+                    href="/buy/orders"
                     className="flex gap-2 justify-between items-center py-1 hover:opacity-50 transition-all text-sm text-gray-700"
                   >
                     <ArrowLeftIcon className="h-4 w-4" />

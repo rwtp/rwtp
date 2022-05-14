@@ -1,8 +1,15 @@
-import { FingerPrintIcon, SwitchHorizontalIcon } from '@heroicons/react/solid';
+import {
+  ChevronDoubleRightIcon,
+  ChevronRightIcon,
+  FingerPrintIcon,
+  SwitchHorizontalIcon,
+} from '@heroicons/react/solid';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FadeIn } from './FadeIn';
+import cn from 'classnames';
+import { useRouter } from 'next/router';
 
 export function InformationPageHeader() {
   return (
@@ -20,17 +27,52 @@ export function InformationPageHeader() {
   );
 }
 
-export function ConnectWalletLayout(props: { children: React.ReactNode }) {
+export function TabBar(props: { tab: 'buy' | 'sell' }) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex px-4 py-4 justify-between items-center w-full">
-        <Link href="/app/orders">
-          <a href="/" className="flex items-center justify-center">
-            <Image width={24} height={24} src="/transitionLogo.png" />
+    <div className=" border-b w-full flex pt-2">
+      <div className="flex gap-4 max-w-6xl mx-auto w-full px-4">
+        <Link href="/buy/orders">
+          <a
+            className={cn({
+              'pb-1': true,
+              'border-b border-black text-black': props.tab === 'buy',
+              'text-gray-500 border-b border-white': props.tab !== 'buy',
+            })}
+          >
+            Buy
           </a>
         </Link>
+        <Link href="/sell/orders">
+          <a
+            className={cn({
+              'pb-1': true,
+              'border-b border-black text-black': props.tab === 'sell',
+              'text-gray-500 border-b border-white': props.tab !== 'sell',
+            })}
+          >
+            Sell
+          </a>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
-        <div className="flex items-center gap-2">
+export function ConnectWalletLayout(props: { children: React.ReactNode }) {
+  const router = useRouter();
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex px-4 py-4  justify-between items-center w-full max-w-6xl mx-auto w-full">
+        <div className="flex items-center">
+          <Link href="/">
+            <a className="flex items-center justify-center">
+              <Image width={24} height={24} src="/transitionLogo.png" />
+            </a>
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-2 ">
           <div>
             <ConnectButton.Custom>
               {({
@@ -80,14 +122,14 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
                 return (
                   <FadeIn className="flex items-center gap-2">
                     <button
-                      className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
+                      className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
                       onClick={() => openChainModal()}
                     >
                       {chain.name}
                       <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
                     </button>
                     <button
-                      className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
+                      className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
                       onClick={() => openAccountModal()}
                     >
                       {account.ensName ? account.ensName : keyDetails}
@@ -98,9 +140,30 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
               }}
             </ConnectButton.Custom>
           </div>
+
+          <a
+            href="/sell/orders"
+            className={cn({
+              'flex px-4 rounded text-sm py-1': true,
+              'bg-black text-white': router.pathname.startsWith('/sell'),
+              border: !router.pathname.startsWith('/sell'),
+            })}
+          >
+            Sell
+          </a>
+          <a
+            href="/buy/orders"
+            className={cn({
+              'flex px-4 rounded text-sm py-1': true,
+              'bg-black text-white': router.pathname.startsWith('/buy'),
+              border: !router.pathname.startsWith('/buy'),
+            })}
+          >
+            Buy
+          </a>
         </div>
       </div>
-      <div className="h-full">{props.children}</div>
+      <div className="h-full bg-white">{props.children}</div>
     </div>
   );
 }

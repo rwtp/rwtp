@@ -1,22 +1,13 @@
-import {
-  ArrowRightIcon,
-  FingerPrintIcon,
-  LightningBoltIcon,
-  SwitchHorizontalIcon,
-} from '@heroicons/react/solid';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import cn from 'classnames';
-import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
-import { ConnectWalletLayout, Footer } from '../../../components/Layout';
-import Tag from '../../../components/Tag';
 import {
-  SellOrderData,
-  useSellOrder,
-  useSellOrders,
-} from '../../../lib/useSellOrder';
+  ConnectWalletLayout,
+  Footer,
+  TabBar,
+} from '../../../components/Layout';
+import Tag from '../../../components/Tag';
+import { useSellOrders } from '../../../lib/useSellOrder';
 
 interface SellOrder {
   address: string;
@@ -33,7 +24,7 @@ function OrderView(props: { order: SellOrder }) {
   return (
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
-        <Link href={`/app/orders/${props.order.address}`}>
+        <Link href={`/buy/orders/${props.order.address}`}>
           <a className="underline font-serif">{props.order.title}</a>
         </Link>
         <div className="h-px bg-black w-full flex-1" />
@@ -82,23 +73,14 @@ export default function Page() {
     <ConnectWalletLayout>
       <div className="h-full flex flex-col">
         <Suspense fallback={<div></div>}>
-          <div className="h-full p-4 max-w-6xl mx-auto w-full flex-1">
+          <div className="h-full p-4 max-w-6xl mx-auto w-full flex-1 mt-8">
             <div className="pb-8">
-              <h1 className="font-serif text-2xl pb-1">Sell Orders</h1>
+              <h1 className="font-serif text-2xl pb-1">For Sale</h1>
               <p className="pb-4">This list may be incomplete.</p>
-              <div className="flex">
-                <Link href="/app/seller/orders/new">
-                  <a className=" border rounded border-black text-sm px-4 py-2 flex items-center hover:opacity-50">
-                    New Sell Order
-                    <ArrowRightIcon className="h-4 w-4 ml-2" />
-                  </a>
-                </Link>
-              </div>
             </div>
             <Results />
           </div>
         </Suspense>
-
         <Footer />
       </div>
     </ConnectWalletLayout>
