@@ -195,7 +195,7 @@ export default function Page() {
               <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
               <p className="pb-4">Learn more about Sell Orders.</p>
               <div className="flex">
-                <Link href="/">
+                <Link href="/sell/orders/new">
                   <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
                     New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
                   </a>
