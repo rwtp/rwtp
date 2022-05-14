@@ -105,7 +105,7 @@ function Offer(props: { offer: IOffer }) {
           {fromBn(BigNumber.from(o.pricePerUnit), o.sellOrder.token.decimals)}
         </div>
       </div>
-      {o.state === 'Committed' ? (
+      {o.state === 'Open' ? (
         <button
           className="text-sm border-b flex items-center justify-center px-2 hover:opacity-80 transition-all "
           onClick={() => onApprove(o)}
@@ -117,7 +117,7 @@ function Offer(props: { offer: IOffer }) {
         </button>
       ) : (
         <div className="px-4 text-gray-500 flex items-center text-sm border-b justify-between">
-          Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+          {o.state}
         </div>
       )}
     </>
