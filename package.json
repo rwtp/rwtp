@@ -12,7 +12,6 @@
     "node": ">=10"
   },
   "scripts": {
-    "preinstall": "forge install",
     "start": "tsdx watch",
     "build": "tsdx build --entry ts/index.ts",
     "lint": "tsdx lint",
