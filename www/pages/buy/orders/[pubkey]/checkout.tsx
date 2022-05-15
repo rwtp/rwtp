@@ -13,6 +13,7 @@ import { postToIPFS } from '../../../../lib/ipfs';
 import { fromBn, toBn } from 'evm-bn';
 import { ArrowLeftIcon, FingerPrintIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../../components/Layout';
+import * as nacl from 'tweetnacl';
 
 function ConnectWalletButton(props: {
   children: React.ReactNode;
@@ -69,14 +70,36 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   async function onBuy() {
     if (!email || !shippingAddress) return;
 
-    const cid = await postToIPFS({
-      // A random number makes it so the same shipping information
-      // doesn't encrypt to the same string, which could then be
-      // used as PII to stalk or harm a buyer.
-      nonce: Math.random(),
-      email,
-      shippingAddress,
-    });
+    const secretData = Buffer.from(
+      JSON.stringify({
+        email,
+        shippingAddress,
+      }),
+      'utf-8'
+    );
+    const nonce = nacl.randomBytes(24);
+    const encryptionKey = Uint8Array.from(
+      Buffer.from(sellOrder.encryptionPublicKey, 'hex')
+    );
+
+    // TODO / NOTE: Right now, we're throwing away the buyers
+    // key, which means they'll never be able to see where
+    // the order went again without asking the buyer.
+    const buyersKey = nacl.box.keyPair();
+
+    const encrypted = nacl.box(
+      secretData,
+      nonce,
+      encryptionKey,
+      buyersKey.secretKey
+    );
+
+    const data = {
+      buyersPublicKey: buyersKey.publicKey,
+      nonce: Buffer.from(nonce).toString('hex'),
+      message: Buffer.from(encrypted).toString('hex'),
+    };
+    const cid = await postToIPFS(data);
 
     const approveTx = await tokenMethods.approve.writeAsync({
       args: [sellOrder.address, price.add(stake).mul(quantity)],

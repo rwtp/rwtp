@@ -35,7 +35,7 @@ function Offer(props: {
   const state = props.offer.state;
 
   return (
-    <FadeIn className="flex flex-col py-4">
+    <FadeIn className="flex flex-col py-2">
       <div className="bg-white border">
         <div className="flex px-4 pt-4">
           <div className="flex flex-col">
