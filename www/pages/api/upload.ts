@@ -50,7 +50,6 @@ export default async function handler(
     apiPath: 'ipfs/api/v0',
     protocol: 'https',
     port: 443,
-
   });
   const graphIpfsResult = await graphIpfs.add(input);
   console.log("uploaded to the graph ipfs node {}", graphIpfsResult);
