@@ -20,41 +20,79 @@ export interface SellOrderData {
   };
 }
 
-export function useSellOrders(args: { first: number; skip: number }) {
-  const metadata = useSubgraph<{
-    sellOrders: SellOrderData[];
-  }>([
+const sellOrderBodyText = `
+address
+title
+description
+sellersStake
+priceSuggested
+stakeSuggested
+encryptionPublicKey
+seller
+token {
+  decimals
+  symbol
+  name
+  address
+}
+`
+
+function useSellOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
+  const metadata = useSubgraph<T>([
     `
     query metadata($first:Int, $skip:Int ){
-      sellOrders(first:$first, skip:$skip) {
-        address
-        title
-        description
-        sellersStake
-        priceSuggested
-        stakeSuggested
-        encryptionPublicKey
-        sellersStake
-        seller
-        token {
-          decimals
-          symbol
-          name
-          address
-        }
-      }
-  }
-  `,
-    {
-      skip: args.skip,
-      first: args.first,
-    },
+      ${queryString}
+    }
+    `,
+    args,
   ]);
-
   return {
-    ...metadata,
-    data: metadata.data?.sellOrders,
+    metadata: metadata,
+    data: metadata.data,
   };
+
+}
+
+function useSellOrdersWithSearch(first: number, skip: number, searchText: string) {
+  let res = useSellOrdersWrapperWithMetaData<{ sellOrderSearch: SellOrderData[]; }>(
+    `
+      sellOrderSearch(first:$first, skip:$skip, text:"${searchText}") {
+        ${sellOrderBodyText}
+      }
+    `,
+    {
+      skip: skip,
+      first: first,
+    }
+  )
+  console.log(res);
+  return {
+    ...res.metadata,
+    data: res.data?.sellOrderSearch,
+  }
+}
+
+
+function useSellOrdersNoSearch(first: number, skip: number) {
+  let res = useSellOrdersWrapperWithMetaData<{ sellOrders: SellOrderData[]; }>(
+    `
+    sellOrders(first:$first, skip:$skip) {
+        ${sellOrderBodyText}
+      }
+    `,
+    {
+      skip: skip,
+      first: first,
+    }
+  )
+  return {
+    ...res.metadata,
+    data: res.data?.sellOrders,
+  }
+}
+
+export function useSellOrders(args: { first: number; skip: number, searchText: string }) {
+  return args.searchText ? useSellOrdersWithSearch(args.first, args.skip, args.searchText) : useSellOrdersNoSearch(args.first, args.skip);
 }
 
 // Returns information about a sell order
