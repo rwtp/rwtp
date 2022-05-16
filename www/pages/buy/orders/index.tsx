@@ -1,10 +1,13 @@
+
 import Link from 'next/link';
-import { FadeIn } from '../../../components/FadeIn';
 import { Suspense, useState } from 'react';
-import { ConnectWalletLayout, Footer } from '../../../components/Layout';
+import { FadeIn } from '../../../components/FadeIn';
+import {
+  ConnectWalletLayout,
+  Footer,
+} from '../../../components/Layout';
 import Tag from '../../../components/Tag';
 import { useSellOrders } from '../../../lib/useSellOrder';
-import { ArrowRightIcon } from '@heroicons/react/solid';
 
 interface SellOrder {
   address: string;
@@ -68,6 +71,7 @@ function Results(props: {
   return <FadeIn>{orders}</FadeIn>;
 }
 
+
 export default function Page() {
   const [searchText, setSearchText] = useState("");
   return (
@@ -77,22 +81,6 @@ export default function Page() {
           <div className="pb-8">
             <h1 className="font-serif text-2xl pb-1">For Sale</h1>
             <p className="pb-4">This list may be incomplete.</p>
-              <div className="flex">
-                <Link href="/app/seller/orders/new">
-                  <a className=" border rounded border-black text-sm px-4 py-2 flex items-center hover:opacity-50">
-                    New Sell Order
-                    <ArrowRightIcon className="h-4 w-4 ml-2" />
-                  </a>
-                </Link>
-              </div>
-            </div>
-            <div>
-              <span className="pr-2">Search:</span>
-              <input style={{borderWidth: 1, borderBottomColor: 'black'}} type="text" name="name" onChange={(inputEvent) => {setSearchText(inputEvent.target.value)}} />
-            </div>
-            <Suspense fallback={<div>Fetching orders...</div>}>
-              <Results searchText={searchText}/>
-            </Suspense>
           </div>
           <div>
             <span className="pr-2">Search:</span>
