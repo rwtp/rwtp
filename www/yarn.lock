@@ -651,11 +651,6 @@
     "@ethersproject/properties" "^5.6.0"
     "@ethersproject/strings" "^5.6.0"
 
-"@headlessui/react@^1.6.1":
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/@headlessui/react/-/react-1.6.1.tgz#d822792e589aac005462491dd62f86095e0c3bef"
-  integrity sha512-gMd6uIs1U4Oz718Z5gFoV0o/vD43/4zvbyiJN9Dt7PK9Ubxn+TmJwTmYwyNJc5KxxU1t0CmgTNgwZX9+4NjCnQ==
-
 "@heroicons/react@^1.0.6":
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-1.0.6.tgz#35dd26987228b39ef2316db3b1245c42eb19e324"
@@ -5737,18 +5732,16 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rwtp@^0.9.0:
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.9.0.tgz#753538bdcf85805546edf737c25719d456d05d16"
-  integrity sha512-ZyA5sR+QOeVYjXqsYU3TxsvreW21mz1OuSbSJ+0lqwJ1Q/D0Yqag0wLHk6QvSl1GpX/TUT42C9Wfox+OelFROw==
+rwtp@^0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.8.1.tgz#529f5c347b70ce9dbffd9c0b2963800fe5c3eebf"
+  integrity sha512-aS09JG9Khe91wRfvvmtpsF+KB6FwTS0aisePolz/7DHc/Xke4lFXOCbpi+3x2uRUUVBTyiZQUFtM9tKFT33+cA==
   dependencies:
-    "@headlessui/react" "^1.6.1"
     "@openzeppelin/contracts" "^4.6.0"
     "@rainbow-me/rainbowkit" "^0.1.0"
     eth-sig-util "^3.0.1"
     evm-bn "^1.1.1"
     tweetnacl "^1.0.3"
-    zustand "^4.0.0-rc.1"
 
 rxjs@^6.6.3:
   version "6.6.7"
