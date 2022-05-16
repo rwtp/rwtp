@@ -27,6 +27,7 @@ export default async function handler(
   const auth =
     'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 
+  console.log("uploading to infura ipfs node");
   const ipfs = create({
     host: 'ipfs.infura.io',
     port: 5001,
