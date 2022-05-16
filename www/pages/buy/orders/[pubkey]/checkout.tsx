@@ -95,7 +95,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     );
 
     const data = {
-      buyersPublicKey: buyersKey.publicKey,
+      buyersPublicKey: Buffer.from(buyersKey.publicKey).toString('hex'),
       nonce: Buffer.from(nonce).toString('hex'),
       message: Buffer.from(encrypted).toString('hex'),
     };
