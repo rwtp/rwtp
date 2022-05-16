@@ -82,11 +82,11 @@ export default function Page() {
             <h1 className="font-serif text-2xl pb-1">For Sale</h1>
             <p className="pb-4">This list may be incomplete.</p>
           </div>
-          <div>
-            <span className="pr-2">Search:</span>
-            <input style={{borderWidth: 1, borderBottomColor: 'black'}} type="text" name="name" onChange={(inputEvent) => {setSearchText(inputEvent.target.value)}} />
-          </div>
           <Suspense fallback={<div></div>}>
+            <div>
+              <span className="pr-2">Search:</span>
+              <input className="border border-black-1 rounded" type="text" name="name" onChange={(inputEvent) => {setSearchText(inputEvent.target.value)}} />
+            </div>
             <Results searchText={searchText}/>
           </Suspense>
         </div>
