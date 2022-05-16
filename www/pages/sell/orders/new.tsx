@@ -75,7 +75,7 @@ export default function Page() {
         await signer.data.getAddress(),
         erc20Address,
         toBn(state.sellersStake.toString(), decimals).toHexString(),
-        cid,
+        `ipfs://${cid}`,
         60 * 60 * 24 * 30,
       ],
     });
