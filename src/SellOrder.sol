@@ -39,6 +39,9 @@ contract SellOrder {
     /// @dev Emitted when `buyer` withdrew and offer.
     event OfferEnforced(address indexed buyer, uint32 indexed index);
 
+    /// @dev Emitted when `seller` sets sell order active or inactive.
+    event ActiveToggled(bool active);
+
     /// @dev Someone requested a cancellation of the sell order. The order is
     ///      is only "really" canceled if both sellerCanceled and buyerCanceled is
     ///      true.
@@ -144,6 +147,7 @@ contract SellOrder {
     /// @dev Sets "active". If false, the order is not open for new offers.
     function setActive(bool active_) external virtual onlySeller {
         active = active_;
+        emit ActiveToggled(active);
     }
 
     /// @dev reverts if the function is not at the expected state
