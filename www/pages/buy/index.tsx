@@ -74,7 +74,7 @@ export default function Page() {
       <div className="h-full flex flex-col">
         <div className="p-4 max-w-6xl mx-auto w-full mt-8">
           <div className="pb-8">
-            <h1 className="font-serif text-2xl pb-1">Explore Sell Orders</h1>
+            <h1 className="font-serif text-2xl pb-1">Explore items for sale</h1>
             <p className="pb-4">This list may be incomplete.</p>
           </div>
         </div>
