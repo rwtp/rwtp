@@ -1,11 +1,7 @@
-
 import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
-import {
-  ConnectWalletLayout,
-  Footer,
-} from '../../../components/Layout';
+import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import Tag from '../../../components/Tag';
 import { useSellOrders } from '../../../lib/useSellOrder';
 
@@ -35,9 +31,7 @@ function OrderView(props: { order: SellOrder }) {
   );
 }
 
-function Results(props: {
-  searchText: string;
-}) {
+function Results(props: { searchText: string }) {
   const sellOrders = useSellOrders({
     first: 10,
     skip: 0,
@@ -71,9 +65,8 @@ function Results(props: {
   return <FadeIn>{orders}</FadeIn>;
 }
 
-
 export default function Page() {
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState('');
   return (
     <ConnectWalletLayout>
       <div className="h-full flex flex-col">
@@ -83,11 +76,11 @@ export default function Page() {
             <p className="pb-4">This list may be incomplete.</p>
           </div>
           <Suspense fallback={<div></div>}>
-            <div>
+            {/* <div>
               <span className="pr-2">Search:</span>
               <input className="border border-black-1 rounded" type="text" name="name" onChange={(inputEvent) => {setSearchText(inputEvent.target.value)}} />
-            </div>
-            <Results searchText={searchText}/>
+            </div> */}
+            <Results searchText={searchText} />
           </Suspense>
         </div>
         <Footer />
