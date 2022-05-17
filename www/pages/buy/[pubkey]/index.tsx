@@ -19,6 +19,7 @@ import {
   useSellOrderOffers,
 } from '../../../lib/useSellOrder';
 import cn from 'classnames';
+import dayjs from 'dayjs';
 
 function Offer(props: {
   offer: {
@@ -27,6 +28,7 @@ function Offer(props: {
     stakePerUnit: string;
     index: string;
     state: 'Closed' | 'Open' | 'Committed';
+    timestamp: string;
   };
   sellOrder: SellOrderData;
   onConfirm: (index: string) => Promise<any>;
@@ -41,7 +43,7 @@ function Offer(props: {
           <div className="flex flex-col">
             <div className="text-gray-500 text-xs">Ordered on</div>
             <div className="text-lg font-serif">
-              {new Date().toDateString()}
+              {dayjs.unix(Number.parseInt(props.offer.timestamp)).format("MMM D YYYY, h:mm a")}
             </div>
           </div>
         </div>

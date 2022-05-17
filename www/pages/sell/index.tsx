@@ -194,7 +194,7 @@ function Offer(props: { offer: IOffer }) {
           <div className="flex flex-col">
             <div className="text-gray-500 text-xs">Ordered on</div>
             <div className="text-lg font-serif">
-              {dayjs(o.timestamp).toISOString()}
+              {dayjs.unix(Number.parseInt(o.timestamp)).format("MMM D YYYY, h:mm a")}
             </div>
           </div>
         </div>

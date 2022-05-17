@@ -257,6 +257,7 @@ export function useSellOrderOffers(sellOrder: string) {
           uri
           quantity
           state
+          timestamp
         }
       }
     }
