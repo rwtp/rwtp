@@ -16,6 +16,7 @@ import { useSubgraph } from '../../../lib/useSubgraph';
 import { FadeIn } from '../../../components/FadeIn';
 import cn from 'classnames';
 import dayjs from 'dayjs';
+import nacl from 'tweetnacl';
 
 type IOffer = {
   id: string;
@@ -92,7 +93,18 @@ function Offer(props: { offer: IOffer }) {
         o.uri.replace('ipfs://', 'https://ipfs.infura.io/ipfs/')
       );
 
-      console.log(await res.text());
+      const result = await res.json();
+      if (!result.message || !result.encryptionPublicKey || !result.nonce) {
+        return;
+      }
+
+      const msg = Buffer.from(result.message, 'hex');
+      const nonce = Buffer.from(result.nonce, 'hex');
+      const encryptionPublicKey = Buffer.from(
+        result.encryptionPublicKey,
+        'hex'
+      );
+      nacl.box.open(msg, nonce, encryptionPublicKey);
     }
     load().catch(console.error);
   }, [o]);

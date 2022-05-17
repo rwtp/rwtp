@@ -7,6 +7,7 @@ import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../../components/Layout';
+import { RequiresKeystore } from '../../../lib/keystore';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -22,7 +23,7 @@ async function postToIPFS(data: any) {
   return cid;
 }
 
-export default function Page() {
+function NewSellOrder() {
   const [state, setState] = useState({
     title: '',
     description: '',
@@ -229,5 +230,13 @@ export default function Page() {
         </div>
       </div>
     </ConnectWalletLayout>
+  );
+}
+
+export default function Page() {
+  return (
+    <RequiresKeystore>
+      <NewSellOrder />
+    </RequiresKeystore>
   );
 }

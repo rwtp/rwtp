@@ -95,7 +95,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     );
 
     const data = {
-      buyersPublicKey: Buffer.from(buyersKey.publicKey).toString('hex'),
+      publicKey: buyersKey.publicKey,
       nonce: Buffer.from(nonce).toString('hex'),
       message: Buffer.from(encrypted).toString('hex'),
     };
@@ -113,7 +113,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
       },
     });
 
-    const receipt = await tx.wait();
+    await tx.wait();
     router.push(`/buy/orders/${sellOrder.address}`);
   }
 

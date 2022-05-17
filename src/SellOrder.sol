@@ -327,10 +327,7 @@ contract SellOrder {
     }
 
     /// @dev Marks all provided offers as completed
-    function confirmBatch(uint32[] calldata indices)
-        external
-        virtual
-    {
+    function confirmBatch(uint32[] calldata indices) external virtual {
         for (uint256 i = 0; i < indices.length; i++) {
             confirm(indices[i]);
         }
