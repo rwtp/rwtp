@@ -15,6 +15,7 @@ import { ArrowLeftIcon, FingerPrintIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
 import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
+import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
 
 function ConnectWalletButton(props: {
   children: React.ReactNode;
@@ -56,6 +57,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const tokenMethods = useTokenMethods(sellOrder.token.address);
   const sellOrderMethods = useSellOrderMethods(sellOrder.address);
   const router = useRouter();
+  const buyersEncryptionKeypair = useEncryptionKeypair();
 
   const [email, setEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
@@ -70,6 +72,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
 
   async function onBuy() {
     if (!email || !shippingAddress) return;
+    if (!buyersEncryptionKeypair) return;
 
     const secretData = Buffer.from(
       JSON.stringify({
@@ -79,24 +82,19 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
       'utf-8'
     );
     const nonce = nacl.randomBytes(24);
-    const encryptionKey = Uint8Array.from(
+    const sellersPublicEncryptionKey = Uint8Array.from(
       Buffer.from(sellOrder.encryptionPublicKey, 'hex')
     );
-
-    // TODO / NOTE: Right now, we're throwing away the buyers
-    // key, which means they'll never be able to see where
-    // the order went again without asking the buyer.
-    const buyersKey = nacl.box.keyPair();
 
     const encrypted = nacl.box(
       secretData,
       nonce,
-      encryptionKey,
-      buyersKey.secretKey
+      sellersPublicEncryptionKey,
+      buyersEncryptionKeypair?.secretKey
     );
 
     const data = {
-      publicKey: buyersKey.publicKey,
+      publicKey: buyersEncryptionKeypair.publicKey,
       nonce: Buffer.from(nonce).toString('hex'),
       message: Buffer.from(encrypted).toString('hex'),
     };

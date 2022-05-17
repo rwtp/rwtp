@@ -3,11 +3,11 @@ import { OrderBook } from 'rwtp';
 import { useState } from 'react';
 import { ArrowRightIcon } from '@heroicons/react/solid';
 import { ethers } from 'ethers';
-import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
+import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -32,10 +32,9 @@ function NewSellOrder() {
     price: 0,
     token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
   });
-  const [secretKey, setSecretKey] = useState('');
-  const [sellOrder, setSellOrder] = useState();
   const signer = useSigner();
   const router = useRouter();
+  const sellersEncryptionKeypair = useEncryptionKeypair();
 
   const book = useContractWrite(
     {
@@ -57,13 +56,10 @@ function NewSellOrder() {
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
 
-    const keypair = nacl.box.keyPair();
-    setSecretKey(Buffer.from(keypair.secretKey).toString('hex'));
-
     const cid = await postToIPFS({
       title: state.title,
       description: state.description,
-      encryptionPublicKey: Buffer.from(keypair.publicKey).toString('hex'),
+      encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
       priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
       stakeSuggested: toBn(
         state.buyersStake.toString(),
@@ -87,44 +83,7 @@ function NewSellOrder() {
       );
     }
     const sellOrderAddress = result.events[0].args[0];
-    setSellOrder(sellOrderAddress);
-  }
-
-  if (sellOrder) {
-    return (
-      <ConnectWalletLayout>
-        <div className="flex flex-col p-8 h-full mt-12">
-          <div className="flex-col max-w-xl mx-auto my-auto h-full">
-            <h1 className="text-xl font-bold mb-1 flex items-center">
-              Write down this secret key, you'll never see it again.
-            </h1>
-            <p className="mb-6 text-gray">
-              You won't be able to see incoming orders without it. Put it in a
-              password manager, or somewhere safe.
-            </p>
-
-            <input
-              className="px-4 py-2 border border-blue-500 rounded shadow-inner w-full text-sm font-mono"
-              value={`${secretKey}`}
-              autoFocus
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => {}}
-            />
-
-            <div className="mt-4 flex justify-end">
-              <button
-                className="underline rounded px-4 py-2 flex items-center"
-                onClick={() => {
-                  router.push('/buy/' + sellOrder);
-                }}
-              >
-                I wrote down the key <ArrowRightIcon className="w-4 h-4 ml-2" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </ConnectWalletLayout>
-    );
+    router.push(`/buy/${sellOrderAddress}`);
   }
 
   return (
