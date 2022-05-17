@@ -82,12 +82,12 @@ export default function Page() {
         <div className="bg-gray-50 border-t pt-4 flex-1 w-full">
           <div className="max-w-6xl mx-auto px-4">
             <Suspense fallback={<div></div>}>
-              <div className="flex flex-row bg-white border rounded text-sm mb-4 w-full flex-1">
+              <div className="flex flex-row bg-white border border-black rounded text-sm mb-4 w-full flex-1">
                 <div className="pl-2 pr-2 py-2 flex items-center">
                   <SearchIcon className="h-4 w-4 my-auto text-gray-400 " />
                 </div>
                 <input
-                  className="outline-0 flex-1 w-full px-2 py-2"
+                  className="outline-0 flex-1 w-full px-2 py-2 rounded-r"
                   type="text"
                   id="search"
                   placeholder="ex: 'Vintage shirts'"
