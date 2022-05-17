@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
@@ -38,9 +37,7 @@ function OrderView(props: { order: SellOrder }) {
   );
 }
 
-function Results(props: {
-  searchText: string;
-}) {
+function Results(props: { searchText: string }) {
   const sellOrders = useSellOrders({
     first: 10,
     skip: 0,
@@ -74,9 +71,8 @@ function Results(props: {
   return <FadeIn>{orders}</FadeIn>;
 }
 
-
 export default function Page() {
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState('');
   return (
     <ConnectWalletLayout>
       <div className="h-full flex flex-col">
