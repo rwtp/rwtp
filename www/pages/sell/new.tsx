@@ -115,7 +115,7 @@ function NewSellOrder() {
               <button
                 className="underline rounded px-4 py-2 flex items-center"
                 onClick={() => {
-                  router.push('/buy/orders/' + sellOrder);
+                  router.push('/buy/' + sellOrder);
                 }}
               >
                 I wrote down the key <ArrowRightIcon className="w-4 h-4 ml-2" />

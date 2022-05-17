@@ -26,7 +26,7 @@ function OrderView(props: { order: SellOrder }) {
   return (
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
-        <Link href={`/buy/orders/${props.order.address}`}>
+        <Link href={`/buy/${props.order.address}`}>
           <a className="underline font-serif">{props.order.title}</a>
         </Link>
         <div className="h-px bg-black w-full flex-1" />

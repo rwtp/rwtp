@@ -31,7 +31,7 @@ export function TabBar(props: { tab: 'buy' | 'sell' }) {
   return (
     <div className=" border-b w-full flex pt-2">
       <div className="flex gap-4 max-w-6xl mx-auto w-full px-4">
-        <Link href="/buy/orders">
+        <Link href="/buy">
           <a
             className={cn({
               'pb-1': true,
@@ -42,7 +42,7 @@ export function TabBar(props: { tab: 'buy' | 'sell' }) {
             Buy
           </a>
         </Link>
-        <Link href="/sell/orders">
+        <Link href="/sell">
           <a
             className={cn({
               'pb-1': true,
@@ -142,7 +142,7 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
           </div>
 
           <a
-            href="/sell/orders"
+            href="/sell"
             className={cn({
               'flex px-4 rounded text-sm py-1': true,
               'bg-black text-white': router.pathname.startsWith('/sell'),
@@ -152,7 +152,7 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
             Sell
           </a>
           <a
-            href="/buy/orders"
+            href="/buy"
             className={cn({
               'flex px-4 rounded text-sm py-1': true,
               'bg-black text-white': router.pathname.startsWith('/buy'),
