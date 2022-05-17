@@ -14,6 +14,7 @@ import { fromBn, toBn } from 'evm-bn';
 import { ArrowLeftIcon, FingerPrintIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
 import * as nacl from 'tweetnacl';
+import { RequiresKeystore } from '../../../../lib/keystore';
 
 function ConnectWalletButton(props: {
   children: React.ReactNode;
@@ -221,7 +222,9 @@ export default function Page() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <PageWithPubkey pubkey={pubkey} />
+      <RequiresKeystore>
+        <PageWithPubkey pubkey={pubkey} />
+      </RequiresKeystore>
     </Suspense>
   );
 }
