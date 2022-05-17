@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
 import {
+  SearchIcon
+} from '@heroicons/react/solid';
+import {
   ConnectWalletLayout,
   Footer,
 } from '../../../components/Layout';
@@ -83,11 +86,17 @@ export default function Page() {
             <p className="pb-4">This list may be incomplete.</p>
           </div>
           <Suspense fallback={<div></div>}>
-            <div>
-              <span className="pr-2">Search:</span>
-              <input className="border border-black-1 rounded" type="text" name="name" onChange={(inputEvent) => {setSearchText(inputEvent.target.value)}} />
+            <div className='flex flex-row px-2 py-2 border rounded w-min text-sm justify-center'>
+              <SearchIcon className="h-4 w-4 mr-2 my-auto text-gray-500" />
+              <input 
+                className='outline-0' 
+                type="text"
+                id='search'
+                placeholder='Search'
+                onChange={(inputEvent) => { setSearchText(inputEvent.target.value) }} 
+              />
             </div>
-            <Results searchText={searchText}/>
+            <Results searchText={searchText} />
           </Suspense>
         </div>
         <Footer />

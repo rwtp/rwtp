@@ -1,4 +1,4 @@
-import { useContract, useContractWrite, useSigner } from 'wagmi';
+import { useContractWrite } from 'wagmi';
 import { useSubgraph } from './useSubgraph';
 import { SellOrder } from 'rwtp';
 import { BigNumber } from 'ethers';
@@ -20,23 +20,6 @@ export interface SellOrderData {
   };
 }
 
-const sellOrderBodyText = `
-address
-title
-description
-sellersStake
-priceSuggested
-stakeSuggested
-encryptionPublicKey
-seller
-token {
-  decimals
-  symbol
-  name
-  address
-}
-`
-
 function useSellOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
   const metadata = useSubgraph<T>([
     `
@@ -53,46 +36,37 @@ function useSellOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
 
 }
 
-function useSellOrdersWithSearch(first: number, skip: number, searchText: string) {
-  let res = useSellOrdersWrapperWithMetaData<{ sellOrderSearch: SellOrderData[]; }>(
-    `
-      sellOrderSearch(first:$first, skip:$skip, text:"${searchText}:*") {
-        ${sellOrderBodyText}
-      }
-    `,
-    {
-      skip: skip,
-      first: first,
-    }
-  )
-  console.log(res);
-  return {
-    ...res.metadata,
-    data: res.data?.sellOrderSearch,
-  }
-}
-
-
-function useSellOrdersNoSearch(first: number, skip: number) {
-  let res = useSellOrdersWrapperWithMetaData<{ sellOrders: SellOrderData[]; }>(
-    `
-    sellOrders(first:$first, skip:$skip) {
-        ${sellOrderBodyText}
-      }
-    `,
-    {
-      skip: skip,
-      first: first,
-    }
-  )
-  return {
-    ...res.metadata,
-    data: res.data?.sellOrders,
-  }
-}
-
 export function useSellOrders(args: { first: number; skip: number, searchText: string }) {
-  return args.searchText ? useSellOrdersWithSearch(args.first, args.skip, args.searchText) : useSellOrdersNoSearch(args.first, args.skip);
+  const searchArg = args.searchText ? `sellOrderSearch(first:$first, skip:$skip, text:"${args.searchText}:*")` : `sellOrders(first:$first, skip:$skip)`;
+  let res = useSellOrdersWrapperWithMetaData(
+    `
+    ${searchArg} {
+      address
+      title
+      description
+      sellersStake
+      priceSuggested
+      stakeSuggested
+      encryptionPublicKey
+      seller
+      token {
+        decimals
+        symbol
+        name
+        address
+      }
+    }
+    `,
+    {
+      skip: args.skip,
+      first: args.first,
+    }
+  ) as any;
+  const data = args.searchText ? res.data?.sellOrderSearch : res.data?.sellOrders;
+  return {
+    ...res.metadata,
+    data: data,
+  }
 }
 
 // Returns information about a sell order
