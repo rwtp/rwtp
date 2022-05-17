@@ -7,12 +7,12 @@ import {
   SellOrderData,
   useSellOrder,
   useSellOrderMethods,
-} from '../../../../lib/useSellOrder';
-import { useTokenMethods } from '../../../../lib/tokens';
-import { postToIPFS } from '../../../../lib/ipfs';
+} from '../../../lib/useSellOrder';
+import { useTokenMethods } from '../../../lib/tokens';
+import { postToIPFS } from '../../../lib/ipfs';
 import { fromBn, toBn } from 'evm-bn';
 import { ArrowLeftIcon, FingerPrintIcon } from '@heroicons/react/solid';
-import { ConnectWalletLayout } from '../../../../components/Layout';
+import { ConnectWalletLayout } from '../../../components/Layout';
 import * as nacl from 'tweetnacl';
 
 function ConnectWalletButton(props: {

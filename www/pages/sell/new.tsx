@@ -6,8 +6,8 @@ import { ethers } from 'ethers';
 import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
-import { ConnectWalletLayout } from '../../../components/Layout';
-import { RequiresKeystore } from '../../../lib/keystore';
+import { ConnectWalletLayout } from '../../components/Layout';
+import { RequiresKeystore } from '../../lib/keystore';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {

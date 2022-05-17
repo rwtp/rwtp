@@ -1,15 +1,15 @@
 import Link from 'next/link';
 import { Suspense, useState } from 'react';
-import { FadeIn } from '../../../components/FadeIn';
+import { FadeIn } from '../../components/FadeIn';
 import {
   SearchIcon
 } from '@heroicons/react/solid';
 import {
   ConnectWalletLayout,
   Footer,
-} from '../../../components/Layout';
-import Tag from '../../../components/Tag';
-import { useSellOrders } from '../../../lib/useSellOrder';
+} from '../../components/Layout';
+import Tag from '../../components/Tag';
+import { useSellOrders } from '../../lib/useSellOrder';
 
 interface SellOrder {
   address: string;

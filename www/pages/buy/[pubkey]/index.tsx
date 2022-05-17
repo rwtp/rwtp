@@ -9,15 +9,15 @@ import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense } from 'react';
-import { FadeIn } from '../../../../components/FadeIn';
-import { ConnectWalletLayout, Footer } from '../../../../components/Layout';
-import { useTokenMethods } from '../../../../lib/tokens';
+import { FadeIn } from '../../../components/FadeIn';
+import { ConnectWalletLayout, Footer } from '../../../components/Layout';
+import { useTokenMethods } from '../../../lib/tokens';
 import {
   SellOrderData,
   useSellOrder,
   useSellOrderMethods,
   useSellOrderOffers,
-} from '../../../../lib/useSellOrder';
+} from '../../../lib/useSellOrder';
 import cn from 'classnames';
 
 function Offer(props: {
