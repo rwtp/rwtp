@@ -12,6 +12,8 @@ export interface SellOrderData {
   stakeSuggested: string;
   encryptionPublicKey: string;
   seller: string;
+  offerSchema: string;
+  offerSchemaUri: string;
   token: {
     decimals: number;
     symbol: string;
@@ -48,6 +50,8 @@ export function useSellOrders(args: { first: number; skip: number, searchText: s
       priceSuggested
       stakeSuggested
       encryptionPublicKey
+      offerSchema
+      offerSchemaUri
       seller
       token {
         decimals
@@ -86,6 +90,8 @@ export function useSellOrder(address: string) {
       encryptionPublicKey
       sellersStake
       seller
+      offerSchema
+      offerSchemaUri
       token {
         decimals
         symbol

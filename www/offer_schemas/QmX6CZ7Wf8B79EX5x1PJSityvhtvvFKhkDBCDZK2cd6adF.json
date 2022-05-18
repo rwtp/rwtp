@@ -1,0 +1,18 @@
+{
+    "title": "Simple Ecommerce Schema",
+    "description": "Payload for buyer's metadata when the request to purchase an item.",
+    "type": "object",
+    "properties": {
+        "shippingAddress": {
+            "title": "Shipping Address",
+            "description": "Buyer's address to ship the item to.",
+            "type": "string"
+        },
+        "email": {
+            "title": "Email",
+            "description": "Email of the buyer requesting to buy a Listing.",
+            "type": "string"
+        }
+    },
+    "required": [ "email", "shippingAddress" ]
+}

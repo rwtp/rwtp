@@ -16,6 +16,8 @@ import { ConnectWalletLayout } from '../../../components/Layout';
 import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
 import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
+import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
+import Form from '@rjsf/core';
 
 function ConnectWalletButton(props: {
   children: React.ReactNode;
@@ -58,9 +60,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const sellOrderMethods = useSellOrderMethods(sellOrder.address);
   const router = useRouter();
   const buyersEncryptionKeypair = useEncryptionKeypair();
-
-  const [email, setEmail] = useState('');
-  const [shippingAddress, setShippingAddress] = useState('');
+  const [offerData, setOfferData] = useState({});
 
   const quantity = 1;
   const price = sellOrder.priceSuggested
@@ -71,14 +71,11 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     : BigNumber.from(0);
 
   async function onBuy() {
-    if (!email || !shippingAddress) return;
+    if (!offerData) return;
     if (!buyersEncryptionKeypair) return;
 
     const secretData = Buffer.from(
-      JSON.stringify({
-        email,
-        shippingAddress,
-      }),
+      JSON.stringify(offerData),
       'utf-8'
     );
     const nonce = nacl.randomBytes(24);
@@ -149,34 +146,19 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
               </div>
             </div>
             <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-              <label className="flex flex-col mt-2">
-                <div className="text-xs font-bold py-1">Shipping Address</div>
-                <input
-                  type={'text'}
-                  className={'px-2 py-2 border rounded'}
-                  name="address"
-                  placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-                  onChange={(e) => setShippingAddress(e.target.value)}
-                />
-              </label>
-
-              <label className="flex flex-col  mt-2">
-                <div className="text-xs font-bold py-1">Email</div>
-                <input
-                  type={'text'}
-                  className={'px-2 py-2 border rounded'}
-                  name="address"
-                  placeholder="you@ethereum.org"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </label>
-
+              <div className="mt-4">
+                {
+                  sellOrder.offerSchemaUri && sellOrder.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
+                    <OfferForm schema={sellOrder.offerSchema} setOfferData={setOfferData} offerData={offerData} /> :
+                    <SimpleOfferForm setOfferData={setOfferData} offerData={offerData} />
+                }
+              </div>
               <div className="mt-4">
                 <ConnectWalletButton
                   className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
                   onClick={() => onBuy().catch(console.error)}
                 >
-                  <div>Buy</div>
+                  <div>Submit Offer</div>
                   <div>{fromBn(price, sellOrder.token.decimals)}</div>
                 </ConnectWalletButton>
                 <div className="text-sm mt-4 text-gray-500">
@@ -195,6 +177,100 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
         </div>
       </div>
     </ConnectWalletLayout>
+  );
+}
+
+const fields = {
+  DescriptionField: (description: any) => {
+    return <div> </div>;
+  },
+  TitleField: (title: any) => {
+    return <div> </div>;
+  },
+};
+
+const customWidgets = {
+  // To add a placeholder we will need to update the uiSchema prop on Form.
+  TextWidget: (props: any) => {
+    return (
+      <div>
+        <input type="text"
+          className="px-2 py-2 border rounded"
+          value={props.value}
+          required={props.required}
+          placeholder={props.uiSchema['ui:placeholder']}
+          onChange={(event) => props.onChange(event.target.value)}
+        />
+      </div>
+    )
+  }
+};
+
+function SimpleOfferForm(props: {
+  setOfferData: (data: any) => void,
+  offerData: any,
+}) {
+  return (
+    <div>
+      <label className="flex flex-col mt-2">
+        <div className="text-xs font-bold py-1">Shipping Address</div>
+        <input
+          type={'text'}
+          className={'px-2 py-2 border rounded'}
+          name="address"
+          placeholder="100 Saddle Point; San Fransokyo, CA 94112"
+          onChange={(e) => props.setOfferData({
+            ...props.offerData,
+            shippingAddress: e.target.value
+          })}
+        />
+      </label>
+
+      <label className="flex flex-col  mt-2">
+        <div className="text-xs font-bold py-1">Email</div>
+        <input
+          type={'text'}
+          className={'px-2 py-2 border rounded'}
+          name="address"
+          placeholder="you@ethereum.org"
+          onChange={(e) => props.setOfferData({
+            ...props.offerData,
+            email: e.target.value
+          })}
+        />
+      </label>
+    </div>
+  );
+}
+
+function OfferForm(props: {
+  schema: string,
+  setOfferData: (data: any) => void,
+  offerData: any,
+}) {
+  // TODO: Add form validation on submit button.
+  let schema = JSON.parse(props.schema);
+  return (
+    <div className="flex flex-col">
+      <Form schema={schema}
+        widgets={customWidgets}
+        fields={fields}
+        onChange={(e) => {
+          let formData = JSON.parse(JSON.stringify(e.formData));
+          let data = props.offerData;
+          for (var key in formData) {
+              if (formData.hasOwnProperty(key)) {
+                data[key] = formData[key];
+              }
+          }
+          props.setOfferData(data);
+        }}
+      >
+        { /* This body needs to be empty so that the submit button isn't rendered. */ }
+        <div></div>
+      </Form>
+
+    </div>
   );
 }
 
