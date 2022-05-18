@@ -88,14 +88,15 @@ function NewSellOrder() {
 
   return (
     <ConnectWalletLayout>
-      <div className="px-4 py-4 max-w-6xl mx-auto">
-        <div className="font-serif pb-2 text-2xl">New Sell Order</div>
-        <p className="mb-8">Sell anything, from a pack of gum to a ferrari.</p>
+      <div className="px-4 py-4 max-w-2xl mx-auto">
+        <div className="font-serif mb-12 mt-12 text-2xl">Create a new sell listing</div>
+        {/* <p className="mb-8">Sell anything, from a pack of gum to a ferrari.</p> */}
+
         <div className="flex flex-col">
-          <label className="flex flex-col">
-            <strong className="mb-1 text-sm">Title</strong>
+          <label className="flex flex-col mb-8">
+            <div className="font-sans mb-1 text-base">Title</div>
             <input
-              className="border px-4 py-2 mb-2"
+              className="font-sans border px-4 py-2 rounded"
               onChange={(e) =>
                 setState((s) => ({ ...s, title: e.target.value }))
               }
@@ -103,11 +104,43 @@ function NewSellOrder() {
               value={state.title}
             />
           </label>
-          <label className="flex flex-col">
-            <strong className="mb-1 text-sm">Description</strong>
+
+          <div className="flex mb-8">
+            <label className="flex flex-col">
+              <div className="font-sans mb-1 text-base">Price</div>
+              <input
+                className="border-l border-t border-b px-4 py-2 rounded-l"
+                type="number"
+                placeholder="1.5"
+                onChange={(e) =>
+                  setState((s) => ({
+                    ...s,
+                    price: parseFloat(e.target.value),
+                  }))
+                }
+                value={state.price}
+              />
+            </label>
+
+            <label className="flex flex-1 flex-col">
+              <div className="font-sans mb-1 text-base">Token</div>
+              <input
+                className="border px-4 py-2 rounded-r"
+                type="string"
+                placeholder="0x..."
+                onChange={(e) =>
+                  setState((s) => ({ ...s, token: e.target.value }))
+                }
+                value={state.token}
+              />
+            </label>
+          </div>
+
+          <label className="flex flex-col mb-8">
+            <div className="font-sans mb-1 text-base">Description</div>
             <textarea
-              className="border px-4 py-2 mb-2"
-              placeholder="Description"
+              className="border px-4 py-2 rounded"
+              placeholder="Description of the item you sell here. Try using tags to make it easier for the user to find your stuff. For example: Used car. #automobile #sedan #tan"
               onChange={(e) =>
                 setState((s) => ({ ...s, description: e.target.value }))
               }
@@ -115,11 +148,11 @@ function NewSellOrder() {
             />
           </label>
 
-          <div className="flex">
-            <label className="flex flex-1 flex-col">
-              <strong className="mb-1 text-sm">Seller's Stake</strong>
+          <div className="flex mb-8">
+            <label className="flex flex-1 flex-col mr-4">
+              <div className="mb-1 text-base">Seller's Stake</div>
               <input
-                className="border px-4 py-2 mb-2"
+                className="border px-4 py-2 rounded"
                 type="number"
                 placeholder="1.5"
                 onChange={(e) =>
@@ -133,9 +166,9 @@ function NewSellOrder() {
             </label>
 
             <label className="flex flex-1 flex-col">
-              <strong className="mb-1 text-sm">Buyer's Stake</strong>
+              <div className="mb-1 text-base">Buyer's Stake</div>
               <input
-                className="border-r border-t border-b px-4 py-2 mb-2"
+                className="border px-4 py-2 rounded"
                 type="number"
                 placeholder="1.5"
                 onChange={(e) =>
@@ -145,36 +178,6 @@ function NewSellOrder() {
                   }))
                 }
                 value={state.buyersStake}
-              />
-            </label>
-          </div>
-
-          <div className="flex">
-            <label className="flex flex-col">
-              <strong className="mb-1 text-sm">Price</strong>
-              <input
-                className="border-l border-t border-b px-4 py-2 mb-2"
-                type="number"
-                placeholder="1.5"
-                onChange={(e) =>
-                  setState((s) => ({
-                    ...s,
-                    price: parseFloat(e.target.value),
-                  }))
-                }
-                value={state.price}
-              />
-            </label>
-            <label className="flex flex-1 flex-col">
-              <strong className="mb-1 text-sm">Token</strong>
-              <input
-                className="border px-4 py-2 mb-2"
-                type="string"
-                placeholder="0x..."
-                onChange={(e) =>
-                  setState((s) => ({ ...s, token: e.target.value }))
-                }
-                value={state.token}
               />
             </label>
           </div>
