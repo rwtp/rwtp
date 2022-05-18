@@ -1,9 +1,10 @@
+import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { ethers } from 'ethers';
 import { OrderBook, SellOrder } from 'rwtp';
-let GAS = 2300000;
+let GAS = 13300000;
 let WRAPPED_ETH_ADDRESS = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
 // let ORDER_BOOK_ADDRESS = "0x667D3DED6C891453E4b1BF6032CD0c22E0c31baC";
-let ORDER_BOOK_ADDRESS = "0x236487c12483526d5dA3Bf23dbd0961f41F32095";
+let ORDER_BOOK_ADDRESS = "0xeEc309065c8Cfb99D1F6bBb97b139488F3A90d03";
 // Parse arguments
 const args = process.argv.slice(2);
 
@@ -40,6 +41,11 @@ function purchasingToken(purchaseTokenAddress: string, wallet: ethers.Wallet): e
   return purchasingToken.attach(purchaseTokenAddress);
 }
 
+const CREATE_ORDER = false;
+const SET_ACTIVE = true;
+const BUY_SEQUENCE = false;
+const COMMIT_ORDER = false;
+const CONFIRM_OFFER = false;
 // MAIN FUNCTION
 (async function () {
   console.log("Running");
@@ -54,78 +60,146 @@ function purchasingToken(purchaseTokenAddress: string, wallet: ethers.Wallet): e
 
     
     console.log("creating wallet");
-    const wallet = new ethers.Wallet(privateKey, provider);
-    console.log("wallet: ", wallet.address);
-    let preBalance = await wallet.getBalance();
+    const sellerWallet = new ethers.Wallet(privateKey, provider);
+    console.log("wallet: ", sellerWallet.address);
+    let preBalance = await sellerWallet.getBalance();
     console.log('Balance:', ethers.utils.formatEther(preBalance), 'ETH\n');
 
 
     // Comment this if you want to create a new order book 
-    let orderBook = new ethers.Contract(ORDER_BOOK_ADDRESS, OrderBook.abi, wallet);
+    let orderBook = new ethers.Contract(ORDER_BOOK_ADDRESS, OrderBook.abi, sellerWallet);
 
     // Uncomment this if you want to create a new order book
-    // let orderBook = await createOrderBook(wallet);
-    // console.log("orderBook: ", orderBook);
+    // let orderBook = await createOrderBook(sellerWallet);
+    console.log("orderBook: ", orderBook);
     
     console.log("orderBook.address: ", orderBook.address);
     // return;
-    let sellOrder = await orderBook.createSellOrder(
-      wallet.address,
-      WRAPPED_ETH_ADDRESS,
-      10,
-      "ipfs://QmZHqdtFg9rLh7fcxPGMKfVn3WxeTKNrv5WzAPZAv86Jb3",
-      1000,
-      { gasLimit: GAS }
-    )
-    // console.log("sellOrder: ", sellOrder);
-    let waited = await sellOrder.wait();
-    // console.log("waited: ", waited);
-    // console.log("waited.events: ", waited.events);
-    console.log("waited.events[0].args: ", waited.events[0].args['sellOrder']);
-    let sellOrderAddress = waited.events[0].args['sellOrder'];
+    let sellOrderAddress = "";
+    if (CREATE_ORDER) {
+
+      let sellOrder = await orderBook.createSellOrder(
+        sellerWallet.address,
+        WRAPPED_ETH_ADDRESS,
+        10,
+        "ipfs://QmZHqdtFg9rLh7fcxPGMKfVn3WxeTKNrv5WzAPZAv86Jb3",
+        1000,
+        { gasLimit: GAS }
+      )
+      console.log("sellOrder: ", sellOrder.hash);
+      let waited = await sellOrder.wait();
+      // console.log("waited: ", waited);
+      // console.log("waited.events: ", waited.events);
+      console.log("waited.events[0].args: ", waited.events[0].args['sellOrder']);
+      sellOrderAddress = waited.events[0].args['sellOrder'];
+      return;
+    } else {
+      sellOrderAddress = "0xD84C9Aac4B3d2A9D12965B38b5B0b4A61d18972b"
+    }
     
-
-
-    //BUY SEQUENCE 
     const buyerWallet = new ethers.Wallet(buyer_privateKey, provider);
     console.log("buyerWallet: ", buyerWallet.address);
     let buyerBalance = await buyerWallet.getBalance();
     console.log('Buyer Balance:', ethers.utils.formatEther(buyerBalance), 'ETH\n');
 
-    let sellOrderContract = new ethers.Contract(sellOrderAddress, SellOrder.abi, buyerWallet);
-    // console.log("sellOrderContract: ", sellOrderContract);
+    let sellOrderContractBuyer = new ethers.Contract(sellOrderAddress, SellOrder.abi, buyerWallet);
 
-    console.log("sellOrderContract.address: ", sellOrderContract.address);
-    console.log("sellOrderContract.orderURI: ", await sellOrderContract.orderURI());
+    if (SET_ACTIVE) {
+      let sellOrderContractSeller = new ethers.Contract(sellOrderAddress, SellOrder.abi, sellerWallet);
+      console.log(sellOrderContractSeller);
+      // return;
+      let setActive = await sellOrderContractSeller.setActive(false, { gasLimit: GAS });
+      console.log("setActive: ", setActive.hash);
+      let waited = await setActive.wait();
+      console.log("waited: ", waited);
+      return;
+    }
+    if (BUY_SEQUENCE) {
+    
+      // console.log("sellOrderContract: ", sellOrderContract);
 
-    let purchaseToken = purchasingToken(await sellOrderContract.token(), buyerWallet);
-    console.log("token:", purchaseToken.address);
-    console.log("token.name: ", await purchaseToken.name());
-    // console.log(`Approving ${appPrice} to purchase ${appName}`);
-    // console.log("purchaseToken: ", purchaseToken);
-    let deposit_txn = await purchaseToken.deposit({value: 1000});
-    console.log("deposit_txn: ", deposit_txn.hash);
-    let deposit_txn_receipt = await deposit_txn.wait();
-    console.log("deposit_txn_receipt: ", deposit_txn_receipt.hash);
-    let approval_txn = await purchaseToken.approve(sellOrderContract.address, 100);
-    console.log("approval_txn: ", approval_txn.hash);
-    let approval_confirmation = await approval_txn.wait();
-    console.log("approval_confirmation: ", approval_confirmation.hash);
-    let allowance = await purchaseToken.allowance(buyerWallet.address, sellOrderContract.address);
-    console.log("allowance: ", allowance.toString());
+      console.log("sellOrderContract.address: ", sellOrderContractBuyer.address);
+      console.log("sellOrderContract.orderURI: ", await sellOrderContractBuyer.orderURI());
+
+      let buyerPurchaseToken = purchasingToken(await sellOrderContractBuyer.token(), buyerWallet);
+      console.log("token:", buyerPurchaseToken.address);
+      console.log("token.name: ", await buyerPurchaseToken.name());
+      // console.log(`Approving ${appPrice} to purchase ${appName}`);
+      // console.log("purchaseToken: ", purchaseToken);
+      let deposit_txn = await buyerPurchaseToken.deposit({value: 1000});
+      console.log("deposit_txn: ", deposit_txn.hash);
+      let deposit_txn_receipt = await deposit_txn.wait();
+      console.log("deposit_txn_receipt: ", deposit_txn_receipt.hash);
+      let approval_txn = await buyerPurchaseToken.approve(sellOrderContractBuyer.address, 100);
+      console.log("approval_txn: ", approval_txn.hash);
+      let approval_confirmation = await approval_txn.wait();
+      console.log("approval_confirmation: ", approval_confirmation.hash);
+      let allowance = await buyerPurchaseToken.allowance(buyerWallet.address, sellOrderContractBuyer.address);
+      console.log("allowance: ", allowance.toString());
 
 
-    let offer = await sellOrderContract['submitOffer(uint32,uint32,uint128,uint128,string)'](
-        0,
-        1,
-        3,
-        2,
-        'ipfs://blahblahblah',
-        { gasLimit: GAS }
-    )
-    console.log("offer: ", offer.hash);
-    let offer_receipt = await offer.wait();
-    console.log("offer_receipt: ", offer_receipt.hash);
+      let offer = await sellOrderContractBuyer['submitOffer(uint32,uint32,uint128,uint128,string)'](
+          0,
+          1,
+          3,
+          2,
+          'ipfs://blahblahblah',
+          { gasLimit: GAS }
+      )
+      console.log("offer: ", offer.hash);
+      let offer_receipt = await offer.wait();
+      console.log("offer_receipt: ", offer_receipt.hash);
+      return;
+    }
+
+
+    let sellOrderContractSeller = new ethers.Contract(sellOrderAddress, SellOrder.abi, sellerWallet);
+    let offer = await sellOrderContractSeller.offers(buyerWallet.address, 0);
+    console.log("offer state: ", offer.state);
+    if (COMMIT_ORDER) {
+      if (offer.state != 1) {
+        console.log("Can only commit an offer that is in state 1");
+        return;
+      }
+
+      let sellerPurchaseToken = purchasingToken(await sellOrderContractSeller.token(), sellerWallet);
+      console.log("token:", sellerPurchaseToken.address);
+      console.log("token.name: ", await sellerPurchaseToken.name());
+      // console.log(`Approving ${appPrice} to purchase ${appName}`);
+      // console.log("purchaseToken: ", purchaseToken);
+      let deposit_txn = await sellerPurchaseToken.deposit({value: 1000});
+      console.log("deposit_txn: ", deposit_txn.hash);
+      let deposit_txn_receipt = await deposit_txn.wait();
+      console.log("deposit_txn_receipt: ", deposit_txn_receipt.hash);
+      let approval_txn = await sellerPurchaseToken.approve(sellOrderContractSeller.address, 1000);
+      console.log("approval_txn: ", approval_txn.hash);
+      let approval_confirmation = await approval_txn.wait();
+      console.log("approval_confirmation: ", approval_confirmation.hash);
+      let allowance = await sellerPurchaseToken.allowance(buyerWallet.address, sellOrderContractSeller.address);
+      console.log("allowance: ", allowance.toString());
+      
+      
+      let commit_txn = await sellOrderContractSeller.commit(buyerWallet.address, 0, { gasLimit: GAS });
+      console.log("commit_txn: ", commit_txn.hash);
+      let commit_txn_receipt = await commit_txn.wait();
+      console.log("commit_txn_receipt: ", commit_txn_receipt.transactionHash);
+      return;
+    }
+
+    if (CONFIRM_OFFER) {
+      if (offer.state != 2) {
+        console.log("Can only confirm an offer that is in state 2");
+        return;
+      }
+      let confirm_txn = await sellOrderContractBuyer.confirm(0, { gasLimit: GAS });
+      console.log("confirm_txn: ", confirm_txn.hash);
+      let confirm_txn_receipt = await confirm_txn.wait();
+      console.log("confirm_txn_receipt: ", confirm_txn_receipt.transactionHash);
+      return;
+    }
+    
+
+    
 
 
 
