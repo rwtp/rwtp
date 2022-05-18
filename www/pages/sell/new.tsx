@@ -57,6 +57,7 @@ function NewSellOrder() {
     const decimals = await erc20.decimals();
 
     const cid = await postToIPFS({
+      buyerSchema: "ipfs://QmaHf6TmEnczaXB2j6k6GFrdtvsipZdjJCL89kfCFCWuV2",
       title: state.title,
       description: state.description,
       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
