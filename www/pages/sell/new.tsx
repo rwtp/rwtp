@@ -9,8 +9,8 @@ import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
 
-async function postToIPFS(data: any) {
-  const result = await fetch('/api/upload', {
+async function postJSONToIPFS(data: any) {
+  const result = await fetch('/api/uploadJson', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,10 +23,20 @@ async function postToIPFS(data: any) {
   return cid;
 }
 
+async function postFileToIPFS(file: Buffer) {
+  const result = await fetch('/api/uploadFile', {
+    method: 'POST',
+    body: file.toString("base64"),
+  });
+  const { cid } = await result.json();
+  return cid;
+}
+
 function NewSellOrder() {
   const [state, setState] = useState({
     title: '',
     description: '',
+    primaryImage: '',
     sellersStake: 0,
     buyersStake: 0,
     price: 0,
@@ -60,9 +70,10 @@ function NewSellOrder() {
     const keypair = nacl.box.keyPair();
     setSecretKey(Buffer.from(keypair.secretKey).toString('hex'));
 
-    const cid = await postToIPFS({
+    const cid = await postJSONToIPFS({
       title: state.title,
       description: state.description,
+      primaryImage: state.primaryImage,
       encryptionPublicKey: Buffer.from(keypair.publicKey).toString('hex'),
       priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
       stakeSuggested: toBn(
@@ -153,6 +164,24 @@ function NewSellOrder() {
                 setState((s) => ({ ...s, description: e.target.value }))
               }
               value={state.description}
+            />
+          </label>
+
+          <label className="flex flex-col">
+            <strong className="mb-1 text-sm">Image</strong>
+            <input
+              className="py-2 mb-2"
+              type="file"
+              accept={'image/png, image/gif, image/jpeg'}
+              onChange={async (e) => {
+                if (!e.target.files) return;
+                const file = e.target.files[0];
+                if (!file || !file.name) return;
+                
+                const arrayBuffer = await file.arrayBuffer()
+                const cid = await postFileToIPFS(Buffer.from(arrayBuffer));
+                setState((s) => ({ ...s, primaryImage: `ipfs://${cid}` }))
+              }}
             />
           </label>
 
