@@ -1,7 +1,7 @@
 import { useContractWrite, useSigner } from 'wagmi';
 import { OrderBook } from 'rwtp';
 import { useState } from 'react';
-import { ArrowRightIcon } from '@heroicons/react/solid';
+import { ArrowRightIcon, RefreshIcon, XIcon } from '@heroicons/react/solid';
 import { ethers } from 'ethers';
 import * as nacl from 'tweetnacl';
 import { toBn } from 'evm-bn';
@@ -44,6 +44,8 @@ function NewSellOrder() {
   });
   const [secretKey, setSecretKey] = useState('');
   const [sellOrder, setSellOrder] = useState();
+  const [imageUploading, setImageUploading] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
   const signer = useSigner();
   const router = useRouter();
 
@@ -119,7 +121,7 @@ function NewSellOrder() {
               value={`${secretKey}`}
               autoFocus
               onFocus={(e) => e.target.select()}
-              onChange={(e) => {}}
+              onChange={(e) => { }}
             />
 
             <div className="mt-4 flex justify-end">
@@ -167,24 +169,86 @@ function NewSellOrder() {
             />
           </label>
 
-          <label className="flex flex-col">
+          <div className="flex flex-col mb-2">
             <strong className="mb-1 text-sm">Image</strong>
-            <input
-              className="py-2 mb-2"
-              type="file"
-              accept={'image/png, image/gif, image/jpeg'}
-              onChange={async (e) => {
-                if (!e.target.files) return;
-                const file = e.target.files[0];
-                if (!file || !file.name) return;
-                
-                const arrayBuffer = await file.arrayBuffer()
-                const cid = await postFileToIPFS(Buffer.from(arrayBuffer));
-                setState((s) => ({ ...s, primaryImage: `ipfs://${cid}` }))
-              }}
-            />
-          </label>
+            <label className='flex flex-row content-center'>
+              <input
+                type="text"
+                className="px-4 py-2 border my-auto flex-grow"
+                placeholder='ipfs://cid or https://image.jpg'
+                hidden={imageUploading}
+                value={state.primaryImage}
+                onChange={(e) => {
+                  setShowImagePreview(false);
+                  setState((s) => ({ ...s, primaryImage: e.target.value }))
+                }}
+                onBlur={() => setShowImagePreview(true)}
+              />
+              <p
+                className='my-auto px-5 text-center'
+                hidden={!!state.primaryImage || imageUploading}>
+                or
+              </p>
+              <input
+                className="max-2-1/4 py-2 my-auto"
+                type="file"
+                accept={'image/png, image/gif, image/jpeg'}
+                hidden={!!state.primaryImage || imageUploading}
+                onChange={async (e) => {
+                  if (!e.target.files) return;
+                  const file = e.target.files[0];
+                  if (!file || !file.name) return;
+                  setImageUploading(true);
 
+                  // Error if file is over 3MB
+                  if (file.size > 3000000) {
+                    alert("Error: Image must be less than 3 MB");
+                    e.target.value = '';
+                    setImageUploading(false);
+                    return;
+                  }
+
+                  const arrayBuffer = await file.arrayBuffer()
+                  const cid = await postFileToIPFS(Buffer.from(arrayBuffer));
+                  setImageUploading(false);
+                  setShowImagePreview(true);
+                  setState((s) => ({ ...s, primaryImage: `ipfs://${cid}` }))
+                }}
+              />
+              <div
+                className='my-auto'
+                hidden={!imageUploading}
+              >
+                <p className='my-auto animate-pulse'>Loading...</p>
+              </div>
+              <div 
+                className='relative h-20 ml-5'
+                hidden={imageUploading || !state.primaryImage || !showImagePreview}
+              >
+                <img 
+                  className='h-full' 
+                  src={showImagePreview ? state.primaryImage.replace("ipfs://", "https://ipfs.io/ipfs/") : ''}
+                  onLoad={() => (setShowImagePreview(true))} 
+                  onError={() => (setShowImagePreview(false))} 
+                ></img>
+                <button 
+                  className='absolute top-0 right-0'
+                  onClick={() => {
+                    setState((s) => ({ ...s, primaryImage: "" }))
+                  }}
+                >
+                  <XIcon className="w-5 h-5 text-white bg-black rounded-full p-1 m-1"/>
+                </button>
+              </div>
+              <div 
+                className='my-auto ml-5'
+                hidden={imageUploading || !state.primaryImage || showImagePreview}
+              >
+                <RefreshIcon className="animate-spin w-5 h-5 text-black"/>
+              </div>
+            </label>
+          </div>
+          {showImagePreview ? "True" : "false"}
           <div className="flex">
             <label className="flex flex-1 flex-col">
               <strong className="mb-1 text-sm">Seller's Stake</strong>
