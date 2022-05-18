@@ -228,6 +228,7 @@ function NewSellOrder() {
                 <img 
                   className='h-full' 
                   src={showImagePreview ? state.primaryImage.replace("ipfs://", "https://ipfs.io/ipfs/") : ''}
+                  onLoadStart={() => (setShowImagePreview(false))}
                   onLoad={() => (setShowImagePreview(true))} 
                   onError={() => (setShowImagePreview(false))} 
                 ></img>
