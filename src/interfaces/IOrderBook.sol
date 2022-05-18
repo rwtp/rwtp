@@ -24,6 +24,7 @@ interface IOrderBook {
         IERC20 token,
         uint256 stake,
         string memory uri,
-        uint256 timeout
+        uint256 timeout,
+        bool isBuyOrder
     ) external returns (Order);
 }

@@ -59,9 +59,16 @@ contract OrderBook is IOrderBook {
         IERC20 token,
         uint256 stake,
         string memory uri,
-        uint256 timeout
+        uint256 timeout,
+        bool isBuyOrder
     ) external returns (Order) {
-        Order order = new Order(maker, token, stake, uri, timeout);
+        Order.OrderType orderType;
+        if (isBuyOrder) {
+            orderType = Order.OrderType.BuyOrder;
+        } else {
+            orderType = Order.OrderType.SellOrder;
+        }
+        Order order = new Order(maker, token, stake, uri, timeout, orderType);
         emit OrderCreated(address(order));
         orders[address(order)] = true;
         return order;

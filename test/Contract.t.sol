@@ -31,7 +31,8 @@ contract SellOrderTest is Test {
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         assert(address(sellOrder.token()) == address(token));
@@ -51,7 +52,8 @@ contract SellOrderTest is Test {
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         token.transfer(buyer, 20);
@@ -101,7 +103,8 @@ contract SellOrderTest is Test {
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         token.transfer(buyer, 20);
@@ -130,7 +133,8 @@ contract SellOrderTest is Test {
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer from buyer1
@@ -210,7 +214,8 @@ contract SellOrderTest is Test {
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer from seller
@@ -235,7 +240,8 @@ contract SellOrderTest is Test {
             token,
             50, // stake
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer
@@ -282,7 +288,8 @@ contract SellOrderTest is Test {
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer from buyer1
@@ -377,7 +384,8 @@ contract CancelationTest is Test {
             token,
             50, // stake
             'ipfs://metadata',
-            100
+            100,
+            false
         );
     }
 
@@ -552,7 +560,8 @@ contract QuantityTest is Test {
             token,
             sellersStake, // stake
             'ipfs://metadata',
-            100
+            100,
+            false
         );
     }
 

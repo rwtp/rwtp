@@ -76,11 +76,20 @@ contract Order {
     /// @dev if false, the order is not open for new offers.
     bool public active;
 
+    /// @dev the type of order that the maker has placed.
+    OrderType public orderType;
+
     /// @dev The state of an offer
     enum State {
         Closed,
         Open,
         Committed
+    }
+
+    /// @dev Types of orders that can be created by a maker.
+    enum OrderType {
+        SellOrder,
+        BuyOrder
     }
 
     struct Offer {
@@ -122,7 +131,8 @@ contract Order {
         IERC20 token_,
         uint256 orderStake_,
         string memory uri_,
-        uint256 timeout_
+        uint256 timeout_,
+        OrderType orderType_
     ) {
         orderBook = msg.sender;
         maker = maker_;
@@ -131,6 +141,7 @@ contract Order {
         _uri = uri_;
         timeout = timeout_;
         active = true;
+        orderType = orderType_;
     }
 
     /// @dev returns the URI of the sell order, containing it's metadata
@@ -200,10 +211,17 @@ contract Order {
         offer.uri = uri;
         offer.quantity = quantity;
 
+        uint256 transferAmount = stakePerUnit * quantity;
+
+        // Only transfer payment if this is a buy offer (for a sell order).
+        if (orderType == OrderType.SellOrder) {
+            transferAmount += pricePerUnit * quantity;
+        }
+
         bool result = token.transferFrom(
             msg.sender,
             address(this),
-            (stakePerUnit + pricePerUnit) * quantity
+            transferAmount
         );
         require(result, 'Transfer failed');
 
@@ -225,9 +243,16 @@ contract Order {
     {
         Offer memory offer = offers[msg.sender][index];
 
+        uint256 transferAmount = offer.stakePerUnit * offer.quantity;
+
+        // Only return payment if this is a buy offer (for a sell order).
+        if (orderType == OrderType.SellOrder) {
+            transferAmount += offer.pricePerUnit * offer.quantity;
+        }
+
         bool result = token.transfer(
             msg.sender,
-            (offer.stakePerUnit + offer.pricePerUnit) * offer.quantity
+            transferAmount
         );
         assert(result);
 
@@ -261,10 +286,17 @@ contract Order {
         offer.acceptedAt = uint64(block.timestamp);
         offer.state = State.Committed;
 
+        uint256 transferAmount = orderStake * offer.quantity;
+
+        // Only transfer payment if this is a sell offer (for a buy order).
+        if (orderType == OrderType.BuyOrder) {
+            transferAmount += offer.pricePerUnit * offer.quantity;
+        }
+
         bool result = token.transferFrom(
             msg.sender,
             address(this),
-            offer.quantity * orderStake
+            transferAmount
         );
         assert(result);
 
@@ -301,22 +333,32 @@ contract Order {
             0
         );
 
-        // Return the taker stake back to the buyer
-        bool result0 = token.transfer(
-            msg.sender,
-            offer.stakePerUnit * offer.quantity
-        );
-        assert(result0);
-
         uint256 total = offer.pricePerUnit * offer.quantity;
         uint256 toOrderBook = (total * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
         uint256 toSeller = total - toOrderBook;
 
-        // Return the maker stake back to the seller, along with the buyer's payment
+        uint256 toTaker = offer.stakePerUnit * offer.quantity;
+        uint256 toMaker = orderStake * offer.quantity;
+
+        // Payment goes to the seller, which is the maker of a sell order or the taker of a buy order.
+        if (orderType == OrderType.SellOrder) {
+            toMaker += toSeller;
+        } else if (orderType == OrderType.BuyOrder) {
+            toTaker += toSeller;
+        }
+
+        // Transfer payment to the taker
+        bool result0 = token.transfer(
+            msg.sender,
+            toTaker
+        );
+        assert(result0);
+
+        // Transfer payment to the maker
         bool result1 = token.transfer(
             maker,
-            toSeller + (orderStake * offer.quantity)
+            toMaker
         );
         assert(result1);
 
@@ -358,9 +400,16 @@ contract Order {
             0
         );
 
-        // Transfer the payment to the seller
+        // Transfer the payment to the seller, which is the maker of a sell order or the taker of a buy order.
+        address seller;
+        if (orderType == OrderType.SellOrder) {
+            seller = maker;
+        } else if (orderType == OrderType.BuyOrder) {
+            seller = taker_;
+        }
+
         bool result0 = token.transfer(
-            maker,
+            seller,
             (offer.pricePerUnit * offer.quantity)
         );
         assert(result0);
@@ -412,18 +461,30 @@ contract Order {
             offer.makerCanceled = true;
         }
 
-        // If both parties canceled, then return the stakes, and the payment to the taker
+        // If both parties canceled, then return the stakes, and the payment to the buyer,
         // and set the offer to closed
         if (offer.makerCanceled && offer.takerCanceled) {
+            uint256 toTaker = offer.stakePerUnit * offer.quantity;
+            uint256 toMaker = orderStake * offer.quantity;
+
+            uint256 toBuyer = offer.pricePerUnit * offer.quantity;
+
+            // Payment goes to the buyer, which is the taker of a sell order or the maker of a buy order.
+            if (orderType == OrderType.SellOrder) {
+                toTaker += toBuyer;
+            } else if (orderType == OrderType.BuyOrder) {
+                toMaker += toBuyer;
+            }
+
             // Transfer the taker stake back to the buyer along with their payment
             bool result0 = token.transfer(
                 taker_,
-                (offer.stakePerUnit + offer.pricePerUnit) * offer.quantity
+                toTaker
             );
             assert(result0);
 
             // Transfer the maker stake back to the seller
-            bool result1 = token.transfer(maker, orderStake * offer.quantity);
+            bool result1 = token.transfer(maker, toMaker);
             assert(result1);
 
             // Null out the offer
