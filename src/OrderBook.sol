@@ -2,13 +2,13 @@
 pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import './SellOrder.sol';
+import './Order.sol';
 import './interfaces/IOrderBook.sol';
 
 /// @dev A factory for creating orders. The Graph should index this contract.
 contract OrderBook is IOrderBook {
-    /// @dev all the sell orders available in the order book
-    mapping(address => bool) public sellOrders;
+    /// @dev all the orders available in the order book
+    mapping(address => bool) public orders;
 
     /// @dev the fee rate in parts per million
     uint256 public fee = 10000; // 1%
@@ -53,17 +53,17 @@ contract OrderBook is IOrderBook {
         _owner = _newOwner;
     }
 
-    /// @dev Creates a new sell order that can be easily indexed by something like theGraph.
-    function createSellOrder(
-        address seller,
+    /// @dev Creates a new order that can be easily indexed by something like theGraph.
+    function createOrder(
+        address maker,
         IERC20 token,
         uint256 stake,
         string memory uri,
         uint256 timeout
-    ) external returns (SellOrder) {
-        SellOrder sellOrder = new SellOrder(seller, token, stake, uri, timeout);
-        emit SellOrderCreated(address(sellOrder));
-        sellOrders[address(sellOrder)] = true;
-        return sellOrder;
+    ) external returns (Order) {
+        Order order = new Order(maker, token, stake, uri, timeout);
+        emit OrderCreated(address(order));
+        orders[address(order)] = true;
+        return order;
     }
 }
