@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
+import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -57,6 +58,7 @@ function NewSellOrder() {
     const decimals = await erc20.decimals();
 
     const cid = await postToIPFS({
+      offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
       title: state.title,
       description: state.description,
       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
