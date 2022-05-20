@@ -156,14 +156,14 @@ export function RequiresKeystore(props: { children: ReactNode }) {
     );
   }
 
-  if (login.isLoggedIn) {
-    return <>{props.children}</>;
-  }
+  // if (login.isLoggedIn) {
+  //   return <>{props.children}</>;
+  // }
 
   return (
     <ConnectWalletLayout>
       <FadeIn className="bg-gray-50 h-full p-4 border-t flex items-center justify-center">
-        <div className="bg-white border max-w-xl mx-auto ">
+        <div className="bg-white border max-w-xl mx-auto">
           <div className="p-8">
             <h1 className="text-2xl mb-2 font-serif">
               Allow this site to handle sensitive data?
