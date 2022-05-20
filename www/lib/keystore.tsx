@@ -156,9 +156,9 @@ export function RequiresKeystore(props: { children: ReactNode }) {
     );
   }
 
-  // if (login.isLoggedIn) {
-  //   return <>{props.children}</>;
-  // }
+  if (login.isLoggedIn) {
+    return <>{props.children}</>;
+  }
 
   return (
     <ConnectWalletLayout>
@@ -200,7 +200,7 @@ export function RequiresKeystore(props: { children: ReactNode }) {
             </div>
           </div>
 
-          <div className="flex px-4 pb-4 pt-4  justify-between">
+          <div className="flex px-4 pb-4 pt-4 justify-between">
             <button
               onClick={() => {
                 router.back();
