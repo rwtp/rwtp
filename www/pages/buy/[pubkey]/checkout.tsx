@@ -16,7 +16,7 @@ import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
 import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
 import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
-import { OfferForm, SimpleOfferForm}  from '../../../lib/offer';
+import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
 
 function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const tokenMethods = useTokenMethods(sellOrder.token.address);
@@ -109,22 +109,22 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
               </div>
             </div>
             <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-                {
-                  sellOrder.offerSchemaUri && sellOrder.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
-                    <OfferForm
-                      schema={sellOrder.offerSchema}
-                      setOfferData={setOfferData}
-                      offerData={offerData}
-                      price={fromBn(price, sellOrder.token.decimals)}
-                      onSubmit={onBuy}
-                      symbol={sellOrder.token.symbol}/> :
-                    <SimpleOfferForm
-                      setOfferData={setOfferData}
-                      offerData={offerData}
-                      price={fromBn(price, sellOrder.token.decimals)}
-                      onSubmit={onBuy}
-                      symbol={sellOrder.token.symbol} />
-                }
+              {
+                sellOrder.offerSchemaUri && sellOrder.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
+                  <OfferForm
+                    schema={sellOrder.offerSchema}
+                    setOfferData={setOfferData}
+                    offerData={offerData}
+                    price={fromBn(price, sellOrder.token.decimals)}
+                    onSubmit={onBuy}
+                    symbol={sellOrder.token.symbol} /> :
+                  <SimpleOfferForm
+                    setOfferData={setOfferData}
+                    offerData={offerData}
+                    price={fromBn(price, sellOrder.token.decimals)}
+                    onSubmit={onBuy}
+                    symbol={sellOrder.token.symbol} />
+              }
             </div>
           </div>
         </div>
