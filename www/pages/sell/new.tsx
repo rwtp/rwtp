@@ -8,6 +8,8 @@ import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
+import SelectSearch from 'react-select-search';
+import { renderToken, dropDownUI, optimismList } from '../../lib/tokenDropdown';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -30,7 +32,7 @@ function NewSellOrder() {
     sellersStake: 0,
     buyersStake: 0,
     price: 0,
-    token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
+    token: '0x7F5c764cBc14f9669B88837ca1490cCa17c31607', // Optimism USDC
   });
   const signer = useSigner();
   const router = useRouter();
@@ -86,10 +88,17 @@ function NewSellOrder() {
     router.push(`/buy/${sellOrderAddress}`);
   }
 
+  let countries = [
+    { name: 'Swedish', value: 'sv' },
+    { name: 'English', value: 'en' },
+  ];
+
   return (
     <ConnectWalletLayout>
       <div className="px-4 py-4 max-w-2xl mx-auto">
-        <div className="font-serif mb-12 mt-12 text-2xl">Create a new sell listing</div>
+        <div className="font-serif mb-12 mt-12 text-2xl">
+          Create a new sell listing
+        </div>
         {/* <p className="mb-8">Sell anything, from a pack of gum to a ferrari.</p> */}
 
         <div className="flex flex-col">
@@ -124,7 +133,7 @@ function NewSellOrder() {
 
             <label className="flex flex-1 flex-col">
               <div className="font-sans mb-1 text-base">Token</div>
-              <input
+              {/* <input
                 className="border px-4 py-2 rounded-r"
                 type="string"
                 placeholder="0x..."
@@ -132,7 +141,25 @@ function NewSellOrder() {
                   setState((s) => ({ ...s, token: e.target.value }))
                 }
                 value={state.token}
+              /> */}
+              <SelectSearch
+                className={(classes: string) => {
+                  return dropDownUI(classes);
+                }}
+                options={optimismList}
+                placeholder="USDC"
+                onChange={(opt) => {
+                  if (opt === 'Custom') {
+                    console.log("It's custom innit");
+                  } else {
+                    setState((s) => ({ ...s, token: opt }));
+                    console.log(opt);
+                  }
+                }}
+                search
+                renderOption={renderToken}
               />
+              <i className="text-xs">{state.token}</i>
             </label>
           </div>
 
