@@ -60,10 +60,11 @@ function SubmitOfferButton(props: {
   return (
     <div className="mt-4">
       <ConnectWalletButton
-        className="bg-black text-white px-4 py-2 w-full flex justify-center border border-white"
+        className="bg-black text-white px-4 py-2 w-full flex justify-between font-bold"
         onClick={props.onClick}
       >
-        <div><span className='font-bold'>Submit Offer</span> {props.price} {props.symbol}</div>
+        <div>Submit Offer</div>
+        <div>{props.price} {props.symbol}</div>
       </ConnectWalletButton>
 
     </div>
