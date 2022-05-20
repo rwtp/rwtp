@@ -166,7 +166,7 @@ export function ConnectWalletLayout(props: { requireConnected: boolean, children
       <div className="h-full bg-white">
         <ConnectButton.Custom>
           {({ account, mounted, chain, openConnectModal, openChainModal }) => {
-            if (mounted && account && chain && !chain?.unsupported) {
+            if (!props.requireConnected || (mounted && account && chain && !chain?.unsupported)) {
               return <>{props.children}</>;
             }
 
