@@ -58,7 +58,7 @@ export function TabBar(props: { tab: 'buy' | 'sell' }) {
   );
 }
 
-export function ConnectWalletLayout(props: { children: React.ReactNode }) {
+export function ConnectWalletLayout(props: { requireConnected: boolean, children: React.ReactNode }) {
   const router = useRouter();
 
   return (
@@ -163,7 +163,37 @@ export function ConnectWalletLayout(props: { children: React.ReactNode }) {
           </a>
         </div>
       </div>
-      <div className="h-full bg-white">{props.children}</div>
+      <div className="h-full bg-white">
+        <ConnectButton.Custom>
+          {({ account, mounted, chain, openConnectModal, openChainModal }) => {
+            if (mounted && account && chain && !chain?.unsupported) {
+              return <>{props.children}</>;
+            }
+
+            function onClick() {
+              if (!mounted || !account || !chain) {
+                return openConnectModal();
+              }
+
+              if (chain?.unsupported) {
+                return openChainModal();
+              }
+            }
+
+            return (
+              <div className='flex flex-col border justify-center h-full'>
+                <button
+                  className="w-min bg-white border border-black rounded px-2 py-1 flex items-center whitespace-nowrap mx-auto"
+                  onClick={onClick}
+                >
+                  Connect Wallet{' '}
+                  <FingerPrintIcon className="h-4 w-4 ml-2" />
+                </button>
+              </div>
+            );
+          }}
+        </ConnectButton.Custom>
+      </div>
     </div>
   );
 }

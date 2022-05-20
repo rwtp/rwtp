@@ -87,7 +87,7 @@ function NewSellOrder() {
   }
 
   return (
-    <ConnectWalletLayout>
+    <ConnectWalletLayout requireConnected={true}>
       <div className="px-4 py-4 max-w-6xl mx-auto">
         <div className="font-serif mb-12 mt-12 text-2xl">
           Create a new sell listing
