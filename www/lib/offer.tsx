@@ -2,42 +2,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { FingerPrintIcon } from '@heroicons/react/solid';
 import Form from '@rjsf/core';
 
-function ConnectWalletButton(props: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  className: string;
-}) {
-  return (
-    <ConnectButton.Custom>
-      {({ account, mounted, chain, openConnectModal, openChainModal }) => {
-        function onClick() {
-          if (!mounted || !account || !chain) {
-            return openConnectModal();
-          }
-
-          if (chain?.unsupported) {
-            return openChainModal();
-          }
-
-          props.onClick && props.onClick();
-        }
-
-        return (
-          <button className={props.className} onClick={onClick}>
-            {account && mounted && chain ? (
-              props.children
-            ) : (
-              <>
-                Connect Wallet <FingerPrintIcon className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </button>
-        );
-      }}
-    </ConnectButton.Custom>
-  );
-}
-
 
 function FormFooter(props: {
   price: string,
@@ -58,15 +22,11 @@ function SubmitOfferButton(props: {
   symbol: string
 }) {
   return (
-    <div className="mt-4">
-      <ConnectWalletButton
-        className="bg-black text-white px-4 py-2 w-full flex justify-between font-bold rounded"
-        onClick={props.onClick}
-      >
-        <div>Submit Offer</div>
-        <div>{props.price} {props.symbol}</div>
-      </ConnectWalletButton>
-
+    <div className="mt-4 bg-black text-white px-4 py-2 w-full flex justify-between font-bold rounded"
+      onClick={props.onClick}
+    >
+      <div>Submit Offer</div>
+      <div>{props.price} {props.symbol}</div>
     </div>
   )
 }
