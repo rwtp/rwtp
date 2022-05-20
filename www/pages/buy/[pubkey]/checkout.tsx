@@ -22,7 +22,7 @@ import Form from '@rjsf/core';
 
 function ConnectWalletButton(props: {
   children: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
   className: string;
 }) {
   return (
@@ -37,7 +37,7 @@ function ConnectWalletButton(props: {
             return openChainModal();
           }
 
-          props.onClick();
+          props.onClick && props.onClick();
         }
 
         return (
@@ -63,7 +63,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const buyersEncryptionKeypair = useEncryptionKeypair();
   const [offerData, setOfferData] = useState({});
   const [submitHandler, setSubmitHandler] = useState({
-    submit: () => {},
+    submit: () => { },
   });
 
   const quantity = 1;
@@ -150,35 +150,22 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
               </div>
             </div>
             <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-              <div className="mt-4">
                 {
                   sellOrder.offerSchemaUri && sellOrder.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
-                    <OfferForm schema={sellOrder.offerSchema} setOfferData={setOfferData} offerData={offerData} setSubmitHandler={setSubmitHandler}/> :
-                    <SimpleOfferForm setOfferData={setOfferData} offerData={offerData} />
+                    <OfferForm
+                      schema={sellOrder.offerSchema}
+                      setOfferData={setOfferData}
+                      offerData={offerData}
+                      price={fromBn(price, sellOrder.token.decimals)}
+                      onSubmit={onBuy}
+                      symbol={sellOrder.token.symbol}/> :
+                    <SimpleOfferForm
+                      setOfferData={setOfferData}
+                      offerData={offerData}
+                      price={fromBn(price, sellOrder.token.decimals)}
+                      onSubmit={onBuy}
+                      symbol={sellOrder.token.symbol} />
                 }
-              </div>
-              <div className="mt-4">
-                <ConnectWalletButton
-                  className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
-                  onClick={() => {
-                    submitHandler && submitHandler.submit();
-                    onBuy().catch(console.error);
-                  }}
-                >
-                  <div>Submit Offer</div>
-                  <div>{fromBn(price, sellOrder.token.decimals)}</div>
-                </ConnectWalletButton>
-                <div className="text-sm mt-4 text-gray-500">
-                  If this item doesn't ship to you, the seller be fined{' '}
-                  <span className="font-bold">
-                    {fromBn(
-                      BigNumber.from(sellOrder.sellersStake),
-                      sellOrder.token.decimals
-                    )}{' '}
-                    {sellOrder.token.symbol}.
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -187,11 +174,26 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   );
 }
 
+function FormFooter(props: {
+  price: string,
+  symbol: string,
+}) {
+  return (<div className="text-sm mt-4 text-gray-500">
+    If this item doesn't ship to you, the seller be fined{' '}
+    <span className="font-bold">
+      {props.price}{' '}{props.symbol}.
+    </span>
+  </div>);
+}
+
 
 
 function SimpleOfferForm(props: {
   setOfferData: (data: any) => void,
   offerData: any,
+  price: string,
+  symbol: string,
+  onSubmit: () => Promise<void>,
 }) {
   return (
     <div>
@@ -222,24 +224,37 @@ function SimpleOfferForm(props: {
           })}
         />
       </label>
+      <div className="mt-4">
+        <SubmitOfferButton price={props.price} onClick={() => props.onSubmit().catch(console.error)} />
+        <FormFooter price={props.price} symbol={props.symbol} />
+      </div>
     </div>
   );
 }
 
-
-const CustomSchemaField = function(props) {
+function SubmitOfferButton(props: {
+  onClick?: () => void,
+  price: string,
+}) {
   return (
-    <div id="custom">
-      {/* <SchemaField {...props} /> */}
+    <div className="mt-4">
+      <ConnectWalletButton
+        className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
+        onClick={props.onClick}
+      >
+        <div>Submit Offer</div>
+        <div>{props.price}</div>
+      </ConnectWalletButton>
+      
     </div>
-  );
-};
+  )
+}
 
 const fields = {
-  DescriptionField: (description: any) => {
+  DescriptionField: (_description: any) => {
     return <div> </div>;
   },
-  TitleField: (title: any) => {
+  TitleField: (_title: any) => {
     return <div> </div>;
   },
   // SchemaField: CustomSchemaField
@@ -250,15 +265,13 @@ function ObjectFieldTemplate(props: {
 }) {
   return (
     <div>
-      {/* {props.title} */}
-      {/* {props.description} */}
-      {props.properties.map((element: any) => <div key={element.id} className="property-wrapper w-full">{element.content}</div>)}
+      {/* Let's omit the {props.title} {props.description}*/}
+      {props.properties.map((element: any) => <div key={element.name} className="property-wrapper w-full">{element.content}</div>)}
     </div>
   );
 }
 
 const customWidgets = {
-  // To add a placeholder we will need to update the uiSchema prop on Form.
   TextWidget: (props: any) => {
     return (
       <div className='w-full'>
@@ -276,8 +289,7 @@ const customWidgets = {
 
 
 function CustomFieldTemplate(props: any) {
-  const {id, classNames, label, help, required, description, errors, children} = props;
-
+  const { id, classNames, label, help, required, description, errors, children } = props;
   return (
     <div className={classNames + ' w-full'}>
       {id === 'root' || <label htmlFor={id} className="text-xs font-bold py-1">{label}{required ? "*" : null}</label>}
@@ -292,48 +304,38 @@ function OfferForm(props: {
   schema: string,
   setOfferData: (data: any) => void,
   offerData: any,
-  setSubmitHandler: any
+  price: string,
+  onSubmit: () => Promise<void>,
+  symbol: string,
 }) {
-  // TODO: Add form validation on submit button.
-  let yourForm;
   let schema = JSON.parse(props.schema);
-  const onSubmit = ({formData}) => console.log("Data submitted: ",  formData);
   return (
-    
+
     <div className="flex w-full">
-      {/* <div>sadklfjlkadsjgflkajsd;lfkjs;adlkjfl;ksadjf;lkadsjf;kjasd;lfkjasd;lkfj;laksjfdl;ksadjf;l</div> */}
-      <Form 
-      className='w-full'
-      schema={schema}
+      <Form
+        className='w-full mt-4'
+        schema={schema}
         widgets={customWidgets}
         fields={fields}
-        // onSubmit={onSubmit}
+        onSubmit={() => props.onSubmit().catch(console.error)}
         ObjectFieldTemplate={ObjectFieldTemplate}
         FieldTemplate={CustomFieldTemplate}
-        // ref={(form) => {yourForm = form;}}
-        // ref={(form) => {props.setSubmitHandler(form);}}
         onChange={(e) => {
+          // There is some weird bug where the form doesn't update the value.
+          // This is a workaround.
           let formData = JSON.parse(JSON.stringify(e.formData));
           let data = props.offerData;
           for (var key in formData) {
-              if (formData.hasOwnProperty(key)) {
-                data[key] = formData[key];
-              }
+            if (formData.hasOwnProperty(key)) {
+              data[key] = formData[key];
+            }
           }
           props.setOfferData(data);
         }}
       >
-        { /* This body needs to be empty so that the submit button isn't rendered. */ }
-        <div className="mt-4">
-          <ConnectWalletButton
-            className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
-            onClick={() => {
-              // onBuy().catch(console.error);
-            }}
-          >
-            <div>Submit Offer</div>
-            {/* <div>{fromBn(price, sellOrder.token.decimals)}</div> */}
-          </ConnectWalletButton>
+        <div className='mt-4'>
+          <SubmitOfferButton price={props.price} />
+          <FormFooter price={props.price} symbol={props.symbol} />
         </div>
       </Form>
 
