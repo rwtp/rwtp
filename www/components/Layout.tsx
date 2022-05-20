@@ -168,29 +168,31 @@ export function ConnectWalletLayout(props: { requireConnected: boolean, children
           {({ account, mounted, chain, openConnectModal, openChainModal }) => {
             if (!props.requireConnected || (mounted && account && chain && !chain?.unsupported)) {
               return <>{props.children}</>;
+            } else if (chain && chain.unsupported) {
+              return (
+                <div className='flex flex-col border justify-center h-full'>
+                  <button
+                    className="w-min bg-white border border-black rounded px-2 py-1 flex items-center whitespace-nowrap mx-auto"
+                    onClick={openChainModal}
+                  >
+                    Wrong Network{' '}
+                    <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
+                  </button>
+                </div>
+              );
+            } else {
+              return (
+                <div className='flex flex-col border justify-center h-full'>
+                  <button
+                    className="w-min bg-white border border-black rounded px-2 py-1 flex items-center whitespace-nowrap mx-auto"
+                    onClick={openConnectModal}
+                  >
+                    Connect Wallet{' '}
+                    <FingerPrintIcon className="h-4 w-4 ml-2" />
+                  </button>
+                </div>
+              );
             }
-
-            function onClick() {
-              if (!mounted || !account || !chain) {
-                return openConnectModal();
-              }
-
-              if (chain?.unsupported) {
-                return openChainModal();
-              }
-            }
-
-            return (
-              <div className='flex flex-col border justify-center h-full'>
-                <button
-                  className="w-min bg-white border border-black rounded px-2 py-1 flex items-center whitespace-nowrap mx-auto"
-                  onClick={onClick}
-                >
-                  Connect Wallet{' '}
-                  <FingerPrintIcon className="h-4 w-4 ml-2" />
-                </button>
-              </div>
-            );
           }}
         </ConnectButton.Custom>
       </div>
