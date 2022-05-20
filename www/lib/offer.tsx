@@ -55,15 +55,15 @@ function FormFooter(props: {
 function SubmitOfferButton(props: {
   onClick?: () => void,
   price: string,
+  symbol: string
 }) {
   return (
     <div className="mt-4">
       <ConnectWalletButton
-        className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
+        className="bg-black text-white px-4 py-2 w-full flex justify-center border border-white"
         onClick={props.onClick}
       >
-        <div>Submit Offer</div>
-        <div>{props.price}</div>
+        <div><span className='font-bold'>Submit Offer</span> {props.price} {props.symbol}</div>
       </ConnectWalletButton>
 
     </div>
@@ -156,7 +156,7 @@ export function OfferForm(props: {
         }}
       >
         <div className='mt-4'>
-          <SubmitOfferButton price={props.price} />
+          <SubmitOfferButton price={props.price} symbol={props.symbol} />
           <FormFooter price={props.price} symbol={props.symbol} />
         </div>
       </Form>
@@ -207,7 +207,7 @@ export function SimpleOfferForm(props: {
         />
       </label>
       <div className="mt-4">
-        <SubmitOfferButton price={props.price} onClick={() => props.onSubmit().catch(console.error)} />
+        <SubmitOfferButton price={props.price} symbol={props.symbol} onClick={() => props.onSubmit().catch(console.error)} />
         <FormFooter price={props.price} symbol={props.symbol} />
       </div>
     </div>
