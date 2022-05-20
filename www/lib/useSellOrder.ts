@@ -22,6 +22,36 @@ export interface SellOrderData {
   };
 }
 
+const ORDER_FIELDS = `
+  address
+  title
+  description
+  sellersStake
+  priceSuggested
+  stakeSuggested
+  encryptionPublicKey
+  sellersStake
+  seller
+  offerSchema
+  offerSchemaUri
+  token {
+    decimals
+    symbol
+    name
+    address
+  }
+`;
+
+const OFFER_FIELDS = `
+  index
+  stakePerUnit
+  pricePerUnit
+  uri
+  quantity
+  state
+  timestamp
+`;
+
 function useSellOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
   const metadata = useSubgraph<T>([
     `
@@ -43,22 +73,7 @@ export function useSellOrders(args: { first: number; skip: number, searchText: s
   let res = useSellOrdersWrapperWithMetaData(
     `
     ${searchArg} {
-      address
-      title
-      description
-      sellersStake
-      priceSuggested
-      stakeSuggested
-      encryptionPublicKey
-      offerSchema
-      offerSchemaUri
-      seller
-      token {
-        decimals
-        symbol
-        name
-        address
-      }
+      ${ORDER_FIELDS}
     }
     `,
     {
@@ -81,23 +96,7 @@ export function useSellOrder(address: string) {
     `
   query metadata($id:ID ){
     sellOrder(id:$id) {
-      address
-      title
-      description
-      sellersStake
-      priceSuggested
-      stakeSuggested
-      encryptionPublicKey
-      sellersStake
-      seller
-      offerSchema
-      offerSchemaUri
-      token {
-        decimals
-        symbol
-        name
-        address
-      }
+      ${ORDER_FIELDS}
     }
   }
   `,
@@ -215,11 +214,7 @@ export function useSellOrderOffersFrom(sellOrder: string, buyer: string) {
         id
         address
         offers(where:{buyerAddress:$buyer}) {
-          index
-          stakePerUnit
-          pricePerUnit
-          uri
-          quantity
+          ${OFFER_FIELDS}
         }
       }
     }
@@ -257,13 +252,7 @@ export function useSellOrderOffers(sellOrder: string) {
         id
         address
         offers {
-          index
-          stakePerUnit
-          pricePerUnit
-          uri
-          quantity
-          state
-          timestamp
+          ${OFFER_FIELDS}
         }
       }
     }
@@ -299,31 +288,9 @@ export function useAllSellOrderOffers(seller: string) {
     `
     query data($seller: ID){
       sellOrders(where:{seller:$seller}) {
+        ${ORDER_FIELDS}
         offers {
-          index
-          stakePerUnit
-          pricePerUnit
-          uri
-          quantity
-          state
-          buyer
-          createdAt
-        }
-        id
-        address
-        title
-        description
-        sellersStake
-        priceSuggested
-        stakeSuggested
-        encryptionPublicKey
-        sellersStake
-        seller
-        token {
-          decimals
-          symbol
-          name
-          address
+          ${OFFER_FIELDS}
         }
       }
     }
