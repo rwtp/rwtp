@@ -77,7 +77,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   }
 
   return (
-    <ConnectWalletLayout>
+    <ConnectWalletLayout requireConnected={true}>
       <div className="h-full w-full flex flex-col border-t">
         <div className="h-full flex w-full">
           <div className="flex w-full border-l border-r mx-auto">

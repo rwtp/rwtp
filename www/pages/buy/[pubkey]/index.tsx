@@ -156,7 +156,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
   }
 
   return (
-    <ConnectWalletLayout>
+    <ConnectWalletLayout requireConnected={true}>
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
           <div className="pb-4 text-sm flex items-center text-gray-600">
