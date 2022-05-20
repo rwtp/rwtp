@@ -22,12 +22,12 @@ function SubmitOfferButton(props: {
   symbol: string
 }) {
   return (
-    <div className="mt-4 bg-black text-white px-4 py-2 w-full flex justify-between font-bold rounded"
+    <button className="mt-4 bg-black text-white px-4 py-2 w-full flex justify-between font-bold rounded"
       onClick={props.onClick}
     >
       <div>Submit Offer</div>
       <div>{props.price} {props.symbol}</div>
-    </div>
+    </button>
   )
 }
 
@@ -117,7 +117,7 @@ export function OfferForm(props: {
         }}
       >
         <div className='mt-4'>
-          <SubmitOfferButton price={props.price} symbol={props.symbol} onClick={() => props.onSubmit().catch(console.error)} />
+          <SubmitOfferButton price={props.price} symbol={props.symbol} />
           <FormFooter price={props.price} symbol={props.symbol} />
         </div>
       </Form>
