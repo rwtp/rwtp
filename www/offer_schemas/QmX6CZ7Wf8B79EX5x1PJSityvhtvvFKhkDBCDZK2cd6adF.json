@@ -11,7 +11,11 @@
         "email": {
             "title": "Email",
             "description": "Email of the buyer requesting to buy a Listing.",
-            "type": "string"
+            "type": "string",
+            "pattern": "^\\S+@\\S+\\.\\S+$",
+            "format": "email",
+            "minLength": 6,
+            "maxLength": 127
         }
     },
     "required": [ "email", "shippingAddress" ]
