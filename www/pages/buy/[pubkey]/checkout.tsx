@@ -1,4 +1,3 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/router';
 import { BigNumber } from 'ethers';
 import { Suspense, useState } from 'react';
@@ -17,44 +16,7 @@ import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
 import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
 import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
-import Form from '@rjsf/core';
-// const SchemaField = require('@rjsf/core/lib/components/fields/SchemaField');
-
-function ConnectWalletButton(props: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  className: string;
-}) {
-  return (
-    <ConnectButton.Custom>
-      {({ account, mounted, chain, openConnectModal, openChainModal }) => {
-        function onClick() {
-          if (!mounted || !account || !chain) {
-            return openConnectModal();
-          }
-
-          if (chain?.unsupported) {
-            return openChainModal();
-          }
-
-          props.onClick && props.onClick();
-        }
-
-        return (
-          <button className={props.className} onClick={onClick}>
-            {account && mounted && chain ? (
-              props.children
-            ) : (
-              <>
-                Connect Wallet <FingerPrintIcon className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </button>
-        );
-      }}
-    </ConnectButton.Custom>
-  );
-}
+import { OfferForm, SimpleOfferForm}  from '../../../lib/offer';
 
 function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const tokenMethods = useTokenMethods(sellOrder.token.address);
@@ -62,9 +24,6 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const router = useRouter();
   const buyersEncryptionKeypair = useEncryptionKeypair();
   const [offerData, setOfferData] = useState({});
-  const [submitHandler, setSubmitHandler] = useState({
-    submit: () => { },
-  });
 
   const quantity = 1;
   const price = sellOrder.priceSuggested
@@ -77,7 +36,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   async function onBuy() {
     if (!offerData) return;
     if (!buyersEncryptionKeypair) return;
-
+    console.log('Submitting offer: ', offerData);
     const secretData = Buffer.from(
       JSON.stringify(offerData),
       'utf-8'
@@ -174,174 +133,6 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   );
 }
 
-function FormFooter(props: {
-  price: string,
-  symbol: string,
-}) {
-  return (<div className="text-sm mt-4 text-gray-500">
-    If this item doesn't ship to you, the seller be fined{' '}
-    <span className="font-bold">
-      {props.price}{' '}{props.symbol}.
-    </span>
-  </div>);
-}
-
-
-
-function SimpleOfferForm(props: {
-  setOfferData: (data: any) => void,
-  offerData: any,
-  price: string,
-  symbol: string,
-  onSubmit: () => Promise<void>,
-}) {
-  return (
-    <div>
-      <label className="flex flex-col mt-2">
-        <div className="text-xs font-bold py-1">Shipping Address</div>
-        <input
-          type={'text'}
-          className={'px-2 py-2 border rounded'}
-          name="address"
-          placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-          onChange={(e) => props.setOfferData({
-            ...props.offerData,
-            shippingAddress: e.target.value
-          })}
-        />
-      </label>
-
-      <label className="flex flex-col  mt-2">
-        <div className="text-xs font-bold py-1">Email</div>
-        <input
-          type={'text'}
-          className={'px-2 py-2 border rounded'}
-          name="address"
-          placeholder="you@ethereum.org"
-          onChange={(e) => props.setOfferData({
-            ...props.offerData,
-            email: e.target.value
-          })}
-        />
-      </label>
-      <div className="mt-4">
-        <SubmitOfferButton price={props.price} onClick={() => props.onSubmit().catch(console.error)} />
-        <FormFooter price={props.price} symbol={props.symbol} />
-      </div>
-    </div>
-  );
-}
-
-function SubmitOfferButton(props: {
-  onClick?: () => void,
-  price: string,
-}) {
-  return (
-    <div className="mt-4">
-      <ConnectWalletButton
-        className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
-        onClick={props.onClick}
-      >
-        <div>Submit Offer</div>
-        <div>{props.price}</div>
-      </ConnectWalletButton>
-      
-    </div>
-  )
-}
-
-const fields = {
-  DescriptionField: (_description: any) => {
-    return <div> </div>;
-  },
-  TitleField: (_title: any) => {
-    return <div> </div>;
-  },
-  // SchemaField: CustomSchemaField
-};
-
-function ObjectFieldTemplate(props: {
-  properties: any
-}) {
-  return (
-    <div>
-      {/* Let's omit the {props.title} {props.description}*/}
-      {props.properties.map((element: any) => <div key={element.name} className="property-wrapper w-full">{element.content}</div>)}
-    </div>
-  );
-}
-
-const customWidgets = {
-  TextWidget: (props: any) => {
-    return (
-      <div className='w-full'>
-        <input type="text"
-          className="px-2 py-2 border rounded w-full"
-          value={props.value}
-          required={props.required}
-          placeholder={props.uiSchema['ui:placeholder']}
-          onChange={(event) => props.onChange(event.target.value)}
-        />
-      </div>
-    )
-  }
-};
-
-
-function CustomFieldTemplate(props: any) {
-  const { id, classNames, label, help, required, description, errors, children } = props;
-  return (
-    <div className={classNames + ' w-full'}>
-      {id === 'root' || <label htmlFor={id} className="text-xs font-bold py-1">{label}{required ? "*" : null}</label>}
-      {description}
-      {children}
-      {errors}
-      {help}
-    </div>
-  );
-}
-function OfferForm(props: {
-  schema: string,
-  setOfferData: (data: any) => void,
-  offerData: any,
-  price: string,
-  onSubmit: () => Promise<void>,
-  symbol: string,
-}) {
-  let schema = JSON.parse(props.schema);
-  return (
-
-    <div className="flex w-full">
-      <Form
-        className='w-full mt-4'
-        schema={schema}
-        widgets={customWidgets}
-        fields={fields}
-        onSubmit={() => props.onSubmit().catch(console.error)}
-        ObjectFieldTemplate={ObjectFieldTemplate}
-        FieldTemplate={CustomFieldTemplate}
-        onChange={(e) => {
-          // There is some weird bug where the form doesn't update the value.
-          // This is a workaround.
-          let formData = JSON.parse(JSON.stringify(e.formData));
-          let data = props.offerData;
-          for (var key in formData) {
-            if (formData.hasOwnProperty(key)) {
-              data[key] = formData[key];
-            }
-          }
-          props.setOfferData(data);
-        }}
-      >
-        <div className='mt-4'>
-          <SubmitOfferButton price={props.price} />
-          <FormFooter price={props.price} symbol={props.symbol} />
-        </div>
-      </Form>
-
-    </div>
-  );
-}
 
 function Loading() {
   return <div className="bg-gray-50 animate-pulse h-screen w-screen"></div>;
