@@ -11,7 +11,12 @@ const acceptedCoins = [
   'FRAX',
 ];
 
-export function renderToken(props, option, snapshot, className) {
+export function renderToken(
+  props: any,
+  option: any,
+  _snapshot: any,
+  className: any
+) {
   const imgStyle = {
     marginRight: 10,
     verticalAlign: 'middle',
@@ -47,7 +52,7 @@ export function dropDownUI(classes: string) {
   if (classes === 'input') {
     return 'px-4 py-2 border rounded-l';
   } else if (classes === 'option') {
-    return 'px-4 py-2 w-full hover:bg-slate-100';
+    return 'px-4 py-2 w-full hover:bg-slate-50';
   } else if (classes === 'options') {
     return 'border absolute bg-white drop-shadow-lg';
   } else {
@@ -63,29 +68,3 @@ export const optimismList = tokenlist.tokens
     return { value: row.address, name: row.symbol, logo: row.logoURI };
   })
   .concat([{ value: 'Custom', name: 'Custom Token', logo: '' }]);
-
-// export default function Page() {
-//   console.log(optimismList);
-
-//   // https://github.com/tbleckert/react-select-search/blob/main/style.css
-//   return (
-//     <div className="px-4 py-4 max-w-2xl mx-auto max-h-1">
-//       <SelectSearch
-//         className={(classes: string) => {
-//           return dropDownUI(classes);
-//         }}
-//         options={optimismList}
-//         placeholder="USDC"
-//         onChange={(opt) => {
-//           if (opt === 'Custom') {
-//             console.log("It's custom innit");
-//           } else {
-//             console.log(opt);
-//           }
-//         }}
-//         search
-//         renderOption={renderToken}
-//       />
-//     </div>
-//   );
-// }

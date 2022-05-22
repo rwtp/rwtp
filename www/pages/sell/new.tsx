@@ -10,6 +10,7 @@ import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import SelectSearch from 'react-select-search';
 import { renderToken, dropDownUI, optimismList } from '../../lib/tokenDropdown';
+import { DEFAULT_TOKEN } from '../../lib/constants';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -32,7 +33,7 @@ function NewSellOrder() {
     sellersStake: 0,
     buyersStake: 0,
     price: 0,
-    token: '0x7F5c764cBc14f9669B88837ca1490cCa17c31607', // Optimism USDC
+    token: DEFAULT_TOKEN,
   });
   const signer = useSigner();
   const router = useRouter();
@@ -88,11 +89,6 @@ function NewSellOrder() {
     router.push(`/buy/${sellOrderAddress}`);
   }
 
-  let countries = [
-    { name: 'Swedish', value: 'sv' },
-    { name: 'English', value: 'en' },
-  ];
-
   let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
 
   return (
@@ -134,15 +130,6 @@ function NewSellOrder() {
 
             <label className="flex-col">
               <div className="font-sans mb-1 text-base">Token</div>
-              {/* <input
-                className="border px-4 py-2 rounded-r"
-                type="string"
-                placeholder="0x..."
-                onChange={(e) =>
-                  setState((s) => ({ ...s, token: e.target.value }))
-                }
-                value={state.token}
-              /> */}
               <SelectSearch
                 className={(classes: string) => {
                   return dropDownUI(classes) + ' w-40';
@@ -170,7 +157,7 @@ function NewSellOrder() {
               <div className="font-sans mb-1 text-base">Token Address</div>
               <input
                 className="border-r border-t border-b px-4 py-2 rounded-r"
-                placeholder="0x0e18a94e59ba260090cd2a1b9d81222b0e0a6abe"
+                placeholder={DEFAULT_TOKEN}
                 disabled={customTokenDisabled}
                 onChange={(e) =>
                   setState((s) => ({

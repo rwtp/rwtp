@@ -27,7 +27,6 @@
     "next-mdx-remote": "^3.0.8",
     "node-abort-controller": "^3.0.1",
     "react": "18",
-    "react-bootstrap": "^2.4.0",
     "react-dom": "18",
     "react-select-search":"^3.0.9",
     "react-spring": "^9.4.5",
