@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@eth-optimism/tokenlist": "git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git",
     "@heroicons/react": "^1.0.6",
     "@metamask/eth-sig-util": "^4.0.1",
     "@rainbow-me/rainbowkit": "^0.1.0",
@@ -28,6 +29,7 @@
     "node-abort-controller": "^3.0.1",
     "react": "18",
     "react-dom": "18",
+    "react-select-search":"^3.0.9",
     "react-spring": "^9.4.5",
     "react-syntax-highlighter": "^15.5.0",
     "rehype-katex": "^5.0.0",

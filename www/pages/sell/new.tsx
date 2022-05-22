@@ -8,6 +8,10 @@ import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
+import SelectSearch from 'react-select-search';
+import { renderToken, optimismList } from '../../lib/tokenDropdown';
+import { DEFAULT_TOKEN } from '../../lib/constants';
+import cn from 'classnames';
 import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
 
 async function postToIPFS(data: any) {
@@ -31,7 +35,7 @@ function NewSellOrder() {
     sellersStake: 0,
     buyersStake: 0,
     price: 0,
-    token: '0xc778417E063141139Fce010982780140Aa0cD5Ab', // Rinkeby wETH
+    token: DEFAULT_TOKEN,
   });
   const signer = useSigner();
   const router = useRouter();
@@ -88,6 +92,8 @@ function NewSellOrder() {
     router.push(`/buy/${sellOrderAddress}`);
   }
 
+  let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
+
   return (
     <ConnectWalletLayout requireConnected={true}>
       <div className="px-4 py-4 max-w-6xl mx-auto">
@@ -108,12 +114,11 @@ function NewSellOrder() {
               value={state.title}
             />
           </label>
-
           <div className="flex mb-8">
-            <label className="flex flex-col">
+            <label className="flex flex-1 flex-col mr-4">
               <div className="font-sans mb-1 text-base">Price</div>
               <input
-                className="border-l border-t border-b px-4 py-2 rounded-l"
+                className="border px-4 py-2 rounded"
                 type="number"
                 placeholder="1.5"
                 onChange={(e) =>
@@ -126,20 +131,51 @@ function NewSellOrder() {
               />
             </label>
 
-            <label className="flex flex-1 flex-col">
+            <label className="flex-col">
               <div className="font-sans mb-1 text-base">Token</div>
+              <SelectSearch
+                className={(classes: string) =>
+                  cn({
+                    'w-40': true,
+                    'px-4 py-2 border rounded-l': classes === 'input',
+                    'px-4 py-2 w-full hover:bg-slate-50': classes === 'option',
+                    'border rounded-b absolute bg-white drop-shadow':
+                      classes === 'options',
+                  })
+                }
+                options={optimismList}
+                placeholder={customTokenDisabled ? 'USDC' : 'Custom Token'}
+                onChange={(opt: any) => {
+                  if (opt === 'Custom') {
+                    setCustomTokenDisabled(false);
+                    setState((s) => ({ ...s, token: '' }));
+                  } else {
+                    setState((s) => ({ ...s, token: opt }));
+                    setCustomTokenDisabled(true);
+                  }
+                }}
+                search
+                renderOption={renderToken}
+                value={state.token}
+              />
+            </label>
+
+            <label className="flex flex-1 flex-col">
+              <div className="font-sans mb-1 text-base">Token Address</div>
               <input
-                className="border px-4 py-2 rounded-r"
-                type="string"
-                placeholder="0x..."
+                className="border-r border-t border-b px-4 py-2 rounded-r"
+                placeholder={DEFAULT_TOKEN}
+                disabled={customTokenDisabled}
                 onChange={(e) =>
-                  setState((s) => ({ ...s, token: e.target.value }))
+                  setState((s) => ({
+                    ...s,
+                    token: e.target.value,
+                  }))
                 }
                 value={state.token}
               />
             </label>
           </div>
-
           <label className="flex flex-col mb-8">
             <div className="font-sans mb-1 text-base">Description</div>
             <textarea
@@ -151,7 +187,6 @@ function NewSellOrder() {
               value={state.description}
             />
           </label>
-
           <div className="flex mb-8">
             <label className="flex flex-1 flex-col mr-4">
               <div className="mb-1 text-base">Seller's Stake</div>
