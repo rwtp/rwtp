@@ -48,18 +48,6 @@ export function renderToken(
   }
 }
 
-export function dropDownUI(classes: string) {
-  if (classes === 'input') {
-    return 'px-4 py-2 border rounded-l';
-  } else if (classes === 'option') {
-    return 'px-4 py-2 w-full hover:bg-slate-50';
-  } else if (classes === 'options') {
-    return 'border absolute bg-white drop-shadow-lg';
-  } else {
-    return classes;
-  }
-}
-
 export const optimismList = tokenlist.tokens
   .filter(
     (token) => acceptedCoins.includes(token.symbol) && token.chainId == 10

@@ -9,8 +9,9 @@ import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import SelectSearch from 'react-select-search';
-import { renderToken, dropDownUI, optimismList } from '../../lib/tokenDropdown';
+import { renderToken, optimismList } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
+import cn from 'classnames';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -131,18 +132,22 @@ function NewSellOrder() {
             <label className="flex-col">
               <div className="font-sans mb-1 text-base">Token</div>
               <SelectSearch
-                className={(classes: string) => {
-                  return dropDownUI(classes) + ' w-40';
-                }}
+                className={(classes: string) =>
+                  cn({
+                    'w-40': true,
+                    'px-4 py-2 border rounded-l': classes === 'input',
+                    'px-4 py-2 w-full hover:bg-slate-50': classes === 'option',
+                    'border rounded-b absolute bg-white drop-shadow':
+                      classes === 'options',
+                  })
+                }
                 options={optimismList}
                 placeholder={customTokenDisabled ? 'USDC' : 'Custom Token'}
-                onChange={(opt) => {
-                  // @ts-ignore
+                onChange={(opt: any) => {
                   if (opt === 'Custom') {
                     setCustomTokenDisabled(false);
                     setState((s) => ({ ...s, token: '' }));
                   } else {
-                    // @ts-ignore
                     setState((s) => ({ ...s, token: opt }));
                     setCustomTokenDisabled(true);
                   }
