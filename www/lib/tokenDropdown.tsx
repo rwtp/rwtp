@@ -20,7 +20,7 @@ export function renderToken(props, option, snapshot, className) {
   if (option.value === 'Custom') {
     return (
       <button {...props} className={className} type="button">
-        <u className="text-blue-400">{option.name}</u>
+        <u className="text-sky-600">{option.name}</u>
       </button>
     );
   } else {
@@ -45,13 +45,11 @@ export function renderToken(props, option, snapshot, className) {
 
 export function dropDownUI(classes: string) {
   if (classes === 'input') {
-    return 'px-4 py-2 border rounded-r bg-slate-100';
+    return 'px-4 py-2 border rounded-l';
   } else if (classes === 'option') {
-    return 'px-4 py-2';
+    return 'px-4 py-2 w-full hover:bg-slate-100';
   } else if (classes === 'options') {
-    return 'border rounded-b absolute bg-white drop-shadow-lg';
-  } else if (classes === 'options:hover') {
-    return 'bg-slate-100';
+    return 'border absolute bg-white drop-shadow-lg';
   } else {
     return classes;
   }

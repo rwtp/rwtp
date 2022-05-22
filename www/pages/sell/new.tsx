@@ -93,6 +93,8 @@ function NewSellOrder() {
     { name: 'English', value: 'en' },
   ];
 
+  let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
+
   return (
     <ConnectWalletLayout>
       <div className="px-4 py-4 max-w-2xl mx-auto">
@@ -113,12 +115,11 @@ function NewSellOrder() {
               value={state.title}
             />
           </label>
-
           <div className="flex mb-8">
-            <label className="flex flex-col">
+            <label className="flex flex-1 flex-col mr-4">
               <div className="font-sans mb-1 text-base">Price</div>
               <input
-                className="border-l border-t border-b px-4 py-2 rounded-l"
+                className="border px-4 py-2 rounded"
                 type="number"
                 placeholder="1.5"
                 onChange={(e) =>
@@ -131,7 +132,7 @@ function NewSellOrder() {
               />
             </label>
 
-            <label className="flex flex-1 flex-col">
+            <label className="flex-col">
               <div className="font-sans mb-1 text-base">Token</div>
               {/* <input
                 className="border px-4 py-2 rounded-r"
@@ -144,25 +145,43 @@ function NewSellOrder() {
               /> */}
               <SelectSearch
                 className={(classes: string) => {
-                  return dropDownUI(classes);
+                  return dropDownUI(classes) + ' w-40';
                 }}
                 options={optimismList}
-                placeholder="USDC"
+                placeholder={customTokenDisabled ? 'USDC' : 'Custom Token'}
                 onChange={(opt) => {
+                  // @ts-ignore
                   if (opt === 'Custom') {
-                    console.log("It's custom innit");
+                    setCustomTokenDisabled(false);
+                    setState((s) => ({ ...s, token: '' }));
                   } else {
+                    // @ts-ignore
                     setState((s) => ({ ...s, token: opt }));
-                    console.log(opt);
+                    setCustomTokenDisabled(true);
                   }
                 }}
                 search
                 renderOption={renderToken}
+                value={state.token}
               />
-              <i className="text-xs">{state.token}</i>
+            </label>
+
+            <label className="flex flex-1 flex-col">
+              <div className="font-sans mb-1 text-base">Token Address</div>
+              <input
+                className="border-r border-t border-b px-4 py-2 rounded-r"
+                placeholder="0x0e18a94e59ba260090cd2a1b9d81222b0e0a6abe"
+                disabled={customTokenDisabled}
+                onChange={(e) =>
+                  setState((s) => ({
+                    ...s,
+                    token: e.target.value,
+                  }))
+                }
+                value={state.token}
+              />
             </label>
           </div>
-
           <label className="flex flex-col mb-8">
             <div className="font-sans mb-1 text-base">Description</div>
             <textarea
@@ -174,7 +193,6 @@ function NewSellOrder() {
               value={state.description}
             />
           </label>
-
           <div className="flex mb-8">
             <label className="flex flex-1 flex-col mr-4">
               <div className="mb-1 text-base">Seller's Stake</div>
