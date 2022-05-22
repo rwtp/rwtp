@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import 'forge-std/Test.sol';
 import './ERC20Mock.sol';
-import '../src/SellOrder.sol';
+import '../src/Order.sol';
 import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '../src/OrderBook.sol';
 
@@ -26,12 +26,13 @@ contract SellOrderTest is Test {
 
     function testConstructor() public {
         ERC20Mock token = new ERC20Mock('wETH', 'WETH', address(this), 100);
-        SellOrder sellOrder = book.createSellOrder(
+        Order sellOrder = book.createOrder(
             address(this),
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         assert(address(sellOrder.token()) == address(token));
@@ -46,12 +47,13 @@ contract SellOrderTest is Test {
         address buyer = address(0x5234567890123456754012345678901234567822);
 
         // Create a sell order
-        SellOrder sellOrder = book.createSellOrder(
+        Order sellOrder = book.createOrder(
             seller,
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         token.transfer(buyer, 20);
@@ -96,12 +98,13 @@ contract SellOrderTest is Test {
         address buyer = address(0x2234567890123456754012345678901234567821);
 
         // Create a sell order
-        SellOrder sellOrder = book.createSellOrder(
+        Order sellOrder = book.createOrder(
             seller,
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         token.transfer(buyer, 20);
@@ -125,12 +128,13 @@ contract SellOrderTest is Test {
         address buyer2 = address(0x5234567890123456754012345678901234567822);
 
         // Create a sell order
-        SellOrder sellOrder = book.createSellOrder(
+        Order sellOrder = book.createOrder(
             seller,
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer from buyer1
@@ -166,12 +170,12 @@ contract SellOrderTest is Test {
         sellOrder.commit(buyer2, 0);
         vm.stopPrank();
 
-        (SellOrder.State offerState1, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState1, , , , , , , ) = sellOrder.offers(
             buyer2,
             0
         );
         require(
-            offerState1 == SellOrder.State.Committed,
+            offerState1 == Order.State.Committed,
             'state is not committed'
         );
         require(
@@ -183,14 +187,14 @@ contract SellOrderTest is Test {
         vm.prank(buyer2);
         sellOrder.confirm(0);
 
-        (SellOrder.State offerState2, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState2, , , , , , , ) = sellOrder.offers(
             buyer2,
             0
         );
-        require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
+        require(offerState2 == Order.State.Closed, 'state is not Closed');
 
         require(
-            token.balanceOf(sellOrder.seller()) == 60, // 60 = payment + stake
+            token.balanceOf(sellOrder.maker()) == 60, // 60 = payment + stake
             'seller did not get paid'
         );
         require(
@@ -205,12 +209,13 @@ contract SellOrderTest is Test {
         address seller = address(0x1234567890123456784012345678901234567829);
 
         // Create a sell order
-        SellOrder sellOrder = book.createSellOrder(
+        Order sellOrder = book.createOrder(
             seller,
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer from seller
@@ -230,12 +235,13 @@ contract SellOrderTest is Test {
 
         // Create a sell order
 
-        SellOrder sellOrder = book.createSellOrder(
+        Order sellOrder = book.createOrder(
             seller,
             token,
             50, // stake
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer
@@ -277,12 +283,13 @@ contract SellOrderTest is Test {
         address buyer2 = address(0x5234567890123456754012345678901234567822);
 
         // Create a sell order
-        SellOrder sellOrder = book.createSellOrder(
+        Order sellOrder = book.createOrder(
             seller,
             token,
             50,
             'ipfs://metadata',
-            100
+            100,
+            false
         );
 
         // Submit an offer from buyer1
@@ -324,12 +331,12 @@ contract SellOrderTest is Test {
         sellOrder.commitBatch(buyers, offerIndices);
         vm.stopPrank();
 
-        (SellOrder.State offerState1, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState1, , , , , , , ) = sellOrder.offers(
             buyer2,
             0
         );
         require(
-            offerState1 == SellOrder.State.Committed,
+            offerState1 == Order.State.Committed,
             'state is not committed'
         );
         require(
@@ -341,14 +348,14 @@ contract SellOrderTest is Test {
         vm.prank(buyer2);
         sellOrder.confirm(0);
 
-        (SellOrder.State offerState2, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState2, , , , , , , ) = sellOrder.offers(
             buyer2,
             0
         );
-        require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
+        require(offerState2 == Order.State.Closed, 'state is not Closed');
 
         require(
-            token.balanceOf(sellOrder.seller()) == 60, // 60 = payment + stake
+            token.balanceOf(sellOrder.maker()) == 60, // 60 = payment + stake
             'seller did not get paid'
         );
         require(
@@ -359,7 +366,7 @@ contract SellOrderTest is Test {
 }
 
 contract CancelationTest is Test {
-    SellOrder sellOrder;
+    Order sellOrder;
     address DAO = address(0x4234567890123456784012345678901234567821);
     address seller = address(0x1234567890123456784012345678901234567829);
     ERC20Mock token;
@@ -372,12 +379,13 @@ contract CancelationTest is Test {
         token = new ERC20Mock('wETH', 'WETH', address(this), 20000);
 
         // Create a sell order
-        sellOrder = book.createSellOrder(
+        sellOrder = book.createOrder(
             seller,
             token,
             50, // stake
             'ipfs://metadata',
-            100
+            100,
+            false
         );
     }
 
@@ -424,11 +432,11 @@ contract CancelationTest is Test {
             'seller should be cleared'
         );
 
-        (SellOrder.State offerState2, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState2, , , , , , , ) = sellOrder.offers(
             buyer,
             0
         );
-        require(offerState2 == SellOrder.State.Closed, 'state is not Closed');
+        require(offerState2 == Order.State.Closed, 'state is not Closed');
     }
 
     function buyAndCommit(address buyer, uint32 index) public {
@@ -490,22 +498,22 @@ contract CancelationTest is Test {
         buyAndCommit(buyer, 0);
         buyAndCommit(buyer, 1);
 
-        (SellOrder.State offerState0, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState0, , , , , , , ) = sellOrder.offers(
             buyer,
             0
         );
-        (SellOrder.State offerState1, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState1, , , , , , , ) = sellOrder.offers(
             buyer,
             1
         );
 
         require(
-            offerState0 == SellOrder.State.Committed,
+            offerState0 == Order.State.Committed,
             'state is not Committed'
         );
 
         require(
-            offerState1 == SellOrder.State.Committed,
+            offerState1 == Order.State.Committed,
             'state is not Committed'
         );
     }
@@ -534,7 +542,7 @@ contract CancelationTest is Test {
 }
 
 contract QuantityTest is Test {
-    SellOrder sellOrder;
+    Order sellOrder;
     address DAO = address(0x4234567890123456784012345678901234567821);
     address seller = address(0x1234567890123456784012345678901234567829);
     ERC20Mock token;
@@ -547,12 +555,13 @@ contract QuantityTest is Test {
         token = new ERC20Mock('wETH', 'WETH', address(this), 20000);
 
         // Create a sell order
-        sellOrder = book.createSellOrder(
+        sellOrder = book.createOrder(
             seller,
             token,
             sellersStake, // stake
             'ipfs://metadata',
-            100
+            100,
+            false
         );
     }
 
@@ -598,11 +607,11 @@ contract QuantityTest is Test {
         );
 
         // Check the state
-        (SellOrder.State offerState, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState, , , , , , , ) = sellOrder.offers(
             buyer,
             index
         );
-        require(offerState == SellOrder.State.Closed, 'state is not Closed');
+        require(offerState == Order.State.Closed, 'state is not Closed');
     }
 }
 
