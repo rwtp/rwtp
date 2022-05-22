@@ -283,7 +283,7 @@ function Offers() {
 
 export default function Page() {
   return (
-    <ConnectWalletLayout>
+    <ConnectWalletLayout requireConnected={false}>
       <div className="h-full flex flex-col">
         <Suspense fallback={<div></div>}>
           <div className=" p-4 max-w-6xl mx-auto w-full mt-8">

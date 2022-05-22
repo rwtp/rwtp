@@ -12,6 +12,7 @@ import SelectSearch from 'react-select-search';
 import { renderToken, optimismList } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
 import cn from 'classnames';
+import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -61,6 +62,7 @@ function NewSellOrder() {
     const decimals = await erc20.decimals();
 
     const cid = await postToIPFS({
+      offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
       title: state.title,
       description: state.description,
       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
@@ -93,8 +95,8 @@ function NewSellOrder() {
   let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
 
   return (
-    <ConnectWalletLayout>
-      <div className="px-4 py-4 max-w-2xl mx-auto">
+    <ConnectWalletLayout requireConnected={true}>
+      <div className="px-4 py-4 max-w-6xl mx-auto">
         <div className="font-serif mb-12 mt-12 text-2xl">
           Create a new sell listing
         </div>

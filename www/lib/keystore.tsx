@@ -150,7 +150,7 @@ export function RequiresKeystore(props: { children: ReactNode }) {
   // Loading
   if (login.isLoading) {
     return (
-      <ConnectWalletLayout>
+      <ConnectWalletLayout requireConnected={true}>
         <div></div>
       </ConnectWalletLayout>
     );
@@ -161,9 +161,9 @@ export function RequiresKeystore(props: { children: ReactNode }) {
   }
 
   return (
-    <ConnectWalletLayout>
+    <ConnectWalletLayout requireConnected={true}>
       <FadeIn className="bg-gray-50 h-full p-4 border-t flex items-center justify-center">
-        <div className="bg-white border max-w-xl mx-auto ">
+        <div className="bg-white border max-w-xl mx-auto">
           <div className="p-8">
             <h1 className="text-2xl mb-2 font-serif">
               Allow this site to handle sensitive data?
@@ -200,7 +200,7 @@ export function RequiresKeystore(props: { children: ReactNode }) {
             </div>
           </div>
 
-          <div className="flex px-4 pb-4 pt-4  justify-between">
+          <div className="flex px-4 pb-4 pt-4 justify-between">
             <button
               onClick={() => {
                 router.back();

@@ -1,4 +1,3 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/router';
 import { BigNumber } from 'ethers';
 import { Suspense, useState } from 'react';
@@ -16,51 +15,15 @@ import { ConnectWalletLayout } from '../../../components/Layout';
 import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
 import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
-
-function ConnectWalletButton(props: {
-  children: React.ReactNode;
-  onClick: () => void;
-  className: string;
-}) {
-  return (
-    <ConnectButton.Custom>
-      {({ account, mounted, chain, openConnectModal, openChainModal }) => {
-        function onClick() {
-          if (!mounted || !account || !chain) {
-            return openConnectModal();
-          }
-
-          if (chain?.unsupported) {
-            return openChainModal();
-          }
-
-          props.onClick();
-        }
-
-        return (
-          <button className={props.className} onClick={onClick}>
-            {account && mounted && chain ? (
-              props.children
-            ) : (
-              <>
-                Connect Wallet <FingerPrintIcon className="h-4 w-4 ml-2" />
-              </>
-            )}
-          </button>
-        );
-      }}
-    </ConnectButton.Custom>
-  );
-}
+import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
+import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
 
 function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   const tokenMethods = useTokenMethods(sellOrder.token.address);
   const sellOrderMethods = useSellOrderMethods(sellOrder.address);
   const router = useRouter();
   const buyersEncryptionKeypair = useEncryptionKeypair();
-
-  const [email, setEmail] = useState('');
-  const [shippingAddress, setShippingAddress] = useState('');
+  const [offerData, setOfferData] = useState({});
 
   const quantity = 1;
   const price = sellOrder.priceSuggested
@@ -71,14 +34,11 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     : BigNumber.from(0);
 
   async function onBuy() {
-    if (!email || !shippingAddress) return;
+    if (!offerData) return;
     if (!buyersEncryptionKeypair) return;
-
+    console.log('Submitting offer: ', offerData);
     const secretData = Buffer.from(
-      JSON.stringify({
-        email,
-        shippingAddress,
-      }),
+      JSON.stringify(offerData),
       'utf-8'
     );
     const nonce = nacl.randomBytes(24);
@@ -117,7 +77,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
   }
 
   return (
-    <ConnectWalletLayout>
+    <ConnectWalletLayout requireConnected={true}>
       <div className="h-full w-full flex flex-col border-t">
         <div className="h-full flex w-full">
           <div className="flex w-full border-l border-r mx-auto">
@@ -149,47 +109,22 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
               </div>
             </div>
             <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-              <label className="flex flex-col mt-2">
-                <div className="text-xs font-bold py-1">Shipping Address</div>
-                <input
-                  type={'text'}
-                  className={'px-2 py-2 border rounded'}
-                  name="address"
-                  placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-                  onChange={(e) => setShippingAddress(e.target.value)}
-                />
-              </label>
-
-              <label className="flex flex-col  mt-2">
-                <div className="text-xs font-bold py-1">Email</div>
-                <input
-                  type={'text'}
-                  className={'px-2 py-2 border rounded'}
-                  name="address"
-                  placeholder="you@ethereum.org"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </label>
-
-              <div className="mt-4">
-                <ConnectWalletButton
-                  className="bg-black text-white px-4 py-2 rounded w-full justify-between flex items-center"
-                  onClick={() => onBuy().catch(console.error)}
-                >
-                  <div>Buy</div>
-                  <div>{fromBn(price, sellOrder.token.decimals)}</div>
-                </ConnectWalletButton>
-                <div className="text-sm mt-4 text-gray-500">
-                  If this item doesn't ship to you, the seller be fined{' '}
-                  <span className="font-bold">
-                    {fromBn(
-                      BigNumber.from(sellOrder.sellersStake),
-                      sellOrder.token.decimals
-                    )}{' '}
-                    {sellOrder.token.symbol}.
-                  </span>
-                </div>
-              </div>
+              {
+                sellOrder.offerSchemaUri && sellOrder.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
+                  <OfferForm
+                    schema={sellOrder.offerSchema}
+                    setOfferData={setOfferData}
+                    offerData={offerData}
+                    price={fromBn(price, sellOrder.token.decimals)}
+                    onSubmit={onBuy}
+                    symbol={sellOrder.token.symbol} /> :
+                  <SimpleOfferForm
+                    setOfferData={setOfferData}
+                    offerData={offerData}
+                    price={fromBn(price, sellOrder.token.decimals)}
+                    onSubmit={onBuy}
+                    symbol={sellOrder.token.symbol} />
+              }
             </div>
           </div>
         </div>
@@ -197,6 +132,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     </ConnectWalletLayout>
   );
 }
+
 
 function Loading() {
   return <div className="bg-gray-50 animate-pulse h-screen w-screen"></div>;
