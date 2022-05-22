@@ -9,3 +9,4 @@ artifacts
 openzeppelin-contracts/
 .deps
 ipfs
+**/.vscode/
