@@ -432,7 +432,6 @@ contract Order {
             ONE_MILLION;
         uint256 toSeller = total - toOrderBook;
         uint256 toBuyer = buyerStakePerUnit(offer) * offer.quantity;
-        // uint256 toBuyer = 1 * offer.quantity;
 
         // Transfer payment to the buyer
         bool result0 = token.transfer(buyer(taker_), toBuyer);
