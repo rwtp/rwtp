@@ -22,7 +22,6 @@ interface IOrderBook {
     function createOrder(
         address maker,
         IERC20 token,
-        uint256 stake,
         string memory uri,
         uint256 timeout,
         bool isBuyOrder

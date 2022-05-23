@@ -57,7 +57,6 @@ contract OrderBook is IOrderBook {
     function createOrder(
         address maker,
         IERC20 token,
-        uint256 stake,
         string memory uri,
         uint256 timeout,
         bool isBuyOrder
@@ -68,7 +67,7 @@ contract OrderBook is IOrderBook {
         } else {
             orderType = Order.OrderType.SellOrder;
         }
-        Order order = new Order(maker, token, stake, uri, timeout, orderType);
+        Order order = new Order(maker, token, uri, timeout, orderType);
         emit OrderCreated(address(order));
         orders[address(order)] = true;
         return order;

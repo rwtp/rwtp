@@ -8,6 +8,9 @@ contract Order {
     /// @dev Don't allow purchases from self
     error TakerCannotBeMaker();
 
+    // @dev msg.sender is not the buyer of the order
+    error MustBeBuyer();
+
     /// @dev msg.sender is not the maker of the order
     error MustBeMaker();
 
@@ -17,13 +20,17 @@ contract Order {
     /// @dev The order is not accepting new offers
     error OrderInactive();
 
+    /// @dev The order timed out and can no longer be refunded
+    error TimeoutExpired();
+
     /// @dev Emitted when `taker` submits an offer.
     event OfferSubmitted(
         address indexed taker,
         uint32 indexed index,
         uint32 quantity,
         uint128 pricePerUnit,
-        uint128 stakePerUnit,
+        uint128 costPerUnit,
+        uint128 sellerStakePerUnit,
         string uri
     );
 
@@ -36,8 +43,8 @@ contract Order {
     /// @dev Emitted when `taker` confirmed an offer was completed.
     event OfferConfirmed(address indexed taker, uint32 indexed index);
 
-    /// @dev Emitted when an offer was enforced.
-    event OfferEnforced(address indexed taker, uint32 indexed index);
+    /// @dev Emitted when an offer was refunded.
+    event OfferRefunded(address indexed taker, uint32 indexed index);
 
     /// @dev Emitted when `maker` sets the order active or inactive.
     event ActiveToggled(bool active);
@@ -63,9 +70,6 @@ contract Order {
 
     /// @dev the maximum delivery time before the order can said to have failed.
     uint256 public timeout;
-
-    /// @dev the amount the maker is offering to stake per order.
-    uint256 public orderStake;
 
     /// @dev order book
     address public orderBook;
@@ -95,10 +99,12 @@ contract Order {
     struct Offer {
         /// @dev the state of the offer
         State state;
-        /// @dev the amount the buyer is willing to pay
+        /// @dev the amount the buyer will pay
         uint128 pricePerUnit;
-        /// @dev the amount the buyer is willing to stake
-        uint128 stakePerUnit;
+        /// @dev the amount the buyer gets when refunded
+        uint128 costPerUnit;
+        /// @dev the amount the seller is willing to stake
+        uint128 sellerStakePerUnit;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
@@ -129,7 +135,6 @@ contract Order {
     constructor(
         address maker_,
         IERC20 token_,
-        uint256 orderStake_,
         string memory uri_,
         uint256 timeout_,
         OrderType orderType_
@@ -137,7 +142,6 @@ contract Order {
         orderBook = msg.sender;
         maker = maker_;
         token = token_;
-        orderStake = orderStake_;
         _uri = uri_;
         timeout = timeout_;
         active = true;
@@ -161,6 +165,68 @@ contract Order {
         emit ActiveToggled(active);
     }
 
+    /// @dev returns buyer refund per unit for offer with given taker and index
+    function refundPerUnit(address taker_, uint32 index)
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        Offer memory offer = offers[taker_][index];
+        if (offer.pricePerUnit > offer.costPerUnit) {
+            return offer.pricePerUnit - offer.costPerUnit;
+        } else {
+            return 0;
+        }
+    }
+
+    /// @dev returns buyer stake per unit for offer with given taker and index
+    function buyerStakePerUnit(address taker_, uint32 index)
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        Offer memory offer = offers[taker_][index];
+        if (offer.costPerUnit > offer.pricePerUnit) {
+            return offer.costPerUnit - offer.pricePerUnit;
+        } else {
+            return 0;
+        }
+    }
+
+    /// @dev returns buyer for offer with given taker
+    function buyer(address taker_) 
+        internal
+        view
+        virtual
+        returns (address) 
+    {
+        if (orderType == OrderType.SellOrder) {
+            return taker_;
+        } else if (orderType == OrderType.BuyOrder) {
+            return maker;
+        } else {
+            revert();
+        }
+    }
+
+    /// @dev returns seller for offer with given taker
+    function seller(address taker_) 
+        internal
+        view
+        virtual
+        returns (address) 
+    {
+        if (orderType == OrderType.SellOrder) {
+            return maker;
+        } else if (orderType == OrderType.BuyOrder) {
+            return taker_;
+        } else {
+            revert();
+        }
+    }
+
     /// @dev reverts if the function is not at the expected state
     modifier onlyState(
         address taker_,
@@ -169,6 +235,15 @@ contract Order {
     ) {
         if (offers[taker_][index].state != expected) {
             revert InvalidState(expected, offers[taker_][index].state);
+        }
+
+        _;
+    }
+
+    // @dev reverts if msg.sender is not the buyer
+    modifier onlyBuyer(address taker_) {
+        if (msg.sender != buyer(taker_)) {
+            revert MustBeBuyer();
         }
 
         _;
@@ -197,7 +272,8 @@ contract Order {
         uint32 index,
         uint32 quantity,
         uint128 pricePerUnit,
-        uint128 stakePerUnit,
+        uint128 costPerUnit,
+        uint128 sellerStakePerUnit,
         string memory uri
     ) external virtual onlyState(msg.sender, index, State.Closed) onlyActive {
         if (msg.sender == maker) {
@@ -207,15 +283,20 @@ contract Order {
         Offer storage offer = offers[msg.sender][index];
         offer.state = State.Open;
         offer.pricePerUnit = pricePerUnit;
-        offer.stakePerUnit = stakePerUnit;
+        offer.costPerUnit = costPerUnit;
+        offer.sellerStakePerUnit = sellerStakePerUnit;
         offer.uri = uri;
         offer.quantity = quantity;
 
-        uint256 transferAmount = stakePerUnit * quantity;
-
-        // Only transfer payment if this is a buy offer (for a sell order).
-        if (orderType == OrderType.SellOrder) {
-            transferAmount += pricePerUnit * quantity;
+        uint256 transferAmount;
+        if (orderType == OrderType.BuyOrder) {
+            // This is a sell offer
+            transferAmount = sellerStakePerUnit * quantity;
+        } else if (orderType == OrderType.SellOrder) {
+            // This is a buy offer
+            transferAmount =
+                (pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
+                quantity;
         }
 
         bool result = token.transferFrom(
@@ -230,7 +311,8 @@ contract Order {
             index,
             quantity,
             pricePerUnit,
-            stakePerUnit,
+            costPerUnit,
+            sellerStakePerUnit,
             uri
         );
     }
@@ -243,21 +325,23 @@ contract Order {
     {
         Offer memory offer = offers[msg.sender][index];
 
-        uint256 transferAmount = offer.stakePerUnit * offer.quantity;
-
-        // Only return payment if this is a buy offer (for a sell order).
-        if (orderType == OrderType.SellOrder) {
-            transferAmount += offer.pricePerUnit * offer.quantity;
+        uint256 transferAmount;
+        if (orderType == OrderType.BuyOrder) {
+            // This is a sell offer
+            transferAmount = offer.sellerStakePerUnit * offer.quantity;
+        } else if (orderType == OrderType.SellOrder) {
+            // This is a buy offer
+            transferAmount =
+                (offer.pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
+                offer.quantity;
         }
 
-        bool result = token.transfer(
-            msg.sender,
-            transferAmount
-        );
+        bool result = token.transfer(msg.sender, transferAmount);
         assert(result);
 
         offers[msg.sender][index] = Offer(
             State.Closed,
+            0,
             0,
             0,
             offer.uri,
@@ -277,21 +361,24 @@ contract Order {
         onlyState(taker_, index, State.Open)
         onlyMaker
     {
-        // Deposit the stake required to commit to the offer
-        uint256 allowance = token.allowance(msg.sender, address(this));
-        require(allowance >= orderStake);
+        Offer storage offer = offers[taker_][index];
 
         // Update the status of the taker's offer
-        Offer storage offer = offers[taker_][index];
         offer.acceptedAt = uint64(block.timestamp);
         offer.state = State.Committed;
 
-        uint256 transferAmount = orderStake * offer.quantity;
-
-        // Only transfer payment if this is a sell offer (for a buy order).
+        uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
-            transferAmount += offer.pricePerUnit * offer.quantity;
+            transferAmount =
+                (offer.pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
+                offer.quantity;
+        } else if (orderType == OrderType.SellOrder) {
+            transferAmount = offer.sellerStakePerUnit * offer.quantity;
         }
+
+        // Deposit the amount required to commit to the offer
+        uint256 allowance = token.allowance(msg.sender, address(this));
+        require(allowance >= transferAmount);
 
         bool result = token.transferFrom(
             msg.sender,
@@ -315,15 +402,24 @@ contract Order {
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm(uint32 index)
+    function confirm(address taker_, uint32 index)
         public
         virtual
-        onlyState(msg.sender, index, State.Committed)
+        onlyState(taker_, index, State.Committed)
     {
+        Offer memory offer = offers[taker_][index];
+
+        // Only buyer can confirm before timeout
+        if (block.timestamp < timeout + offer.acceptedAt) {
+            if (msg.sender != buyer(taker_)) {
+                revert MustBeBuyer();
+            }
+        }
+
         // Close the offer
-        Offer memory offer = offers[msg.sender][index];
-        offers[msg.sender][index] = Offer(
+        offers[taker_][index] = Offer(
             State.Closed,
+            0,
             0,
             0,
             '',
@@ -333,33 +429,18 @@ contract Order {
             0
         );
 
-        uint256 total = offer.pricePerUnit * offer.quantity;
+        uint256 total = (offer.pricePerUnit + offer.sellerStakePerUnit) * offer.quantity;
         uint256 toOrderBook = (total * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
         uint256 toSeller = total - toOrderBook;
+        uint256 toBuyer = buyerStakePerUnit(taker_, index) * offer.quantity;
 
-        uint256 toTaker = offer.stakePerUnit * offer.quantity;
-        uint256 toMaker = orderStake * offer.quantity;
-
-        // Payment goes to the seller, which is the maker of a sell order or the taker of a buy order.
-        if (orderType == OrderType.SellOrder) {
-            toMaker += toSeller;
-        } else if (orderType == OrderType.BuyOrder) {
-            toTaker += toSeller;
-        }
-
-        // Transfer payment to the taker
-        bool result0 = token.transfer(
-            msg.sender,
-            toTaker
-        );
+        // Transfer payment to the buyer
+        bool result0 = token.transfer(buyer(taker_), toBuyer);
         assert(result0);
 
-        // Transfer payment to the maker
-        bool result1 = token.transfer(
-            maker,
-            toMaker
-        );
+        // Transfer payment to the seller
+        bool result1 = token.transfer(seller(taker_), toSeller);
         assert(result1);
 
         // Transfer payment to the order book
@@ -369,28 +450,35 @@ contract Order {
         );
         assert(result2);
 
-        emit OfferConfirmed(msg.sender, index);
+        emit OfferConfirmed(taker_, index);
     }
 
     /// @dev Marks all provided offers as completed
-    function confirmBatch(uint32[] calldata indices) external virtual {
+    function confirmBatch(address[] calldata takers, uint32[] calldata indices)
+        external
+        virtual
+    {
         for (uint256 i = 0; i < indices.length; i++) {
-            confirm(indices[i]);
+            confirm(takers[i], indices[i]);
         }
     }
 
-    /// @dev Allows anyone to enforce an offer.
-    function enforce(address taker_, uint32 index)
+    /// @dev Allows the buyer to refund an offer.
+    function refund(address taker_, uint32 index)
         public
         virtual
         onlyState(taker_, index, State.Committed)
+        onlyBuyer(taker_)
     {
         Offer memory offer = offers[taker_][index];
-        require(block.timestamp > timeout + offer.acceptedAt);
+        if (block.timestamp > timeout + offer.acceptedAt) {
+            revert TimeoutExpired();
+        }
 
         // Close the offer
         offers[taker_][index] = Offer(
             State.Closed,
+            0,
             0,
             0,
             '',
@@ -400,45 +488,38 @@ contract Order {
             0
         );
 
-        // Transfer the payment to the buyer, which is the taker of a sell order or the maker of a buy order.
-        address buyer;
-        if (orderType == OrderType.SellOrder) {
-            buyer = taker_;
-        } else if (orderType == OrderType.BuyOrder) {
-            buyer = maker;
-        }
-
+        // Transfer the refund to the buyer
         bool result0 = token.transfer(
-            buyer,
-            (offer.pricePerUnit * offer.quantity)
+            buyer(taker_),
+            refundPerUnit(taker_, index) * offer.quantity
         );
         assert(result0);
 
-        // Transfer the taker's stake to address(dead).
+        // Transfer the buyer's stake to address(dead).
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            (offer.stakePerUnit * offer.quantity)
+            buyerStakePerUnit(taker_, index) * offer.quantity
         );
         assert(result1);
 
-        // Transfer the maker's stake to address(dead).
+        // Transfer the seller's stake to address(dead).
         bool result2 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            orderStake * offer.quantity
+            offer.sellerStakePerUnit * offer.quantity
         );
         assert(result2);
 
-        emit OfferEnforced(taker_, index);
+        emit OfferRefunded(taker_, index);
     }
 
-    /// @dev Enforces all provided offers
-    function enforceBatch(address[] calldata takers, uint32[] calldata indices)
+    /// @dev Refunds all provided offers
+    function refundBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
     {
         require(takers.length == indices.length);
         for (uint256 i = 0; i < takers.length; i++) {
-            enforce(takers[i], indices[i]);
+            refund(takers[i], indices[i]);
         }
     }
 
@@ -464,32 +545,22 @@ contract Order {
         // If both parties canceled, then return the stakes, and the payment to the buyer,
         // and set the offer to closed
         if (offer.makerCanceled && offer.takerCanceled) {
-            uint256 toTaker = offer.stakePerUnit * offer.quantity;
-            uint256 toMaker = orderStake * offer.quantity;
+            uint256 toBuyer = (offer.pricePerUnit +
+                buyerStakePerUnit(taker_, index)) * offer.quantity;
+            uint256 toSeller = offer.sellerStakePerUnit * offer.quantity;
 
-            uint256 toBuyer = offer.pricePerUnit * offer.quantity;
-
-            // Payment goes to the buyer, which is the taker of a sell order or the maker of a buy order.
-            if (orderType == OrderType.SellOrder) {
-                toTaker += toBuyer;
-            } else if (orderType == OrderType.BuyOrder) {
-                toMaker += toBuyer;
-            }
-
-            // Transfer the taker stake back to the buyer along with their payment
-            bool result0 = token.transfer(
-                taker_,
-                toTaker
-            );
+            // Transfer the buyer stake back to the buyer along with their payment
+            bool result0 = token.transfer(buyer(taker_), toBuyer);
             assert(result0);
 
-            // Transfer the maker stake back to the seller
-            bool result1 = token.transfer(maker, toMaker);
+            // Transfer the seller stake back to the seller
+            bool result1 = token.transfer(seller(taker_), toSeller);
             assert(result1);
 
             // Null out the offer
             offers[taker_][index] = Offer(
                 State.Closed,
+                0,
                 0,
                 0,
                 '',
