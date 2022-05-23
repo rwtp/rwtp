@@ -124,7 +124,7 @@ contract SellOrderTest is Test {
         submitOffer(taker, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
     }
 
-    function testSubmitOfferBase() public {
+    function testSubmitOffer() public {
         submitOfferBase(taker1);
     }
 
@@ -462,7 +462,7 @@ contract SellOrderTest is Test {
             );
         } else {
             require(
-                token.balanceOf(taker) == 0,
+                token.balanceOf(taker) == takerStartBalance,
                 'incorrect transfer to buyer'
             );
         }
@@ -569,8 +569,63 @@ contract SellOrderTest is Test {
         require(offerState == Order.State.Closed, 'incorrect offer state');
     }
 
-    function testFailConfirmOfferBaseNotCommitted() public {
+    function testFailConfirmOfferNotCommitted() public {
         submitOfferBase(taker1);
         confirmOffer(taker1, taker1, 0);
+    }
+
+    function refundOffer(
+        address taker, 
+        uint32 index
+    ) public {
+        // Get initial balances
+        uint256 makerStartBalance = token.balanceOf(maker);
+        uint256 takerStartBalance = token.balanceOf(taker);
+        
+        (, uint128 pricePerUnit, uint128 costPerUnit, , , , , , uint32 quantity) = sellOrder.offers(taker, index);
+
+        // Confirm to an offer from maker
+        vm.startPrank(taker);
+        sellOrder.refund(taker, index);
+        vm.stopPrank();
+
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker, index);
+        require(offerState == Order.State.Closed, 'incorrect offer state');
+
+        require(
+            token.balanceOf(address(sellOrder)) == 0,
+            'sell order should have no balance'
+        );
+
+        require(
+            token.balanceOf(maker) == makerStartBalance,
+            'incorrect transfer to seller'
+        );
+
+        if (costPerUnit < pricePerUnit) {
+             require(
+                token.balanceOf(taker) == takerStartBalance + (pricePerUnit - costPerUnit) * quantity,
+                'incorrect transfer to buyer'
+            );
+        } else {
+            require(
+                token.balanceOf(taker) == takerStartBalance,
+                'incorrect transfer to buyer'
+            );
+        }
+    }
+
+    function testRefundOffer() public {
+        vm.warp(0);
+        submitOfferBase(taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(sellOrder), 1);
+        vm.stopPrank();
+        commitOffer(taker1, 0);
+
+        vm.warp(0);
+        refundOffer(taker1, 0);
     }
 }

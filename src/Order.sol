@@ -493,19 +493,16 @@ contract Order {
         );
         assert(result0);
 
-        // Transfer the buyer's stake to address(dead).
+        // Transfers to address(dead)
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            buyerStakePerUnit(offer) * offer.quantity
+            (
+                buyerStakePerUnit(offer) // buyer's stake
+                + offer.sellerStakePerUnit // seller's stake
+                + (offer.pricePerUnit - refundPerUnit(offer)) * offer.quantity // non-refundable purchase amount
+            ) * offer.quantity
         );
         assert(result1);
-
-        // Transfer the seller's stake to address(dead).
-        bool result2 = token.transfer(
-            address(0x000000000000000000000000000000000000dEaD),
-            offer.sellerStakePerUnit * offer.quantity
-        );
-        assert(result2);
 
         emit OfferRefunded(taker_, index);
     }
