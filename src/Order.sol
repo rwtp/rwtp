@@ -400,16 +400,16 @@ contract Order {
             0
         );
 
-        // Transfer the payment to the seller, which is the maker of a sell order or the taker of a buy order.
-        address seller;
+        // Transfer the payment to the buyer, which is the taker of a sell order or the maker of a buy order.
+        address buyer;
         if (orderType == OrderType.SellOrder) {
-            seller = maker;
+            buyer = taker_;
         } else if (orderType == OrderType.BuyOrder) {
-            seller = taker_;
+            buyer = maker;
         }
 
         bool result0 = token.transfer(
-            seller,
+            buyer,
             (offer.pricePerUnit * offer.quantity)
         );
         assert(result0);
