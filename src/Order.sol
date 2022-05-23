@@ -165,14 +165,13 @@ contract Order {
         emit ActiveToggled(active);
     }
 
-    /// @dev returns buyer refund per unit for offer with given taker and index
-    function refundPerUnit(address taker_, uint32 index)
+    /// @dev returns buyer refund per unit for offer
+    function refundPerUnit(Offer memory offer)
         internal
         view
         virtual
         returns (uint256)
     {
-        Offer memory offer = offers[taker_][index];
         if (offer.pricePerUnit > offer.costPerUnit) {
             return offer.pricePerUnit - offer.costPerUnit;
         } else {
@@ -180,14 +179,13 @@ contract Order {
         }
     }
 
-    /// @dev returns buyer stake per unit for offer with given taker and index
-    function buyerStakePerUnit(address taker_, uint32 index)
+    /// @dev returns buyer stake per unit for offer 
+    function buyerStakePerUnit(Offer memory offer)
         internal
         view
         virtual
         returns (uint256)
     {
-        Offer memory offer = offers[taker_][index];
         if (offer.costPerUnit > offer.pricePerUnit) {
             return offer.costPerUnit - offer.pricePerUnit;
         } else {
@@ -295,7 +293,7 @@ contract Order {
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
             transferAmount =
-                (pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
+                (pricePerUnit + buyerStakePerUnit(offer)) *
                 quantity;
         }
 
@@ -332,7 +330,7 @@ contract Order {
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
             transferAmount =
-                (offer.pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
+                (offer.pricePerUnit + buyerStakePerUnit(offer)) *
                 offer.quantity;
         }
 
@@ -370,7 +368,7 @@ contract Order {
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
             transferAmount =
-                (offer.pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
+                (offer.pricePerUnit + buyerStakePerUnit(offer)) *
                 offer.quantity;
         } else if (orderType == OrderType.SellOrder) {
             transferAmount = offer.sellerStakePerUnit * offer.quantity;
@@ -390,7 +388,7 @@ contract Order {
         emit OfferCommitted(taker_, index);
     }
 
-    /// @dev Marks all provided offers as confirmed
+    /// @dev Marks all provided offers as committed
     function commitBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
@@ -433,7 +431,8 @@ contract Order {
         uint256 toOrderBook = (total * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
         uint256 toSeller = total - toOrderBook;
-        uint256 toBuyer = buyerStakePerUnit(taker_, index) * offer.quantity;
+        uint256 toBuyer = buyerStakePerUnit(offer) * offer.quantity;
+        // uint256 toBuyer = 1 * offer.quantity;
 
         // Transfer payment to the buyer
         bool result0 = token.transfer(buyer(taker_), toBuyer);
@@ -491,14 +490,14 @@ contract Order {
         // Transfer the refund to the buyer
         bool result0 = token.transfer(
             buyer(taker_),
-            refundPerUnit(taker_, index) * offer.quantity
+            refundPerUnit(offer) * offer.quantity
         );
         assert(result0);
 
         // Transfer the buyer's stake to address(dead).
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            buyerStakePerUnit(taker_, index) * offer.quantity
+            buyerStakePerUnit(offer) * offer.quantity
         );
         assert(result1);
 
@@ -546,7 +545,7 @@ contract Order {
         // and set the offer to closed
         if (offer.makerCanceled && offer.takerCanceled) {
             uint256 toBuyer = (offer.pricePerUnit +
-                buyerStakePerUnit(taker_, index)) * offer.quantity;
+                buyerStakePerUnit(offer)) * offer.quantity;
             uint256 toSeller = offer.sellerStakePerUnit * offer.quantity;
 
             // Transfer the buyer stake back to the buyer along with their payment
