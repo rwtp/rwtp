@@ -499,7 +499,7 @@ contract Order {
             (
                 buyerStakePerUnit(offer) // buyer's stake
                 + offer.sellerStakePerUnit // seller's stake
-                + (offer.pricePerUnit - refundPerUnit(offer)) * offer.quantity // non-refundable purchase amount
+                + offer.pricePerUnit - refundPerUnit(offer) // non-refundable purchase amount
             ) * offer.quantity
         );
         assert(result1);
