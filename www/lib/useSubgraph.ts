@@ -8,7 +8,7 @@ import { request } from 'graphql-request';
 
 const fetcher = (query: any, variables: any) =>
   request(
-    'https://api.thegraph.com/subgraphs/name/rwtp/rinkeby',
+    'https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp',
     query,
     variables
   );

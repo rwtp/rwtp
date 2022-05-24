@@ -117,7 +117,7 @@ function NewSellOrder() {
 
         <div className="flex flex-col">
           <label className="flex flex-col mb-8">
-            <div className="font-sans mb-1 text-base">Title</div>
+            <strong className="mb-1 text-sm">Title</strong>
             <input
               className="font-sans border px-4 py-2 rounded"
               onChange={(e) =>
@@ -128,7 +128,7 @@ function NewSellOrder() {
             />
           </label>
           <label className="flex flex-col mb-8">
-            <div className="font-sans mb-1 text-base">Description</div>
+            <strong className="mb-1 text-sm">Description</strong>
             <textarea
               className="border px-4 py-2 rounded"
               placeholder="Description of the item you sell here. Try using tags to make it easier for the user to find your stuff. For example: Used car. #automobile #sedan #tan"
@@ -220,7 +220,7 @@ function NewSellOrder() {
           </div>
           <div className="flex mb-8">
             <label className="flex flex-1 flex-col mr-4">
-              <div className="font-sans mb-1 text-base">Price</div>
+              <strong className="mb-1 text-sm">Price</strong>
               <input
                 className="border px-4 py-2 rounded"
                 type="number"
@@ -236,7 +236,7 @@ function NewSellOrder() {
             </label>
 
             <label className="flex-col">
-              <div className="font-sans mb-1 text-base">Token</div>
+              <strong className="mb-1 text-sm">Token</strong>
               <SelectSearch
                 className={(classes: string) =>
                   cn({
@@ -265,7 +265,7 @@ function NewSellOrder() {
             </label>
 
             <label className="flex flex-1 flex-col">
-              <div className="font-sans mb-1 text-base">Token Address</div>
+              <strong className="mb-1 text-sm">Token Address</strong>
               <input
                 className="border-r border-t border-b px-4 py-2 rounded-r"
                 placeholder={DEFAULT_TOKEN}
@@ -298,7 +298,7 @@ function NewSellOrder() {
             </label>
 
             <label className="flex flex-1 flex-col">
-              <div className="mb-1 text-base">Buyer's Stake</div>
+              <strong className="text-sm mb-1">Buyer's Stake</strong>
               <input
                 className="border px-4 py-2 rounded"
                 type="number"
