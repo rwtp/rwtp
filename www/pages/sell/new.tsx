@@ -13,6 +13,8 @@ import { renderToken, optimismList } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
 import cn from 'classnames';
 import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
+import { InputCustomSchema } from '../../components/AddCustomSchema';
+
 
 async function postToIPFS(data: any) {
   const result = await fetch('/api/upload', {
@@ -28,6 +30,7 @@ async function postToIPFS(data: any) {
   return cid;
 }
 
+
 function NewSellOrder() {
   const [state, setState] = useState({
     title: '',
@@ -36,6 +39,8 @@ function NewSellOrder() {
     buyersStake: 0,
     price: 0,
     token: DEFAULT_TOKEN,
+    customIPFSSchema: '',
+    customJSONSchema: '',
   });
   const signer = useSigner();
   const router = useRouter();
@@ -50,6 +55,19 @@ function NewSellOrder() {
     'createSellOrder'
   );
 
+  async function getOfferSchema(customIPFSSchema: string, customJSONSchema: string) {
+    if (customIPFSSchema) {
+      // TODO probably want to validate this is a valid ipfs cid.
+      return customIPFSSchema;
+    } else if (customJSONSchema) {
+      // TODO handle error if upload fails
+      const cid = await postToIPFS(JSON.stringify(customJSONSchema));
+      return `ipfs://${cid}`;
+    } else {
+      return `ipfs://${DEFAULT_OFFER_SCHEMA}`;
+    }
+  }
+
   async function createSellOrder() {
     if (!signer || !signer.data) return;
 
@@ -60,9 +78,9 @@ function NewSellOrder() {
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
-
+    const offerSchema = getOfferSchema(state.customIPFSSchema, state.customJSONSchema)
     const cid = await postToIPFS({
-      offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
+      offerSchema: offerSchema,
       title: state.title,
       description: state.description,
       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
@@ -221,6 +239,16 @@ function NewSellOrder() {
             </label>
           </div>
         </div>
+        <InputCustomSchema JSONSchema={state.customJSONSchema} IPFSSchema={state.customIPFSSchema}
+          setIPFSSchema={
+            (schema) =>
+              setState((s) => ({ ...s, customIPFSSchema: schema }))
+          }
+          setJSONSchema={
+            (schema) =>
+              setState((s) => ({ ...s, customJSONSchema: schema }))
+          }
+        />
         <div className="mt-8">
           <button
             className="flex items-center px-4 py-2 rounded bg-black text-white border-black hover:opacity-50 transition-all"
@@ -229,10 +257,12 @@ function NewSellOrder() {
             Publish new sell order <ArrowRightIcon className="w-4 h-4 ml-4" />
           </button>
         </div>
+
       </div>
     </ConnectWalletLayout>
   );
 }
+
 
 export default function Page() {
   return (
