@@ -7,10 +7,6 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    fontFamily : {
-      'sans':['-apple-system', 'BlinkMacSystemFont'],
-      'serif':['Georgia', 'Times New Roman','ui-serif']
-    },
     extend: {
       colors: {
         ...colors,
