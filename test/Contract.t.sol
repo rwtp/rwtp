@@ -50,22 +50,39 @@ contract SellOrderTest is Test {
 
         // Submit an offer from taker
         vm.startPrank(taker);
-        sellOrder.submitOffer(index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit, 'ipfs://somedata');
+        sellOrder.submitOffer(
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit,
+            'ipfs://somedata'
+        );
         vm.stopPrank();
-        
-        (Order.State offerState, uint256 offerPrice, uint256 offerCost, , , , , , ) = sellOrder
-            .offers(taker, index);
+
+        (
+            Order.State offerState,
+            uint256 offerPrice,
+            uint256 offerCost,
+            ,
+            ,
+            ,
+            ,
+            ,
+
+        ) = sellOrder.offers(taker, index);
         require(offerState == Order.State.Open, 'incorrect offer state');
         require(offerPrice == pricePerUnit, 'incorrect offer price');
         require(offerCost == costPerUnit, 'incorrect offer cost');
-        
+
         uint128 transferAmount = pricePerUnit * quantity;
         if (costPerUnit > pricePerUnit) {
             transferAmount += (costPerUnit - pricePerUnit) * quantity;
         }
 
         require(
-            token.balanceOf(address(sellOrder)) == orderStartBalance + transferAmount,
+            token.balanceOf(address(sellOrder)) ==
+                orderStartBalance + transferAmount,
             'incorrect transfer to sell order'
         );
         require(
@@ -88,7 +105,7 @@ contract SellOrderTest is Test {
         uint128 pricePerUnit,
         uint128 costPerUnit,
         uint128 sellerStakePerUnit
-    )  public {
+    ) public {
         vm.assume(quantity < 10000000000000000000000000);
         vm.assume(pricePerUnit < 10000000000000000000000000000);
         vm.assume(costPerUnit < 10000000000000000000000000000);
@@ -102,10 +119,17 @@ contract SellOrderTest is Test {
         vm.startPrank(taker1);
         token.approve(address(sellOrder), transferAmount);
         vm.stopPrank();
-        submitOffer(taker1, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+        submitOffer(
+            taker1,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
     }
 
-    function submitOfferBase(address taker)  public {
+    function submitOfferBase(address taker) public {
         uint32 index = 0;
         uint32 quantity = 1;
         uint128 pricePerUnit = 1;
@@ -121,14 +145,21 @@ contract SellOrderTest is Test {
         vm.startPrank(taker);
         token.approve(address(sellOrder), transferAmount);
         vm.stopPrank();
-        submitOffer(taker, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+        submitOffer(
+            taker,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
     }
 
     function testSubmitOffer() public {
         submitOfferBase(taker1);
     }
 
-    function testFailSubmitOfferLacksToken()  public {
+    function testFailSubmitOfferLacksToken() public {
         uint32 index = 0;
         uint32 quantity = 1;
         uint128 pricePerUnit = 1;
@@ -144,14 +175,21 @@ contract SellOrderTest is Test {
         vm.startPrank(taker1);
         token.approve(address(sellOrder), transferAmount - 1);
         vm.stopPrank();
-        submitOffer(taker1, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+        submitOffer(
+            taker1,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
     }
 
-    function testFailSubmitOfferInactive()  public {
+    function testFailSubmitOfferInactive() public {
         vm.startPrank(maker);
         sellOrder.setActive(false);
         vm.stopPrank();
-        
+
         submitOfferBase(taker1);
 
         vm.startPrank(maker);
@@ -159,21 +197,21 @@ contract SellOrderTest is Test {
         vm.stopPrank();
     }
 
-    function testFailSubmitOfferTwice()  public {
+    function testFailSubmitOfferTwice() public {
         submitOfferBase(taker1);
         submitOfferBase(taker1);
     }
 
-    function testSubmitTwoOffers()  public {
+    function testSubmitTwoOffers() public {
         submitOfferBase(taker1);
         submitOfferBase(taker2);
     }
 
-    function testFailSubmitOfferMaker()  public {
+    function testFailSubmitOfferMaker() public {
         submitOfferBase(maker);
     }
 
-    function testFailSubmitOfferCommitted()  public {
+    function testFailSubmitOfferCommitted() public {
         submitOfferBase(taker1);
         commitOffer(taker1, 0);
         submitOfferBase(taker1);
@@ -193,10 +231,7 @@ contract SellOrderTest is Test {
             token.balanceOf(address(sellOrder)) == 0,
             'incorrect transfer to sell order'
         );
-        require(
-            token.balanceOf(taker1) == 1,
-            'incorrect transfer from taker'
-        );
+        require(token.balanceOf(taker1) == 1, 'incorrect transfer from taker');
     }
 
     function testWithdrawOfferFuzz(
@@ -205,7 +240,7 @@ contract SellOrderTest is Test {
         uint128 pricePerUnit,
         uint128 costPerUnit,
         uint128 sellerStakePerUnit
-    )  public {
+    ) public {
         vm.assume(quantity < 10000000000000000000000000);
         vm.assume(pricePerUnit < 10000000000000000000000000000);
         vm.assume(costPerUnit < 10000000000000000000000000000);
@@ -219,13 +254,23 @@ contract SellOrderTest is Test {
         vm.startPrank(taker1);
         token.approve(address(sellOrder), transferAmount);
         vm.stopPrank();
-        submitOffer(taker1, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+        submitOffer(
+            taker1,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
 
         vm.startPrank(taker1);
         sellOrder.withdrawOffer(index);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker1, index);
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(
+            taker1,
+            index
+        );
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
         require(
@@ -261,7 +306,7 @@ contract SellOrderTest is Test {
         vm.stopPrank();
     }
 
-    function testFailWithdrawOfferCommitted()  public {
+    function testFailWithdrawOfferCommitted() public {
         submitOfferBase(taker1);
         commitOffer(taker1, 0);
         vm.startPrank(taker1);
@@ -269,10 +314,7 @@ contract SellOrderTest is Test {
         vm.stopPrank();
     }
 
-    function commitOffer(
-        address taker, 
-        uint32 index
-    ) public {
+    function commitOffer(address taker, uint32 index) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 orderStartBalance = token.balanceOf(address(sellOrder));
@@ -281,15 +323,25 @@ contract SellOrderTest is Test {
         vm.startPrank(maker);
         sellOrder.commit(taker, index);
         vm.stopPrank();
-        
-        (Order.State offerState, , , uint128 sellerStakePerUnit , , , , , uint32 quantity) = sellOrder
-            .offers(taker, index);
+
+        (
+            Order.State offerState,
+            ,
+            ,
+            uint128 sellerStakePerUnit,
+            ,
+            ,
+            ,
+            ,
+            uint32 quantity
+        ) = sellOrder.offers(taker, index);
         require(offerState == Order.State.Committed, 'incorrect offer state');
-        
+
         uint128 transferAmount = sellerStakePerUnit * quantity;
 
         require(
-            token.balanceOf(address(sellOrder)) == orderStartBalance + transferAmount,
+            token.balanceOf(address(sellOrder)) ==
+                orderStartBalance + transferAmount,
             'incorrect transfer to sell order'
         );
         require(
@@ -314,7 +366,7 @@ contract SellOrderTest is Test {
         uint128 pricePerUnit,
         uint128 costPerUnit,
         uint128 sellerStakePerUnit
-    )  public {
+    ) public {
         vm.assume(quantity < 10000000000000000000000000);
         vm.assume(pricePerUnit < 10000000000000000000000000000);
         vm.assume(costPerUnit < 10000000000000000000000000000);
@@ -328,7 +380,14 @@ contract SellOrderTest is Test {
         vm.startPrank(taker1);
         token.approve(address(sellOrder), transferAmount);
         vm.stopPrank();
-        submitOffer(taker1, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+        submitOffer(
+            taker1,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
 
         uint128 makerStakeAmount = sellerStakePerUnit * quantity;
         token.mint(maker, makerStakeAmount);
@@ -337,7 +396,10 @@ contract SellOrderTest is Test {
         vm.stopPrank();
         commitOffer(taker1, index);
 
-        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker1, index);
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(
+            taker1,
+            index
+        );
         require(offerState == Order.State.Committed, 'incorrect offer state');
     }
 
@@ -387,7 +449,7 @@ contract SellOrderTest is Test {
         vm.startPrank(maker);
         token.approve(address(sellOrder), 2);
         vm.stopPrank();
-        
+
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 orderStartBalance = token.balanceOf(address(sellOrder));
@@ -402,9 +464,8 @@ contract SellOrderTest is Test {
         vm.startPrank(maker);
         sellOrder.commitBatch(takers, indicies);
         vm.stopPrank();
-        
-        (Order.State offerState, , , , , , , , ) = sellOrder
-            .offers(taker1, 0);
+
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker1, 0);
         require(offerState == Order.State.Committed, 'incorrect offer state');
 
         require(
@@ -419,24 +480,37 @@ contract SellOrderTest is Test {
 
     function confirmOffer(
         address taker,
-        address from, 
+        address from,
         uint32 index
     ) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 takerStartBalance = token.balanceOf(taker);
         uint256 daoStartBalance = token.balanceOf(DAO);
-        
-        (, uint128 pricePerUnit, uint128 costPerUnit, uint128 sellerStakePerUnit, , , , , uint32 quantity) = sellOrder.offers(taker, index);
+
+        (
+            ,
+            uint128 pricePerUnit,
+            uint128 costPerUnit,
+            uint128 sellerStakePerUnit,
+            ,
+            ,
+            ,
+            ,
+            uint32 quantity
+        ) = sellOrder.offers(taker, index);
 
         // Confirm to an offer from maker
         vm.startPrank(from);
         sellOrder.confirm(taker, index);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker, index);
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(
+            taker,
+            index
+        );
         require(offerState == Order.State.Closed, 'incorrect offer state');
-        
+
         uint256 total = (pricePerUnit + sellerStakePerUnit) * quantity;
         uint256 toDao = (total * IOrderBook(book).fee()) / 1000000;
 
@@ -456,8 +530,9 @@ contract SellOrderTest is Test {
         );
 
         if (costPerUnit > pricePerUnit) {
-             require(
-                token.balanceOf(taker) == takerStartBalance + (costPerUnit - pricePerUnit) * quantity,
+            require(
+                token.balanceOf(taker) ==
+                    takerStartBalance + (costPerUnit - pricePerUnit) * quantity,
                 'incorrect transfer to buyer'
             );
         } else {
@@ -540,7 +615,7 @@ contract SellOrderTest is Test {
         uint128 pricePerUnit,
         uint128 costPerUnit,
         uint128 sellerStakePerUnit
-    )  public {
+    ) public {
         vm.assume(quantity < 10000000000000000000000000);
         vm.assume(pricePerUnit < 10000000000000000000000000000);
         vm.assume(costPerUnit < 10000000000000000000000000000);
@@ -554,7 +629,14 @@ contract SellOrderTest is Test {
         vm.startPrank(taker1);
         token.approve(address(sellOrder), transferAmount);
         vm.stopPrank();
-        submitOffer(taker1, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+        submitOffer(
+            taker1,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
 
         uint128 makerStakeAmount = sellerStakePerUnit * quantity;
         token.mint(maker, makerStakeAmount);
@@ -565,7 +647,10 @@ contract SellOrderTest is Test {
 
         confirmOffer(taker1, taker1, index);
 
-        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker1, index);
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(
+            taker1,
+            index
+        );
         require(offerState == Order.State.Closed, 'incorrect offer state');
     }
 
@@ -574,22 +659,32 @@ contract SellOrderTest is Test {
         confirmOffer(taker1, taker1, 0);
     }
 
-    function refundOffer(
-        address taker, 
-        uint32 index
-    ) public {
+    function refundOffer(address taker, uint32 index) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 takerStartBalance = token.balanceOf(taker);
-        
-        (, uint128 pricePerUnit, uint128 costPerUnit, , , , , , uint32 quantity) = sellOrder.offers(taker, index);
+
+        (
+            ,
+            uint128 pricePerUnit,
+            uint128 costPerUnit,
+            ,
+            ,
+            ,
+            ,
+            ,
+            uint32 quantity
+        ) = sellOrder.offers(taker, index);
 
         // Confirm to an offer from maker
         vm.startPrank(taker);
         sellOrder.refund(taker, index);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker, index);
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(
+            taker,
+            index
+        );
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
         require(
@@ -603,8 +698,9 @@ contract SellOrderTest is Test {
         );
 
         if (costPerUnit < pricePerUnit) {
-             require(
-                token.balanceOf(taker) == takerStartBalance + (pricePerUnit - costPerUnit) * quantity,
+            require(
+                token.balanceOf(taker) ==
+                    takerStartBalance + (pricePerUnit - costPerUnit) * quantity,
                 'incorrect transfer to buyer'
             );
         } else {
@@ -635,7 +731,7 @@ contract SellOrderTest is Test {
         uint128 pricePerUnit,
         uint128 costPerUnit,
         uint128 sellerStakePerUnit
-    )  public {
+    ) public {
         vm.assume(quantity < 10000000000000000000000000);
         vm.assume(pricePerUnit < 10000000000000000000000000000);
         vm.assume(costPerUnit < 10000000000000000000000000000);
@@ -649,7 +745,14 @@ contract SellOrderTest is Test {
         vm.startPrank(taker1);
         token.approve(address(sellOrder), transferAmount);
         vm.stopPrank();
-        submitOffer(taker1, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+        submitOffer(
+            taker1,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
 
         uint128 makerStakeAmount = sellerStakePerUnit * quantity;
         token.mint(maker, makerStakeAmount);
@@ -660,7 +763,10 @@ contract SellOrderTest is Test {
 
         refundOffer(taker1, index);
 
-        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker1, index);
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(
+            taker1,
+            index
+        );
         require(offerState == Order.State.Closed, 'incorrect offer state');
     }
 
@@ -691,5 +797,158 @@ contract SellOrderTest is Test {
         vm.startPrank(taker2);
         sellOrder.refund(taker1, 0);
         vm.stopPrank();
+    }
+
+    function cancelOffer(
+        address taker,
+        address from,
+        uint32 index
+    ) public {
+        // Get initial balances
+        uint256 makerStartBalance = token.balanceOf(maker);
+        uint256 takerStartBalance = token.balanceOf(taker);
+
+        (
+            ,
+            uint128 pricePerUnit,
+            uint128 costPerUnit,
+            uint128 sellerStakePerUnit,
+            ,
+            ,
+            bool makerCanceled,
+            bool takerCanceled,
+            uint32 quantity
+        ) = sellOrder.offers(taker, index);
+
+        // Cancel an offer
+        vm.startPrank(from);
+        sellOrder.cancel(taker, index);
+        vm.stopPrank();
+
+        (
+            Order.State offerState,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            
+        ) = sellOrder.offers(taker, index);
+
+        if (makerCanceled || takerCanceled) {
+            require(offerState == Order.State.Closed, 'incorrect offer state');
+            require(
+                token.balanceOf(address(sellOrder)) == 0,
+                'sell order should have no balance'
+            );
+            require(
+                token.balanceOf(maker) == makerStartBalance + (sellerStakePerUnit * quantity),
+                'incorrect transfer to seller'
+            );
+            uint128 toBuyer = pricePerUnit * quantity;
+            if (costPerUnit > pricePerUnit) {
+                toBuyer += (costPerUnit - pricePerUnit) * quantity;
+            }
+            require(
+                token.balanceOf(taker) == takerStartBalance + toBuyer,
+                'incorrect transfer to buyer'
+            );
+        } else {
+            require(
+                offerState == Order.State.Committed,
+                'incorrect offer state'
+            );
+        }
+    }
+
+    function testCancelOffer() public {
+        submitOfferBase(taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(sellOrder), 1);
+        vm.stopPrank();
+        
+        commitOffer(taker1, 0);
+
+        cancelOffer(taker1, taker1, 0);
+        cancelOffer(taker1, maker, 0);
+    }
+
+     function testCancelOnce() public {
+        submitOfferBase(taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(sellOrder), 1);
+        vm.stopPrank();
+        
+        commitOffer(taker1, 0);
+
+        cancelOffer(taker1, taker1, 0);
+
+        (
+            Order.State offerState,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ,
+            
+        ) = sellOrder.offers(taker1, 0);
+        require(
+            offerState == Order.State.Committed,
+            'incorrect offer state'
+        );
+    }
+
+    function testCancelOfferFuzz(
+        uint32 index,
+        uint32 quantity,
+        uint128 pricePerUnit,
+        uint128 costPerUnit,
+        uint128 sellerStakePerUnit
+    ) public {
+        vm.assume(quantity < 10000000000000000000000000);
+        vm.assume(pricePerUnit < 10000000000000000000000000000);
+        vm.assume(costPerUnit < 10000000000000000000000000000);
+        vm.assume(sellerStakePerUnit < 10000000000000000000000000000);
+        uint128 transferAmount = pricePerUnit * quantity;
+        if (costPerUnit > pricePerUnit) {
+            transferAmount += (costPerUnit + pricePerUnit) * quantity;
+        }
+
+        token.mint(taker1, transferAmount);
+        vm.startPrank(taker1);
+        token.approve(address(sellOrder), transferAmount);
+        vm.stopPrank();
+        submitOffer(
+            taker1,
+            index,
+            quantity,
+            pricePerUnit,
+            costPerUnit,
+            sellerStakePerUnit
+        );
+
+        uint128 makerStakeAmount = sellerStakePerUnit * quantity;
+        token.mint(maker, makerStakeAmount);
+        vm.startPrank(maker);
+        token.approve(address(sellOrder), makerStakeAmount);
+        vm.stopPrank();
+        commitOffer(taker1, index);
+
+        cancelOffer(taker1, taker1, index);
+        cancelOffer(taker1, maker, index);
+
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(
+            taker1,
+            index
+        );
+        require(offerState == Order.State.Closed, 'incorrect offer state');
     }
 }
