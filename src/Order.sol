@@ -2,9 +2,10 @@
 pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
 import './interfaces/IOrderBook.sol';
 
-contract Order {
+contract Order is Pausable {
     /// @dev Don't allow purchases from self
     error TakerCannotBeMaker();
 
@@ -14,11 +15,14 @@ contract Order {
     /// @dev msg.sender is not the maker of the order
     error MustBeMaker();
 
+    /// @dev msg.sender is not the maker of the order or dao
+    error MustBeMakerOrDAO();
+
     /// @dev A function is run at the wrong time in the lifecycle
     error InvalidState(State expected, State received);
 
-    /// @dev The order is not accepting new offers
-    error OrderInactive();
+    /// @dev Order or order book is paused
+    error OrderOrBookPaused();
 
     /// @dev The order timed out and can no longer be refunded
     error TimeoutExpired();
@@ -27,10 +31,9 @@ contract Order {
     event OfferSubmitted(
         address indexed taker,
         uint32 indexed index,
-        uint32 quantity,
-        uint128 pricePerUnit,
-        uint128 costPerUnit,
-        uint128 sellerStakePerUnit,
+        uint128 price,
+        uint128 cost,
+        uint128 sellerStake,
         string uri
     );
 
@@ -100,11 +103,11 @@ contract Order {
         /// @dev the state of the offer
         State state;
         /// @dev the amount the buyer will pay
-        uint128 pricePerUnit;
+        uint128 price;
         /// @dev the amount the buyer gets when refunded
-        uint128 costPerUnit;
+        uint128 cost;
         /// @dev the amount the seller is willing to stake
-        uint128 sellerStakePerUnit;
+        uint128 sellerStake;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
@@ -113,9 +116,6 @@ contract Order {
         bool makerCanceled;
         /// @dev canceled by the taker
         bool takerCanceled;
-        /// @dev Allows purchases of multiple units.
-        /// The maker and taker's required stakes will both be scaled by this value.
-        uint32 quantity;
     }
 
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
@@ -165,45 +165,48 @@ contract Order {
         emit ActiveToggled(active);
     }
 
-    /// @dev returns buyer refund per unit for offer with given taker and index
-    function refundPerUnit(address taker_, uint32 index)
+    /// @dev pauses this order book
+    function pause() external onlyMakerOrDAO {
+        _pause();
+    }
+
+    /// @dev unpauses this order book
+    function unpause() external onlyMakerOrDAO {
+        _unpause();
+    }
+
+    /// @dev returns buyer refund per unit for offer
+    function refund(Offer memory offer)
         internal
         view
         virtual
         returns (uint256)
     {
-        Offer memory offer = offers[taker_][index];
-        if (offer.pricePerUnit > offer.costPerUnit) {
-            return offer.pricePerUnit - offer.costPerUnit;
+        if (offer.price > offer.cost) {
+            return offer.price - offer.cost;
         } else {
             return 0;
         }
     }
 
-    /// @dev returns buyer stake per unit for offer with given taker and index
-    function buyerStakePerUnit(address taker_, uint32 index)
+    /// @dev returns buyer stake per unit for offer
+    function buyerStake(Offer memory offer)
         internal
         view
         virtual
         returns (uint256)
     {
-        Offer memory offer = offers[taker_][index];
-        if (offer.costPerUnit > offer.pricePerUnit) {
-            return offer.costPerUnit - offer.pricePerUnit;
+        if (offer.cost > offer.price) {
+            return offer.cost - offer.price;
         } else {
             return 0;
         }
     }
 
     /// @dev returns buyer for offer with given taker
-    function buyer(address taker_) 
-        internal
-        view
-        virtual
-        returns (address) 
-    {
+    function buyer(address taker) internal view virtual returns (address) {
         if (orderType == OrderType.SellOrder) {
-            return taker_;
+            return taker;
         } else if (orderType == OrderType.BuyOrder) {
             return maker;
         } else {
@@ -212,16 +215,11 @@ contract Order {
     }
 
     /// @dev returns seller for offer with given taker
-    function seller(address taker_) 
-        internal
-        view
-        virtual
-        returns (address) 
-    {
+    function seller(address taker) internal view virtual returns (address) {
         if (orderType == OrderType.SellOrder) {
             return maker;
         } else if (orderType == OrderType.BuyOrder) {
-            return taker_;
+            return taker;
         } else {
             revert();
         }
@@ -229,20 +227,20 @@ contract Order {
 
     /// @dev reverts if the function is not at the expected state
     modifier onlyState(
-        address taker_,
+        address taker,
         uint32 index,
         State expected
     ) {
-        if (offers[taker_][index].state != expected) {
-            revert InvalidState(expected, offers[taker_][index].state);
+        if (offers[taker][index].state != expected) {
+            revert InvalidState(expected, offers[taker][index].state);
         }
 
         _;
     }
 
     // @dev reverts if msg.sender is not the buyer
-    modifier onlyBuyer(address taker_) {
-        if (msg.sender != buyer(taker_)) {
+    modifier onlyBuyer(address taker) {
+        if (msg.sender != buyer(taker)) {
             revert MustBeBuyer();
         }
 
@@ -258,10 +256,19 @@ contract Order {
         _;
     }
 
-    /// @dev reverts if not active
-    modifier onlyActive() {
-        if (!active) {
-            revert OrderInactive();
+    /// @dev reverts if msg.sender is not the maker or DAO
+    modifier onlyMakerOrDAO() {
+        if (msg.sender != maker && msg.sender != IOrderBook(orderBook).owner()) {
+            revert MustBeMakerOrDAO();
+        }
+
+        _;
+    }
+
+    /// @dev reverts order or book is paused
+    modifier onlyOrderAndBookUnpaused() {
+        if (paused() || Pausable(orderBook).paused()) {
+            revert OrderOrBookPaused();
         }
 
         _;
@@ -270,57 +277,53 @@ contract Order {
     /// @dev creates an offer
     function submitOffer(
         uint32 index,
-        uint32 quantity,
-        uint128 pricePerUnit,
-        uint128 costPerUnit,
-        uint128 sellerStakePerUnit,
+        uint128 price,
+        uint128 cost,
+        uint128 sellerStake,
         string memory uri
-    ) external virtual onlyState(msg.sender, index, State.Closed) onlyActive {
+    )
+        external
+        virtual
+        onlyState(msg.sender, index, State.Closed)
+        onlyOrderAndBookUnpaused
+    {
         if (msg.sender == maker) {
             revert TakerCannotBeMaker();
         }
 
         Offer storage offer = offers[msg.sender][index];
         offer.state = State.Open;
-        offer.pricePerUnit = pricePerUnit;
-        offer.costPerUnit = costPerUnit;
-        offer.sellerStakePerUnit = sellerStakePerUnit;
+        offer.price = price;
+        offer.cost = cost;
+        offer.sellerStake = sellerStake;
         offer.uri = uri;
-        offer.quantity = quantity;
 
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
             // This is a sell offer
-            transferAmount = sellerStakePerUnit * quantity;
+            transferAmount = sellerStake;
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
-            transferAmount =
-                (pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
-                quantity;
+            transferAmount = price + buyerStake(offer);
         }
 
-        bool result = token.transferFrom(
-            msg.sender,
-            address(this),
-            transferAmount
-        );
-        require(result, 'Transfer failed');
+        if (transferAmount > 0) {
+            bool result = token.transferFrom(
+                msg.sender,
+                address(this),
+                transferAmount
+            );
+            require(result, 'Transfer failed');
+        }
 
-        emit OfferSubmitted(
-            msg.sender,
-            index,
-            quantity,
-            pricePerUnit,
-            costPerUnit,
-            sellerStakePerUnit,
-            uri
-        );
+        emit OfferSubmitted(msg.sender, index, price, cost, sellerStake, uri);
     }
 
     /// @dev allows a taker to withdraw a previous offer
     function withdrawOffer(uint32 index)
         external
         virtual
+        onlyOrderAndBookUnpaused
         onlyState(msg.sender, index, State.Open)
     {
         Offer memory offer = offers[msg.sender][index];
@@ -328,16 +331,16 @@ contract Order {
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
             // This is a sell offer
-            transferAmount = offer.sellerStakePerUnit * offer.quantity;
+            transferAmount = offer.sellerStake;
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
-            transferAmount =
-                (offer.pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
-                offer.quantity;
+            transferAmount = offer.price + buyerStake(offer);
         }
 
-        bool result = token.transfer(msg.sender, transferAmount);
-        assert(result);
+        if (transferAmount > 0) {
+            bool result = token.transfer(msg.sender, transferAmount);
+            assert(result);
+        }
 
         offers[msg.sender][index] = Offer(
             State.Closed,
@@ -347,21 +350,21 @@ contract Order {
             offer.uri,
             0,
             false,
-            false,
-            0
+            false
         );
 
         emit OfferWithdrawn(msg.sender, index);
     }
 
     /// @dev Commits a maker to an offer
-    function commit(address taker_, uint32 index)
+    function commit(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Open)
+        onlyOrderAndBookUnpaused
+        onlyState(taker, index, State.Open)
         onlyMaker
     {
-        Offer storage offer = offers[taker_][index];
+        Offer storage offer = offers[taker][index];
 
         // Update the status of the taker's offer
         offer.acceptedAt = uint64(block.timestamp);
@@ -369,31 +372,32 @@ contract Order {
 
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
-            transferAmount =
-                (offer.pricePerUnit + buyerStakePerUnit(msg.sender, index)) *
-                offer.quantity;
+            transferAmount = offer.price + buyerStake(offer);
         } else if (orderType == OrderType.SellOrder) {
-            transferAmount = offer.sellerStakePerUnit * offer.quantity;
+            transferAmount = offer.sellerStake;
         }
 
         // Deposit the amount required to commit to the offer
         uint256 allowance = token.allowance(msg.sender, address(this));
         require(allowance >= transferAmount);
 
-        bool result = token.transferFrom(
-            msg.sender,
-            address(this),
-            transferAmount
-        );
-        assert(result);
+        if (transferAmount > 0) {
+            bool result = token.transferFrom(
+                msg.sender,
+                address(this),
+                transferAmount
+            );
+            assert(result);
+        }
 
-        emit OfferCommitted(taker_, index);
+        emit OfferCommitted(taker, index);
     }
 
-    /// @dev Marks all provided offers as confirmed
+    /// @dev Marks all provided offers as committed
     function commitBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         require(takers.length == indices.length);
         for (uint256 i = 0; i < takers.length; i++) {
@@ -402,22 +406,23 @@ contract Order {
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm(address taker_, uint32 index)
+    function confirm(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Committed)
+        onlyOrderAndBookUnpaused
+        onlyState(taker, index, State.Committed)
     {
-        Offer memory offer = offers[taker_][index];
+        Offer memory offer = offers[taker][index];
 
         // Only buyer can confirm before timeout
         if (block.timestamp < timeout + offer.acceptedAt) {
-            if (msg.sender != buyer(taker_)) {
+            if (msg.sender != buyer(taker)) {
                 revert MustBeBuyer();
             }
         }
 
         // Close the offer
-        offers[taker_][index] = Offer(
+        offers[taker][index] = Offer(
             State.Closed,
             0,
             0,
@@ -425,38 +430,43 @@ contract Order {
             '',
             uint64(block.timestamp),
             false,
-            false,
-            0
+            false
         );
 
-        uint256 total = (offer.pricePerUnit + offer.sellerStakePerUnit) * offer.quantity;
-        uint256 toOrderBook = (total * IOrderBook(orderBook).fee()) /
+        uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
-        uint256 toSeller = total - toOrderBook;
-        uint256 toBuyer = buyerStakePerUnit(taker_, index) * offer.quantity;
+        uint256 toSeller = offer.price - toOrderBook + offer.sellerStake;
+        uint256 toBuyer = buyerStake(offer);
 
         // Transfer payment to the buyer
-        bool result0 = token.transfer(buyer(taker_), toBuyer);
-        assert(result0);
+        if (toBuyer > 0) {
+            bool result0 = token.transfer(buyer(taker), toBuyer);
+            assert(result0);
+        }
 
         // Transfer payment to the seller
-        bool result1 = token.transfer(seller(taker_), toSeller);
-        assert(result1);
+        if (toSeller > 0) {
+            bool result1 = token.transfer(seller(taker), toSeller);
+            assert(result1);
+        }
 
         // Transfer payment to the order book
-        bool result2 = token.transfer(
-            IOrderBook(orderBook).owner(),
-            toOrderBook
-        );
-        assert(result2);
+        if (toOrderBook > 0) {
+            bool result2 = token.transfer(
+                IOrderBook(orderBook).owner(),
+                toOrderBook
+            );
+            assert(result2);
+        }
 
-        emit OfferConfirmed(taker_, index);
+        emit OfferConfirmed(taker, index);
     }
 
     /// @dev Marks all provided offers as completed
     function confirmBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         for (uint256 i = 0; i < indices.length; i++) {
             confirm(takers[i], indices[i]);
@@ -464,19 +474,20 @@ contract Order {
     }
 
     /// @dev Allows the buyer to refund an offer.
-    function refund(address taker_, uint32 index)
+    function refund(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Committed)
-        onlyBuyer(taker_)
+        onlyOrderAndBookUnpaused
+        onlyState(taker, index, State.Committed)
+        onlyBuyer(taker)
     {
-        Offer memory offer = offers[taker_][index];
+        Offer memory offer = offers[taker][index];
         if (block.timestamp > timeout + offer.acceptedAt) {
             revert TimeoutExpired();
         }
 
         // Close the offer
-        offers[taker_][index] = Offer(
+        offers[taker][index] = Offer(
             State.Closed,
             0,
             0,
@@ -484,38 +495,33 @@ contract Order {
             '',
             uint64(block.timestamp),
             false,
-            false,
-            0
+            false
         );
 
         // Transfer the refund to the buyer
-        bool result0 = token.transfer(
-            buyer(taker_),
-            refundPerUnit(taker_, index) * offer.quantity
-        );
-        assert(result0);
+        if (refund(offer) > 0) {
+            bool result0 = token.transfer(buyer(taker), refund(offer));
+            assert(result0);
+        }
 
-        // Transfer the buyer's stake to address(dead).
+        // Transfers to address(dead)
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            buyerStakePerUnit(taker_, index) * offer.quantity
+            (buyerStake(offer) + // buyer's stake
+                offer.sellerStake + // seller's stake
+                offer.price -
+                refund(offer)) // non-refundable purchase amount
         );
         assert(result1);
 
-        // Transfer the seller's stake to address(dead).
-        bool result2 = token.transfer(
-            address(0x000000000000000000000000000000000000dEaD),
-            offer.sellerStakePerUnit * offer.quantity
-        );
-        assert(result2);
-
-        emit OfferRefunded(taker_, index);
+        emit OfferRefunded(taker, index);
     }
 
     /// @dev Refunds all provided offers
     function refundBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         require(takers.length == indices.length);
         for (uint256 i = 0; i < takers.length; i++) {
@@ -525,13 +531,14 @@ contract Order {
 
     /// @dev Allows either the taker or the maker to cancel the offer.
     ///      Only a committed offer can be canceled
-    function cancel(address taker_, uint32 index)
+    function cancel(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Committed)
+        onlyOrderAndBookUnpaused
+        onlyState(taker, index, State.Committed)
     {
-        Offer storage offer = offers[taker_][index];
-        if (msg.sender == taker_) {
+        Offer storage offer = offers[taker][index];
+        if (msg.sender == taker) {
             // The taker is canceling their offer
             offer.takerCanceled = true;
         } else {
@@ -545,20 +552,21 @@ contract Order {
         // If both parties canceled, then return the stakes, and the payment to the buyer,
         // and set the offer to closed
         if (offer.makerCanceled && offer.takerCanceled) {
-            uint256 toBuyer = (offer.pricePerUnit +
-                buyerStakePerUnit(taker_, index)) * offer.quantity;
-            uint256 toSeller = offer.sellerStakePerUnit * offer.quantity;
-
             // Transfer the buyer stake back to the buyer along with their payment
-            bool result0 = token.transfer(buyer(taker_), toBuyer);
+            bool result0 = token.transfer(
+                buyer(taker),
+                offer.price + buyerStake(offer)
+            );
             assert(result0);
 
             // Transfer the seller stake back to the seller
-            bool result1 = token.transfer(seller(taker_), toSeller);
-            assert(result1);
+            if (offer.sellerStake > 0) {
+                bool result1 = token.transfer(seller(taker), offer.sellerStake);
+                assert(result1);
+            }
 
             // Null out the offer
-            offers[taker_][index] = Offer(
+            offers[taker][index] = Offer(
                 State.Closed,
                 0,
                 0,
@@ -566,13 +574,12 @@ contract Order {
                 '',
                 uint64(block.timestamp),
                 false,
-                false,
-                0
+                false
             );
         }
 
         emit OfferCanceled(
-            taker_,
+            taker,
             index,
             offer.makerCanceled,
             offer.takerCanceled
@@ -583,6 +590,7 @@ contract Order {
     function cancelBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         require(takers.length == indices.length);
         for (uint256 i = 0; i < takers.length; i++) {
