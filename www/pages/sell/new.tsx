@@ -1,7 +1,7 @@
 import { useContractWrite, useSigner } from 'wagmi';
 import { OrderBook } from 'rwtp';
 import { useState } from 'react';
-import { ArrowRightIcon } from '@heroicons/react/solid';
+import { ArrowRightIcon, RefreshIcon, XIcon } from '@heroicons/react/solid';
 import { ethers } from 'ethers';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
@@ -14,8 +14,8 @@ import { DEFAULT_TOKEN } from '../../lib/constants';
 import cn from 'classnames';
 import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
 
-async function postToIPFS(data: any) {
-  const result = await fetch('/api/upload', {
+async function postJSONToIPFS(data: any) {
+  const result = await fetch('/api/uploadJson', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -28,15 +28,27 @@ async function postToIPFS(data: any) {
   return cid;
 }
 
+async function postFileToIPFS(file: Buffer) {
+  const result = await fetch('/api/uploadFile', {
+    method: 'POST',
+    body: file.toString("base64"),
+  });
+  const { cid } = await result.json();
+  return cid;
+}
+
 function NewSellOrder() {
   const [state, setState] = useState({
     title: '',
     description: '',
+    primaryImage: '',
     sellersStake: 0,
     buyersStake: 0,
     price: 0,
     token: DEFAULT_TOKEN,
   });
+  const [imageUploading, setImageUploading] = useState(false);
+  const [showImagePreview, setShowImagePreview] = useState(false);
   const signer = useSigner();
   const router = useRouter();
   const sellersEncryptionKeypair = useEncryptionKeypair();
@@ -61,10 +73,11 @@ function NewSellOrder() {
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
 
-    const cid = await postToIPFS({
+    const cid = await postJSONToIPFS({
       offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
       title: state.title,
       description: state.description,
+      primaryImage: state.primaryImage,
       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
       priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
       stakeSuggested: toBn(
@@ -114,6 +127,97 @@ function NewSellOrder() {
               value={state.title}
             />
           </label>
+          <label className="flex flex-col mb-8">
+            <div className="font-sans mb-1 text-base">Description</div>
+            <textarea
+              className="border px-4 py-2 rounded"
+              placeholder="Description of the item you sell here. Try using tags to make it easier for the user to find your stuff. For example: Used car. #automobile #sedan #tan"
+              onChange={(e) =>
+                setState((s) => ({ ...s, description: e.target.value }))
+              }
+              value={state.description}
+            />
+          </label>
+          <div className="flex flex-col mb-2">
+            <strong className="mb-1 text-sm">Image</strong>
+            <label className='flex flex-row content-center'>
+              <input
+                type="text"
+                className="px-4 py-2 border my-auto flex-grow"
+                placeholder='ipfs://cid or https://image.jpg'
+                hidden={imageUploading}
+                value={state.primaryImage}
+                onChange={(e) => {
+                  setShowImagePreview(false);
+                  setState((s) => ({ ...s, primaryImage: e.target.value }))
+                }}
+                onBlur={() => setShowImagePreview(true)}
+              />
+              <p
+                className='my-auto px-5 text-center'
+                hidden={!!state.primaryImage || imageUploading}>
+                or
+              </p>
+              <input
+                className="max-2-1/4 py-2 my-auto"
+                type="file"
+                accept={'image/png, image/gif, image/jpeg'}
+                hidden={!!state.primaryImage || imageUploading}
+                onChange={async (e) => {
+                  if (!e.target.files) return;
+                  const file = e.target.files[0];
+                  if (!file || !file.name) return;
+                  setImageUploading(true);
+
+                  // Error if file is over 3MB
+                  if (file.size > 3_000_000) {
+                    alert("Error: Image must be less than 3 MB");
+                    e.target.value = '';
+                    setImageUploading(false);
+                    return;
+                  }
+
+                  const arrayBuffer = await file.arrayBuffer()
+                  const cid = await postFileToIPFS(Buffer.from(arrayBuffer));
+                  setImageUploading(false);
+                  setShowImagePreview(true);
+                  setState((s) => ({ ...s, primaryImage: `ipfs://${cid}` }))
+                }}
+              />
+              <div
+                className='my-auto'
+                hidden={!imageUploading}
+              >
+                <p className='my-auto animate-pulse'>Loading...</p>
+              </div>
+              <div 
+                className='relative h-20 ml-5'
+                hidden={imageUploading || !state.primaryImage || !showImagePreview}
+              >
+                <img 
+                  className='h-full' 
+                  src={showImagePreview ? state.primaryImage.replace("ipfs://", "https://infura-ipfs.io/ipfs/") : ''}
+                  onLoadStart={() => (setShowImagePreview(false))}
+                  onLoad={() => (setShowImagePreview(true))} 
+                  onError={() => (setShowImagePreview(false))} 
+                ></img>
+                <button 
+                  className='absolute top-0 right-0'
+                  onClick={() => {
+                    setState((s) => ({ ...s, primaryImage: "" }))
+                  }}
+                >
+                  <XIcon className="w-5 h-5 text-white bg-black rounded-full p-1 m-1"/>
+                </button>
+              </div>
+              <div 
+                className='my-auto ml-5'
+                hidden={imageUploading || !state.primaryImage || showImagePreview}
+              >
+                <RefreshIcon className="animate-spin w-5 h-5 text-black"/>
+              </div>
+            </label>
+          </div>
           <div className="flex mb-8">
             <label className="flex flex-1 flex-col mr-4">
               <div className="font-sans mb-1 text-base">Price</div>
@@ -176,20 +280,9 @@ function NewSellOrder() {
               />
             </label>
           </div>
-          <label className="flex flex-col mb-8">
-            <div className="font-sans mb-1 text-base">Description</div>
-            <textarea
-              className="border px-4 py-2 rounded"
-              placeholder="Description of the item you sell here. Try using tags to make it easier for the user to find your stuff. For example: Used car. #automobile #sedan #tan"
-              onChange={(e) =>
-                setState((s) => ({ ...s, description: e.target.value }))
-              }
-              value={state.description}
-            />
-          </label>
-          <div className="flex mb-8">
-            <label className="flex flex-1 flex-col mr-4">
-              <div className="mb-1 text-base">Seller's Stake</div>
+          <div className="flex">
+            <label className="flex flex-1 flex-col">
+              <strong className="mb-1 text-sm">Seller's Stake</strong>
               <input
                 className="border px-4 py-2 rounded"
                 type="number"

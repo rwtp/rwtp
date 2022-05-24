@@ -174,7 +174,7 @@ function StickerStore() {
       })
     );
 
-    const result = await fetch('/api/upload', {
+    const result = await fetch('/api/uploadJson', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
