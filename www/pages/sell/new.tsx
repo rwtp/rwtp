@@ -249,7 +249,6 @@ function NewSellOrder() {
               </div>
             </label>
           </div>
-          {showImagePreview ? "True" : "false"}
           <div className="flex">
             <label className="flex flex-1 flex-col">
               <strong className="mb-1 text-sm">Seller's Stake</strong>
