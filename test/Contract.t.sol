@@ -8,8 +8,8 @@ import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '../src/OrderBook.sol';
 
-contract SellOrderTest is Test {
-    Order sellOrder;
+contract OrderTest is Test {
+    Order order;
     address DAO = address(0x4234567890123456784012345678901234567821);
     address maker = address(0x1234567890123456784012345678901234567829);
     address taker1 = address(0x2234567890123456754012345678901234567821);
@@ -24,7 +24,7 @@ contract SellOrderTest is Test {
         token = new ERC20Mock('wETH', 'WETH', address(this), 20000);
 
         // Create a sell order
-        sellOrder = book.createOrder(
+        order = book.createOrder(
             maker,
             token,
             'ipfs://metadata',
@@ -32,8 +32,8 @@ contract SellOrderTest is Test {
             false
         );
 
-        assert(address(sellOrder.token()) == address(token));
-        assert(sellOrder.active());
+        assert(address(order.token()) == address(token));
+        assert(order.active());
     }
 
     function submitOffer(
@@ -45,11 +45,11 @@ contract SellOrderTest is Test {
     ) public {
         // Get initial balances
         uint256 takerStartBalance = token.balanceOf(taker);
-        uint256 orderStartBalance = token.balanceOf(address(sellOrder));
+        uint256 orderStartBalance = token.balanceOf(address(order));
 
         // Submit an offer from taker
         vm.startPrank(taker);
-        sellOrder.submitOffer(
+        order.submitOffer(
             index,
             price,
             cost,
@@ -67,7 +67,7 @@ contract SellOrderTest is Test {
             ,
             ,
 
-        ) = sellOrder.offers(taker, index);
+        ) = order.offers(taker, index);
         require(offerState == Order.State.Open, 'incorrect offer state');
         require(offerPrice == price, 'incorrect offer price');
         require(offerCost == cost, 'incorrect offer cost');
@@ -78,7 +78,7 @@ contract SellOrderTest is Test {
         }
 
         require(
-            token.balanceOf(address(sellOrder)) ==
+            token.balanceOf(address(order)) ==
                 orderStartBalance + transferAmount,
             'incorrect transfer to sell order'
         );
@@ -112,7 +112,7 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, transferAmount);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), transferAmount);
+        token.approve(address(order), transferAmount);
         vm.stopPrank();
         submitOffer(taker1, index, price, cost, sellerStake);
     }
@@ -130,7 +130,7 @@ contract SellOrderTest is Test {
 
         token.mint(taker, transferAmount);
         vm.startPrank(taker);
-        token.approve(address(sellOrder), transferAmount);
+        token.approve(address(order), transferAmount);
         vm.stopPrank();
         submitOffer(taker, index, price, cost, sellerStake);
     }
@@ -152,20 +152,20 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, transferAmount - 1);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), transferAmount - 1);
+        token.approve(address(order), transferAmount - 1);
         vm.stopPrank();
         submitOffer(taker1, index, price, cost, sellerStake);
     }
 
     function testFailSubmitOfferInactive() public {
         vm.startPrank(maker);
-        sellOrder.setActive(false);
+        order.setActive(false);
         vm.stopPrank();
 
         submitOfferBase(taker1);
 
         vm.startPrank(maker);
-        sellOrder.setActive(true);
+        order.setActive(true);
         vm.stopPrank();
     }
 
@@ -193,14 +193,14 @@ contract SellOrderTest is Test {
         submitOfferBase(taker1);
 
         vm.startPrank(taker1);
-        sellOrder.withdrawOffer(0);
+        order.withdrawOffer(0);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(taker1, 0);
+        (Order.State offerState, , , , , , , ) = order.offers(taker1, 0);
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
         require(
-            token.balanceOf(address(sellOrder)) == 0,
+            token.balanceOf(address(order)) == 0,
             'incorrect transfer to sell order'
         );
         require(token.balanceOf(taker1) == 1, 'incorrect transfer from taker');
@@ -222,22 +222,22 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, transferAmount);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), transferAmount);
+        token.approve(address(order), transferAmount);
         vm.stopPrank();
         submitOffer(taker1, index, price, cost, sellerStake);
 
         vm.startPrank(taker1);
-        sellOrder.withdrawOffer(index);
+        order.withdrawOffer(index);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState, , , , , , , ) = order.offers(
             taker1,
             index
         );
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
         require(
-            token.balanceOf(address(sellOrder)) == 0,
+            token.balanceOf(address(order)) == 0,
             'incorrect transfer to sell order'
         );
         require(
@@ -250,14 +250,14 @@ contract SellOrderTest is Test {
         submitOfferBase(taker1);
 
         vm.startPrank(taker1);
-        sellOrder.withdrawOffer(0);
-        sellOrder.withdrawOffer(0);
+        order.withdrawOffer(0);
+        order.withdrawOffer(0);
         vm.stopPrank();
     }
 
     function testFailWithdrawClosedOffer() public {
         vm.startPrank(taker1);
-        sellOrder.withdrawOffer(0);
+        order.withdrawOffer(0);
         vm.stopPrank();
     }
 
@@ -265,7 +265,7 @@ contract SellOrderTest is Test {
         submitOfferBase(taker1);
 
         vm.startPrank(maker);
-        sellOrder.withdrawOffer(0);
+        order.withdrawOffer(0);
         vm.stopPrank();
     }
 
@@ -273,28 +273,28 @@ contract SellOrderTest is Test {
         submitOfferBase(taker1);
         commitOffer(taker1, 0);
         vm.startPrank(taker1);
-        sellOrder.withdrawOffer(0);
+        order.withdrawOffer(0);
         vm.stopPrank();
     }
 
     function commitOffer(address taker, uint32 index) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
-        uint256 orderStartBalance = token.balanceOf(address(sellOrder));
+        uint256 orderStartBalance = token.balanceOf(address(order));
 
         // Commit to an offer from maker
         vm.startPrank(maker);
-        sellOrder.commit(taker, index);
+        order.commit(taker, index);
         vm.stopPrank();
 
-        (Order.State offerState, , , uint128 sellerStake, , , , ) = sellOrder
+        (Order.State offerState, , , uint128 sellerStake, , , , ) = order
             .offers(taker, index);
         require(offerState == Order.State.Committed, 'incorrect offer state');
 
         uint128 transferAmount = sellerStake;
 
         require(
-            token.balanceOf(address(sellOrder)) ==
+            token.balanceOf(address(order)) ==
                 orderStartBalance + transferAmount,
             'incorrect transfer to sell order'
         );
@@ -309,7 +309,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
     }
@@ -330,18 +330,18 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, transferAmount);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), transferAmount);
+        token.approve(address(order), transferAmount);
         vm.stopPrank();
         submitOffer(taker1, index, price, cost, sellerStake);
 
         uint128 makerStakeAmount = sellerStake;
         token.mint(maker, makerStakeAmount);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), makerStakeAmount);
+        token.approve(address(order), makerStakeAmount);
         vm.stopPrank();
         commitOffer(taker1, index);
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState, , , , , , , ) = order.offers(
             taker1,
             index
         );
@@ -353,7 +353,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 0);
+        token.approve(address(order), 0);
         vm.stopPrank();
         commitOffer(taker1, 0);
     }
@@ -363,7 +363,7 @@ contract SellOrderTest is Test {
 
         token.mint(taker2, 1);
         vm.startPrank(taker2);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
     }
@@ -373,7 +373,7 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, 1);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
     }
@@ -381,7 +381,7 @@ contract SellOrderTest is Test {
     function testFailCommitOfferClosed() public {
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 0);
+        token.approve(address(order), 0);
         vm.stopPrank();
         commitOffer(taker1, 0);
     }
@@ -392,12 +392,12 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 2);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 2);
+        token.approve(address(order), 2);
         vm.stopPrank();
 
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
-        uint256 orderStartBalance = token.balanceOf(address(sellOrder));
+        uint256 orderStartBalance = token.balanceOf(address(order));
 
         // Commit to an offer from maker
         address[] memory takers = new address[](2);
@@ -407,14 +407,14 @@ contract SellOrderTest is Test {
         takers[1] = taker2;
         indicies[1] = 0;
         vm.startPrank(maker);
-        sellOrder.commitBatch(takers, indicies);
+        order.commitBatch(takers, indicies);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(taker1, 0);
+        (Order.State offerState, , , , , , , ) = order.offers(taker1, 0);
         require(offerState == Order.State.Committed, 'incorrect offer state');
 
         require(
-            token.balanceOf(address(sellOrder)) == orderStartBalance + 2,
+            token.balanceOf(address(order)) == orderStartBalance + 2,
             'incorrect transfer to sell order'
         );
         require(
@@ -433,22 +433,22 @@ contract SellOrderTest is Test {
         uint256 takerStartBalance = token.balanceOf(taker);
         uint256 daoStartBalance = token.balanceOf(DAO);
 
-        (, uint128 price, uint128 cost, uint128 sellerStake, , , , ) = sellOrder
+        (, uint128 price, uint128 cost, uint128 sellerStake, , , , ) = order
             .offers(taker, index);
 
         // Confirm to an offer from maker
         vm.startPrank(from);
-        sellOrder.confirm(taker, index);
+        order.confirm(taker, index);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(taker, index);
+        (Order.State offerState, , , , , , , ) = order.offers(taker, index);
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
         uint256 total = price;
         uint256 toDao = (total * IOrderBook(book).fee()) / 1000000;
 
         require(
-            token.balanceOf(address(sellOrder)) == 0,
+            token.balanceOf(address(order)) == 0,
             'sell order should have no balance'
         );
 
@@ -482,7 +482,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
 
@@ -496,7 +496,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
 
@@ -510,7 +510,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
 
@@ -525,7 +525,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 2);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 2);
+        token.approve(address(order), 2);
         vm.stopPrank();
         commitOffer(taker1, 0);
         commitOffer(taker2, 0);
@@ -538,7 +538,7 @@ contract SellOrderTest is Test {
         takers[1] = taker2;
         indicies[1] = 0;
         vm.startPrank(maker);
-        sellOrder.confirmBatch(takers, indicies);
+        order.confirmBatch(takers, indicies);
         vm.stopPrank();
     }
 
@@ -558,20 +558,20 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, transferAmount);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), transferAmount);
+        token.approve(address(order), transferAmount);
         vm.stopPrank();
         submitOffer(taker1, index, price, cost, sellerStake);
 
         uint128 makerStakeAmount = sellerStake;
         token.mint(maker, makerStakeAmount);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), makerStakeAmount);
+        token.approve(address(order), makerStakeAmount);
         vm.stopPrank();
         commitOffer(taker1, index);
 
         confirmOffer(taker1, taker1, index);
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState, , , , , , , ) = order.offers(
             taker1,
             index
         );
@@ -588,21 +588,21 @@ contract SellOrderTest is Test {
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 takerStartBalance = token.balanceOf(taker);
 
-        (, uint128 price, uint128 cost, , , , , ) = sellOrder.offers(
+        (, uint128 price, uint128 cost, , , , , ) = order.offers(
             taker,
             index
         );
 
         // Confirm to an offer from maker
         vm.startPrank(taker);
-        sellOrder.refund(taker, index);
+        order.refund(taker, index);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(taker, index);
+        (Order.State offerState, , , , , , , ) = order.offers(taker, index);
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
         require(
-            token.balanceOf(address(sellOrder)) == 0,
+            token.balanceOf(address(order)) == 0,
             'sell order should have no balance'
         );
 
@@ -630,7 +630,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
 
@@ -654,20 +654,20 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, transferAmount);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), transferAmount);
+        token.approve(address(order), transferAmount);
         vm.stopPrank();
         submitOffer(taker1, index, price, cost, sellerStake);
 
         uint128 makerStakeAmount = sellerStake;
         token.mint(maker, makerStakeAmount);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), makerStakeAmount);
+        token.approve(address(order), makerStakeAmount);
         vm.stopPrank();
         commitOffer(taker1, index);
 
         refundOffer(taker1, index);
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState, , , , , , , ) = order.offers(
             taker1,
             index
         );
@@ -680,7 +680,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
 
@@ -693,13 +693,13 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(taker1, 0);
 
         // Confirm to an offer from maker
         vm.startPrank(taker2);
-        sellOrder.refund(taker1, 0);
+        order.refund(taker1, 0);
         vm.stopPrank();
     }
 
@@ -721,19 +721,19 @@ contract SellOrderTest is Test {
             ,
             bool makerCanceled,
             bool takerCanceled
-        ) = sellOrder.offers(taker, index);
+        ) = order.offers(taker, index);
 
         // Cancel an offer
         vm.startPrank(from);
-        sellOrder.cancel(taker, index);
+        order.cancel(taker, index);
         vm.stopPrank();
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(taker, index);
+        (Order.State offerState, , , , , , , ) = order.offers(taker, index);
 
         if (makerCanceled || takerCanceled) {
             require(offerState == Order.State.Closed, 'incorrect offer state');
             require(
-                token.balanceOf(address(sellOrder)) == 0,
+                token.balanceOf(address(order)) == 0,
                 'sell order should have no balance'
             );
             require(
@@ -761,7 +761,7 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
 
         commitOffer(taker1, 0);
@@ -775,14 +775,14 @@ contract SellOrderTest is Test {
 
         token.mint(maker, 1);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), 1);
+        token.approve(address(order), 1);
         vm.stopPrank();
 
         commitOffer(taker1, 0);
 
         cancelOffer(taker1, taker1, 0);
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(taker1, 0);
+        (Order.State offerState, , , , , , , ) = order.offers(taker1, 0);
         require(offerState == Order.State.Committed, 'incorrect offer state');
     }
 
@@ -802,21 +802,21 @@ contract SellOrderTest is Test {
 
         token.mint(taker1, transferAmount);
         vm.startPrank(taker1);
-        token.approve(address(sellOrder), transferAmount);
+        token.approve(address(order), transferAmount);
         vm.stopPrank();
         submitOffer(taker1, index, price, cost, sellerStake);
 
         uint128 makerStakeAmount = sellerStake;
         token.mint(maker, makerStakeAmount);
         vm.startPrank(maker);
-        token.approve(address(sellOrder), makerStakeAmount);
+        token.approve(address(order), makerStakeAmount);
         vm.stopPrank();
         commitOffer(taker1, index);
 
         cancelOffer(taker1, taker1, index);
         cancelOffer(taker1, maker, index);
 
-        (Order.State offerState, , , , , , , ) = sellOrder.offers(
+        (Order.State offerState, , , , , , , ) = order.offers(
             taker1,
             index
         );
