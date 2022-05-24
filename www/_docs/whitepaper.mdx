@@ -4,20 +4,61 @@ title: Whitepaper
 
 # Real World Trade Protocol
 
-RWTP is a peer-to-peer protocol for buying and selling physical goods in untrusted situations.
+RWTP is a peer-to-peer protocol for buying and selling physical goods in untrusted situations. Use it to programatically buy and sell real-world goods with crypto-currencies.
 
-```js
-const foo = bar();
-```
+## How it works
 
-## Motiviation
+To sell on Real World Trade Protocol, the seller puts down a deposit. If a buyer claims that the seller did not delivered the package, the seller will lose their deposit and the buyer will get their payment back. To prevent an untrusted buyer from abusing this power, the buyer agrees to a "cost" if they press the refund button. The amount the buyer is allowed to refund is calculated as $Refund=Payment-Cost$. If the cost is greater than the payment, then the buyer must put down a deposit as well; which they will lose if they reject the deal.
 
-By default, a buyer on the internet does not know if, when they order a package, the package will actually be delivered. A nefarious no-good evil-doer could simply claim to be selling laptops, take your $1000, and then never actually ship you a laptop. To prevent fraud, buyers today may use credit-card charge backs.
+## Understanding the Payoff Matrix
 
-However, cryptocurrencies do not have chargebacks; sending money to the wrong address is final. So buying real-world goods with cryptocurrencies, especially from unknown parties is dangerous.
+- Let $C_b$ be the cost the buyer pays if the deal fails.
+- Let $C_s$ be the cost the seller pays if the deal fails. This is their deposit.
+- Let $P$ be the payment.
+- Let $I_s$ be the original value of the item to the seller, such as the expenses of manufacturing the item. A rational seller will not agree to the deal if $P < I_s$.
+- Let $I_b$ be the actual value of the item to the buyer. A rational buyer will not agree to the deal if $P < I_b$.[^1]
 
-One solution is for buyers to only purchase from trusted addresses. The seller may be able to sign a message like "I am Amazon.com" and put that message in a `txt` DNS record and call it a day. However, this solution restricts the ability for new entrants to sell on the internet. The buyer has no way to distinguish between an honest, but new seller, and a scammer. So instead, the new seller is better off selling via a centralized platform such as Amazon.
+|               | Buyer Confirms  | Buyer Rejects                  |
+| ------------- | --------------- | ------------------------------ |
+| Seller ships  | $(P-I_s,I_b-P)$ | $(-C_s - I_s,  I_b + P - C_b)$ |
+| Seller flakes | $(P,-P)$        | $(-C_s, P-C_b)$                |
 
-## Two-sided deposits
+The buyer and the seller can negotiate the cost with each other. If both parties trust each other fully, neither needs a cost.
 
-To solve the problem of fraud, Real World Trade Protocol requires both the buyer and the seller to put down a deposit. If either party believes the deal failed, both the buyer and the seller lose their deposit.
+However, in situations where either the buyer or the seller is not trusted, the cost allows one party to tweak the expected value of engaging in the deal until it's favorable.
+
+### Trusted seller, untrusted buyer
+
+Imagine the situation where a trusted seller is interacting with an unknown buyer. Say $P = 10$, $I_b = 15$, $I_s = 5$. Regardless of what the seller stakes; the seller can protect themselves by only agreeing to offers where $C_b \geq P + C_b$, such as $C_b = 25$.
+
+|               | Buyer Confirms | Buyer Rejects    |
+| ------------- | -------------- | ---------------- |
+| Seller ships  | $(5,5)$        | $(-C_s - 5,  0)$ |
+| Seller flakes | $(10,-10)$     | $(-C_s, -25)$    |
+
+Regardless of what the seller does, the buyer is incentivized to confirm the offer. If the buyer intends to cheat, they lose in both cases. However, if the buyer intends to be honest, then they can make an expected value calculation.
+
+For example, say 1% of deals from this seller are rejected and 99% are confirmed. The expected value for the buyer is then $5*0.99 + -10*0.01 = 4.85$, so the buyer should take this deal.
+
+### Untrusted seller, trusted buyer
+
+Imagine the situation where a trusted buyer interacts with an untrusted seller. Say $P = 10$, $I_b = 15$, $I_s = 5$. The buyer can protect themselves by only agreeing to offers where $C_s \geq P$, such as $C_s = 10$, and costs where $C_b \leq P + I_b$.
+
+|               | Buyer Confirms | Buyer Rejects      |
+| ------------- | -------------- | ------------------ |
+| Seller ships  | $(5,5)$        | $(-15,  25 - C_b)$ |
+| Seller flakes | $(10,-10)$     | $(-10, 10 - C_b)$  |
+
+In this case, the buyer can still reject a failed offer if the seller flakes. If the seller intends to be honest, they can make an expected value calculation.
+
+For example, say 1% of deals from this buyer are rejected, and 99% are confirmed. The expected value for the seller is $5*0.99 + -15 * 0.01 = 4.8$, so the seller should take this deal.
+
+## How does a buyer and seller figure out if the other is trustworthy?
+
+RWTP is agnostic to the way a buyer and a seller determine each other's reputation. You could use the history of past deals, but this could be vulnerable to wash trading. Some potential solutions include:
+
+- Proof-of-personhood protocols (such as [Worldcoin](https://worldcoin.org))
+- Signing a message and putting it in a DNS record
+- Linking to social media profiles, including decentralized protocols such as [Lens](https://lens.xyz/).
+
+[^1]: Trade is positive sum! A rational buyer wants the item more than they want their money.
