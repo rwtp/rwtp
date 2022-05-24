@@ -2,11 +2,12 @@
 pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import "@openzeppelin/contracts/security/Pausable.sol";
 import './Order.sol';
 import './interfaces/IOrderBook.sol';
 
 /// @dev A factory for creating orders. The Graph should index this contract.
-contract OrderBook is IOrderBook {
+contract OrderBook is IOrderBook, Pausable {
     /// @dev all the orders available in the order book
     mapping(address => bool) public orders;
 
@@ -53,6 +54,16 @@ contract OrderBook is IOrderBook {
         _owner = _newOwner;
     }
 
+    /// @dev pauses this order book
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /// @dev unpauses this order book
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     /// @dev Creates a new order that can be easily indexed by something like theGraph.
     function createOrder(
         address maker,
@@ -60,7 +71,7 @@ contract OrderBook is IOrderBook {
         string memory uri,
         uint256 timeout,
         bool isBuyOrder
-    ) external returns (Order) {
+    ) external whenNotPaused returns (Order) {
         Order.OrderType orderType;
         if (isBuyOrder) {
             orderType = Order.OrderType.BuyOrder;
