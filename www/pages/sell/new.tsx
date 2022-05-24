@@ -113,7 +113,7 @@ function NewSellOrder() {
         <div className="font-serif mb-12 mt-12 text-2xl">
           Create a new sell listing
         </div>
-        {/* <p className="mb-8">Sell anything, from a pack of gum to a ferrari.</p> */}
+        <p className="mb-8">Sell anything, from a pack of gum to a ferrari.</p>
 
         <div className="flex flex-col">
           <label className="flex flex-col mb-8">
