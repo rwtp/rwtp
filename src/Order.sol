@@ -2,9 +2,10 @@
 pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
 import './interfaces/IOrderBook.sol';
 
-contract Order {
+contract Order is Pausable {
     /// @dev Don't allow purchases from self
     error TakerCannotBeMaker();
 
@@ -14,11 +15,14 @@ contract Order {
     /// @dev msg.sender is not the maker of the order
     error MustBeMaker();
 
+    /// @dev msg.sender is not the maker of the order or dao
+    error MustBeMakerOrDAO();
+
     /// @dev A function is run at the wrong time in the lifecycle
     error InvalidState(State expected, State received);
 
-    /// @dev The order is not accepting new offers
-    error OrderInactive();
+    /// @dev Order or order book is paused
+    error OrderOrBookPaused();
 
     /// @dev The order timed out and can no longer be refunded
     error TimeoutExpired();
@@ -161,6 +165,16 @@ contract Order {
         emit ActiveToggled(active);
     }
 
+    /// @dev pauses this order book
+    function pause() external onlyMakerOrDAO {
+        _pause();
+    }
+
+    /// @dev unpauses this order book
+    function unpause() external onlyMakerOrDAO {
+        _unpause();
+    }
+
     /// @dev returns buyer refund per unit for offer
     function refund(Offer memory offer)
         internal
@@ -242,10 +256,19 @@ contract Order {
         _;
     }
 
-    /// @dev reverts if not active
-    modifier onlyActive() {
-        if (!active) {
-            revert OrderInactive();
+    /// @dev reverts if msg.sender is not the maker or DAO
+    modifier onlyMakerOrDAO() {
+        if (msg.sender != maker && msg.sender != IOrderBook(orderBook).owner()) {
+            revert MustBeMakerOrDAO();
+        }
+
+        _;
+    }
+
+    /// @dev reverts order or book is paused
+    modifier onlyOrderAndBookUnpaused() {
+        if (paused() || Pausable(orderBook).paused()) {
+            revert OrderOrBookPaused();
         }
 
         _;
@@ -258,7 +281,12 @@ contract Order {
         uint128 cost,
         uint128 sellerStake,
         string memory uri
-    ) external virtual onlyState(msg.sender, index, State.Closed) onlyActive {
+    )
+        external
+        virtual
+        onlyState(msg.sender, index, State.Closed)
+        onlyOrderAndBookUnpaused
+    {
         if (msg.sender == maker) {
             revert TakerCannotBeMaker();
         }
@@ -295,6 +323,7 @@ contract Order {
     function withdrawOffer(uint32 index)
         external
         virtual
+        onlyOrderAndBookUnpaused
         onlyState(msg.sender, index, State.Open)
     {
         Offer memory offer = offers[msg.sender][index];
@@ -331,6 +360,7 @@ contract Order {
     function commit(address taker, uint32 index)
         public
         virtual
+        onlyOrderAndBookUnpaused
         onlyState(taker, index, State.Open)
         onlyMaker
     {
@@ -367,6 +397,7 @@ contract Order {
     function commitBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         require(takers.length == indices.length);
         for (uint256 i = 0; i < takers.length; i++) {
@@ -378,6 +409,7 @@ contract Order {
     function confirm(address taker, uint32 index)
         public
         virtual
+        onlyOrderAndBookUnpaused
         onlyState(taker, index, State.Committed)
     {
         Offer memory offer = offers[taker][index];
@@ -434,6 +466,7 @@ contract Order {
     function confirmBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         for (uint256 i = 0; i < indices.length; i++) {
             confirm(takers[i], indices[i]);
@@ -444,6 +477,7 @@ contract Order {
     function refund(address taker, uint32 index)
         public
         virtual
+        onlyOrderAndBookUnpaused
         onlyState(taker, index, State.Committed)
         onlyBuyer(taker)
     {
@@ -487,6 +521,7 @@ contract Order {
     function refundBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         require(takers.length == indices.length);
         for (uint256 i = 0; i < takers.length; i++) {
@@ -499,6 +534,7 @@ contract Order {
     function cancel(address taker, uint32 index)
         public
         virtual
+        onlyOrderAndBookUnpaused
         onlyState(taker, index, State.Committed)
     {
         Offer storage offer = offers[taker][index];
@@ -554,6 +590,7 @@ contract Order {
     function cancelBatch(address[] calldata takers, uint32[] calldata indices)
         external
         virtual
+        onlyOrderAndBookUnpaused
     {
         require(takers.length == indices.length);
         for (uint256 i = 0; i < takers.length; i++) {

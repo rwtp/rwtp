@@ -181,17 +181,30 @@ contract OrderTest is Test {
         submitOffer(order, taker1, index, price, cost, sellerStake);
     }
 
-    function testFailSubmitOfferInactive() public {
+    function testFailSubmitOfferPaused() public {
         vm.startPrank(maker);
         Order order = createOrder(false);
-        order.setActive(false);
+        order.pause();
         vm.stopPrank();
 
         submitOfferBase(order, taker1);
 
         vm.startPrank(maker);
-        order.setActive(true);
+        order.unpause();
         vm.stopPrank();
+    }
+
+    function testSubmitOfferPauseUnpause() public {
+        vm.startPrank(maker);
+        Order order = createOrder(false);
+        order.pause();
+        vm.stopPrank();
+
+        vm.startPrank(maker);
+        order.unpause();
+        vm.stopPrank();
+        
+        submitOfferBase(order, taker1);
     }
 
     function testFailSubmitOfferTwice() public {
@@ -286,6 +299,19 @@ contract OrderTest is Test {
         vm.stopPrank();
     }
 
+    function testFailWithdrawOfferPaused() public {
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        vm.startPrank(maker);
+        order.pause();
+        vm.stopPrank();
+
+        vm.startPrank(taker1);
+        order.withdrawOffer(0);
+        vm.stopPrank();
+    }
+
     function testFailWithdrawClosedOffer() public {
         Order order = createOrder(false);
         vm.startPrank(taker1);
@@ -340,6 +366,21 @@ contract OrderTest is Test {
     function testCommitOfferBase() public {
         Order order = createOrder(false);
         submitOfferBase(order, taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(order), 1);
+        vm.stopPrank();
+        commitOffer(order, taker1, 0);
+    }
+
+    function testFailCommitOfferPaused() public {
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        vm.startPrank(maker);
+        order.pause();
+        vm.stopPrank();
 
         token.mint(maker, 1);
         vm.startPrank(maker);
@@ -528,6 +569,25 @@ contract OrderTest is Test {
         token.approve(address(order), 1);
         vm.stopPrank();
         commitOffer(order, taker1, 0);
+
+        vm.warp(0);
+        confirmOffer(order, taker1, taker1, 0);
+    }
+
+    function testFailConfirmOfferPaused() public {
+        vm.warp(0);
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(order), 1);
+        vm.stopPrank();
+        commitOffer(order, taker1, 0);
+
+        vm.startPrank(maker);
+        order.pause();
+        vm.stopPrank();
 
         vm.warp(0);
         confirmOffer(order, taker1, taker1, 0);
@@ -727,6 +787,25 @@ contract OrderTest is Test {
         require(offerState == Order.State.Closed, 'incorrect offer state');
     }
 
+    function testFailRefundOfferPaused() public {
+        vm.warp(0);
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(order), 1);
+        vm.stopPrank();
+        commitOffer(order, taker1, 0);
+
+        vm.startPrank(maker);
+        order.pause();
+        vm.stopPrank();
+
+        vm.warp(0);
+        refundOffer(order, taker1, taker1, 0);
+    }
+
     function testFailRefundOfferExpired() public {
         vm.warp(0);
         Order order = createOrder(false);
@@ -875,41 +954,191 @@ contract OrderTest is Test {
         );
         require(offerState == Order.State.Closed, 'incorrect offer state');
     }
+
+    function testFailCancelOfferPaused() public {
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(order), 1);
+        vm.stopPrank();
+
+        commitOffer(order, taker1, 0);
+
+        vm.startPrank(maker);
+        order.pause();
+        vm.stopPrank();
+
+        cancelOffer(order, taker1, taker1, 0);
+    }
+
+    function testPauseMaker() public {
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        vm.startPrank(maker);
+        order.pause();
+        vm.stopPrank();
+
+        assert(Pausable(order).paused() == true);
+    }
+
+    function testUnpauseMaker() public {
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        vm.startPrank(maker);
+        order.pause();
+        vm.stopPrank();
+
+        vm.startPrank(maker);
+        order.unpause();
+        vm.stopPrank();
+
+        assert(Pausable(order).paused() == false);
+    }
+
+    function testFailPauseNotMaker() public {
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        vm.startPrank(taker1);
+        order.pause();
+        vm.stopPrank();
+    }
+
+    function testPauseDAO() public {
+        Order order = createOrder(false);
+        submitOfferBase(order, taker1);
+
+        vm.startPrank(DAO);
+        order.pause();
+        vm.stopPrank();
+
+        assert(Pausable(order).paused() == true);
+    }
 }
 
 contract OrderBookTest is Test {
-    function testFailOnlyOwnerCanSetFees() public {
-        address owner = address(0x1234567890123456784012345678901234567829);
-        vm.prank(owner);
+    address DAO = address(0x4234567890123456784012345678901234567821);
+    address maker = address(0x1234567890123456784012345678901234567829);
+    address taker1 = address(0x2234567890123456754012345678901234567821);
+    address taker2 = address(0x5234567890123456754012345678901234567822);
+    ERC20Mock token;
+
+    function setUp() public {
+        token = new ERC20Mock('wETH', 'WETH', address(this), 20000);
+    }
+    
+    function testFailOnlyDAOCanSetFees() public {
+        vm.prank(DAO);
         OrderBook book = new OrderBook();
         book.setFee(10);
     }
 
-    function testFailOnlyOwnerCanSetOwner() public {
-        address owner = address(0x1234567890123456784012345678901234567829);
-        vm.prank(owner);
+    function testFailOnlyDAOCanSetOwner() public {
+        vm.prank(DAO);
         OrderBook book = new OrderBook();
-        book.setOwner(address(0x4234567890123456784012345678901234567822));
+        book.setOwner(maker);
     }
 
-    function testOwnerCanSetFees() public {
-        address owner = address(0x1234567890123456784012345678901234567829);
-        vm.prank(owner);
+    function testDAOCanSetFees() public {
+        vm.prank(DAO);
         OrderBook book = new OrderBook();
 
-        vm.prank(owner);
+        vm.prank(DAO);
         book.setFee(10);
         require(book.fee() == 10, 'fee is not 10');
     }
 
-    function testOwnerCanSetOwner() public {
-        address owner = address(0x1234567890123456784012345678901234567829);
-        vm.prank(owner);
+    function testDAOCanSetOwner() public {
+        vm.prank(DAO);
         OrderBook book = new OrderBook();
 
-        vm.prank(owner);
-        book.setOwner(owner);
-        require(book.owner() == owner, 'owner is not owner');
+        vm.prank(DAO);
+        book.setOwner(DAO);
+        require(book.owner() == DAO, 'owner is not owner');
+    }
+
+    function testPauseBook() public {
+        vm.startPrank(DAO);
+        OrderBook book = new OrderBook();
+        book.pause();
+        vm.stopPrank();
+
+        assert(Pausable(book).paused() == true);
+    }
+
+    function testFailPauseBookNotDAO() public {
+        vm.startPrank(DAO);
+        OrderBook book = new OrderBook();
+        vm.stopPrank();
+        
+        vm.startPrank(maker);
+        book.pause();
+        vm.stopPrank();
+    }
+
+    function testFailPauseBookCreateOrder() public {
+        vm.startPrank(DAO);
+        OrderBook book = new OrderBook();
+        book.pause();
+        vm.stopPrank();
+
+        book.createOrder(
+            maker,
+            token,
+            'ipfs://metadata',
+            100,
+            false
+        );
+    }
+
+    function testPauseUnpauseBookCreateOrder() public {
+        vm.startPrank(DAO);
+        OrderBook book = new OrderBook();
+        vm.stopPrank();
+
+        vm.startPrank(DAO);
+        book.pause();
+        vm.stopPrank();
+
+        vm.startPrank(DAO);
+        book.unpause();
+        vm.stopPrank();
+        
+        book.createOrder(
+            maker,
+            token,
+            'ipfs://metadata',
+            100,
+            false
+        );
+    }
+
+    function testFailPauseSubmitOffer() public {
+        vm.startPrank(DAO);
+        OrderBook book = new OrderBook();
+        vm.stopPrank();
+
+        Order order = book.createOrder(
+            maker,
+            token,
+            'ipfs://metadata',
+            100,
+            false
+        );
+        
+        vm.startPrank(DAO);
+        book.pause();
+        vm.stopPrank();
+        
+        token.mint(taker1, 1);
+        vm.startPrank(taker1);
+        token.approve(address(order), 1);
+        order.submitOffer(0, 1, 1, 1, "");
+        vm.stopPrank();
     }
 }
 
