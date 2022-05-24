@@ -194,14 +194,14 @@ contract Order {
     }
 
     /// @dev returns buyer for offer with given taker
-    function buyer(address taker_) 
+    function buyer(address taker) 
         internal
         view
         virtual
         returns (address) 
     {
         if (orderType == OrderType.SellOrder) {
-            return taker_;
+            return taker;
         } else if (orderType == OrderType.BuyOrder) {
             return maker;
         } else {
@@ -210,7 +210,7 @@ contract Order {
     }
 
     /// @dev returns seller for offer with given taker
-    function seller(address taker_) 
+    function seller(address taker) 
         internal
         view
         virtual
@@ -219,7 +219,7 @@ contract Order {
         if (orderType == OrderType.SellOrder) {
             return maker;
         } else if (orderType == OrderType.BuyOrder) {
-            return taker_;
+            return taker;
         } else {
             revert();
         }
@@ -227,20 +227,20 @@ contract Order {
 
     /// @dev reverts if the function is not at the expected state
     modifier onlyState(
-        address taker_,
+        address taker,
         uint32 index,
         State expected
     ) {
-        if (offers[taker_][index].state != expected) {
-            revert InvalidState(expected, offers[taker_][index].state);
+        if (offers[taker][index].state != expected) {
+            revert InvalidState(expected, offers[taker][index].state);
         }
 
         _;
     }
 
     // @dev reverts if msg.sender is not the buyer
-    modifier onlyBuyer(address taker_) {
-        if (msg.sender != buyer(taker_)) {
+    modifier onlyBuyer(address taker) {
+        if (msg.sender != buyer(taker)) {
             revert MustBeBuyer();
         }
 
@@ -353,13 +353,13 @@ contract Order {
     }
 
     /// @dev Commits a maker to an offer
-    function commit(address taker_, uint32 index)
+    function commit(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Open)
+        onlyState(taker, index, State.Open)
         onlyMaker
     {
-        Offer storage offer = offers[taker_][index];
+        Offer storage offer = offers[taker][index];
 
         // Update the status of the taker's offer
         offer.acceptedAt = uint64(block.timestamp);
@@ -385,7 +385,7 @@ contract Order {
         );
         assert(result);
 
-        emit OfferCommitted(taker_, index);
+        emit OfferCommitted(taker, index);
     }
 
     /// @dev Marks all provided offers as committed
@@ -400,22 +400,22 @@ contract Order {
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm(address taker_, uint32 index)
+    function confirm(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Committed)
+        onlyState(taker, index, State.Committed)
     {
-        Offer memory offer = offers[taker_][index];
+        Offer memory offer = offers[taker][index];
 
         // Only buyer can confirm before timeout
         if (block.timestamp < timeout + offer.acceptedAt) {
-            if (msg.sender != buyer(taker_)) {
+            if (msg.sender != buyer(taker)) {
                 revert MustBeBuyer();
             }
         }
 
         // Close the offer
-        offers[taker_][index] = Offer(
+        offers[taker][index] = Offer(
             State.Closed,
             0,
             0,
@@ -434,11 +434,11 @@ contract Order {
         uint256 toBuyer = buyerStakePerUnit(offer) * offer.quantity;
 
         // Transfer payment to the buyer
-        bool result0 = token.transfer(buyer(taker_), toBuyer);
+        bool result0 = token.transfer(buyer(taker), toBuyer);
         assert(result0);
 
         // Transfer payment to the seller
-        bool result1 = token.transfer(seller(taker_), toSeller);
+        bool result1 = token.transfer(seller(taker), toSeller);
         assert(result1);
 
         // Transfer payment to the order book
@@ -448,7 +448,7 @@ contract Order {
         );
         assert(result2);
 
-        emit OfferConfirmed(taker_, index);
+        emit OfferConfirmed(taker, index);
     }
 
     /// @dev Marks all provided offers as completed
@@ -462,19 +462,19 @@ contract Order {
     }
 
     /// @dev Allows the buyer to refund an offer.
-    function refund(address taker_, uint32 index)
+    function refund(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Committed)
-        onlyBuyer(taker_)
+        onlyState(taker, index, State.Committed)
+        onlyBuyer(taker)
     {
-        Offer memory offer = offers[taker_][index];
+        Offer memory offer = offers[taker][index];
         if (block.timestamp > timeout + offer.acceptedAt) {
             revert TimeoutExpired();
         }
 
         // Close the offer
-        offers[taker_][index] = Offer(
+        offers[taker][index] = Offer(
             State.Closed,
             0,
             0,
@@ -488,7 +488,7 @@ contract Order {
 
         // Transfer the refund to the buyer
         bool result0 = token.transfer(
-            buyer(taker_),
+            buyer(taker),
             refundPerUnit(offer) * offer.quantity
         );
         assert(result0);
@@ -504,7 +504,7 @@ contract Order {
         );
         assert(result1);
 
-        emit OfferRefunded(taker_, index);
+        emit OfferRefunded(taker, index);
     }
 
     /// @dev Refunds all provided offers
@@ -520,13 +520,13 @@ contract Order {
 
     /// @dev Allows either the taker or the maker to cancel the offer.
     ///      Only a committed offer can be canceled
-    function cancel(address taker_, uint32 index)
+    function cancel(address taker, uint32 index)
         public
         virtual
-        onlyState(taker_, index, State.Committed)
+        onlyState(taker, index, State.Committed)
     {
-        Offer storage offer = offers[taker_][index];
-        if (msg.sender == taker_) {
+        Offer storage offer = offers[taker][index];
+        if (msg.sender == taker) {
             // The taker is canceling their offer
             offer.takerCanceled = true;
         } else {
@@ -545,15 +545,15 @@ contract Order {
             uint256 toSeller = offer.sellerStakePerUnit * offer.quantity;
 
             // Transfer the buyer stake back to the buyer along with their payment
-            bool result0 = token.transfer(buyer(taker_), toBuyer);
+            bool result0 = token.transfer(buyer(taker), toBuyer);
             assert(result0);
 
             // Transfer the seller stake back to the seller
-            bool result1 = token.transfer(seller(taker_), toSeller);
+            bool result1 = token.transfer(seller(taker), toSeller);
             assert(result1);
 
             // Null out the offer
-            offers[taker_][index] = Offer(
+            offers[taker][index] = Offer(
                 State.Closed,
                 0,
                 0,
@@ -567,7 +567,7 @@ contract Order {
         }
 
         emit OfferCanceled(
-            taker_,
+            taker,
             index,
             offer.makerCanceled,
             offer.takerCanceled
