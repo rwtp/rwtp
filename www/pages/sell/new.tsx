@@ -201,7 +201,7 @@ function NewSellOrder() {
                   setImageUploading(true);
 
                   // Error if file is over 3MB
-                  if (file.size > 3000000) {
+                  if (file.size > 3_000_000) {
                     alert("Error: Image must be less than 3 MB");
                     e.target.value = '';
                     setImageUploading(false);
