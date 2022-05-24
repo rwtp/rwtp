@@ -165,7 +165,7 @@ contract OrderTest is Test {
         submitOfferBase(order, taker1);
     }
 
-    function testFailSubmitOfferLacksToken() public {
+    function testSubmitOfferLacksToken() public {
         uint32 index = 0;
         uint128 price = 1;
         uint128 cost = 1;
