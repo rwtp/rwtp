@@ -138,7 +138,7 @@ function NewSellOrder() {
               value={state.description}
             />
           </label>
-          <div className="flex flex-col mb-2">
+          <div className="flex flex-col mb-8">
             <strong className="mb-1 text-sm">Image</strong>
             <label className='flex flex-row content-center'>
               <input
