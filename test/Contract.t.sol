@@ -511,7 +511,7 @@ contract SellOrderTest is Test {
         );
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
-        uint256 total = (pricePerUnit + sellerStakePerUnit) * quantity;
+        uint256 total = pricePerUnit * quantity;
         uint256 toDao = (total * IOrderBook(book).fee()) / 1000000;
 
         require(
@@ -520,7 +520,7 @@ contract SellOrderTest is Test {
         );
 
         require(
-            token.balanceOf(maker) == makerStartBalance + total - toDao,
+            token.balanceOf(maker) == makerStartBalance + total - toDao + sellerStakePerUnit * quantity,
             'incorrect transfer to seller'
         );
 

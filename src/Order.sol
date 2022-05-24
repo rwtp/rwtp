@@ -427,10 +427,10 @@ contract Order {
             0
         );
 
-        uint256 total = (offer.pricePerUnit + offer.sellerStakePerUnit) * offer.quantity;
+        uint256 total = offer.pricePerUnit * offer.quantity;
         uint256 toOrderBook = (total * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
-        uint256 toSeller = total - toOrderBook;
+        uint256 toSeller = total - toOrderBook + (offer.sellerStakePerUnit * offer.quantity);
         uint256 toBuyer = buyerStakePerUnit(offer) * offer.quantity;
 
         // Transfer payment to the buyer
