@@ -27,10 +27,9 @@ contract Order {
     event OfferSubmitted(
         address indexed taker,
         uint32 indexed index,
-        uint32 quantity,
-        uint128 pricePerUnit,
-        uint128 costPerUnit,
-        uint128 sellerStakePerUnit,
+        uint128 price,
+        uint128 cost,
+        uint128 sellerStake,
         string uri
     );
 
@@ -100,11 +99,11 @@ contract Order {
         /// @dev the state of the offer
         State state;
         /// @dev the amount the buyer will pay
-        uint128 pricePerUnit;
+        uint128 price;
         /// @dev the amount the buyer gets when refunded
-        uint128 costPerUnit;
+        uint128 cost;
         /// @dev the amount the seller is willing to stake
-        uint128 sellerStakePerUnit;
+        uint128 sellerStake;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
@@ -113,9 +112,6 @@ contract Order {
         bool makerCanceled;
         /// @dev canceled by the taker
         bool takerCanceled;
-        /// @dev Allows purchases of multiple units.
-        /// The maker and taker's required stakes will both be scaled by this value.
-        uint32 quantity;
     }
 
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
@@ -166,40 +162,35 @@ contract Order {
     }
 
     /// @dev returns buyer refund per unit for offer
-    function refundPerUnit(Offer memory offer)
+    function refund(Offer memory offer)
         internal
         view
         virtual
         returns (uint256)
     {
-        if (offer.pricePerUnit > offer.costPerUnit) {
-            return offer.pricePerUnit - offer.costPerUnit;
+        if (offer.price > offer.cost) {
+            return offer.price - offer.cost;
         } else {
             return 0;
         }
     }
 
-    /// @dev returns buyer stake per unit for offer 
-    function buyerStakePerUnit(Offer memory offer)
+    /// @dev returns buyer stake per unit for offer
+    function buyerStake(Offer memory offer)
         internal
         view
         virtual
         returns (uint256)
     {
-        if (offer.costPerUnit > offer.pricePerUnit) {
-            return offer.costPerUnit - offer.pricePerUnit;
+        if (offer.cost > offer.price) {
+            return offer.cost - offer.price;
         } else {
             return 0;
         }
     }
 
     /// @dev returns buyer for offer with given taker
-    function buyer(address taker) 
-        internal
-        view
-        virtual
-        returns (address) 
-    {
+    function buyer(address taker) internal view virtual returns (address) {
         if (orderType == OrderType.SellOrder) {
             return taker;
         } else if (orderType == OrderType.BuyOrder) {
@@ -210,12 +201,7 @@ contract Order {
     }
 
     /// @dev returns seller for offer with given taker
-    function seller(address taker) 
-        internal
-        view
-        virtual
-        returns (address) 
-    {
+    function seller(address taker) internal view virtual returns (address) {
         if (orderType == OrderType.SellOrder) {
             return maker;
         } else if (orderType == OrderType.BuyOrder) {
@@ -268,10 +254,9 @@ contract Order {
     /// @dev creates an offer
     function submitOffer(
         uint32 index,
-        uint32 quantity,
-        uint128 pricePerUnit,
-        uint128 costPerUnit,
-        uint128 sellerStakePerUnit,
+        uint128 price,
+        uint128 cost,
+        uint128 sellerStake,
         string memory uri
     ) external virtual onlyState(msg.sender, index, State.Closed) onlyActive {
         if (msg.sender == maker) {
@@ -280,21 +265,18 @@ contract Order {
 
         Offer storage offer = offers[msg.sender][index];
         offer.state = State.Open;
-        offer.pricePerUnit = pricePerUnit;
-        offer.costPerUnit = costPerUnit;
-        offer.sellerStakePerUnit = sellerStakePerUnit;
+        offer.price = price;
+        offer.cost = cost;
+        offer.sellerStake = sellerStake;
         offer.uri = uri;
-        offer.quantity = quantity;
 
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
             // This is a sell offer
-            transferAmount = sellerStakePerUnit * quantity;
+            transferAmount = sellerStake;
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
-            transferAmount =
-                (pricePerUnit + buyerStakePerUnit(offer)) *
-                quantity;
+            transferAmount = price + buyerStake(offer);
         }
 
         bool result = token.transferFrom(
@@ -304,15 +286,7 @@ contract Order {
         );
         require(result, 'Transfer failed');
 
-        emit OfferSubmitted(
-            msg.sender,
-            index,
-            quantity,
-            pricePerUnit,
-            costPerUnit,
-            sellerStakePerUnit,
-            uri
-        );
+        emit OfferSubmitted(msg.sender, index, price, cost, sellerStake, uri);
     }
 
     /// @dev allows a taker to withdraw a previous offer
@@ -326,12 +300,10 @@ contract Order {
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
             // This is a sell offer
-            transferAmount = offer.sellerStakePerUnit * offer.quantity;
+            transferAmount = offer.sellerStake;
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
-            transferAmount =
-                (offer.pricePerUnit + buyerStakePerUnit(offer)) *
-                offer.quantity;
+            transferAmount = offer.price + buyerStake(offer);
         }
 
         bool result = token.transfer(msg.sender, transferAmount);
@@ -345,8 +317,7 @@ contract Order {
             offer.uri,
             0,
             false,
-            false,
-            0
+            false
         );
 
         emit OfferWithdrawn(msg.sender, index);
@@ -367,11 +338,9 @@ contract Order {
 
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
-            transferAmount =
-                (offer.pricePerUnit + buyerStakePerUnit(offer)) *
-                offer.quantity;
+            transferAmount = offer.price + buyerStake(offer);
         } else if (orderType == OrderType.SellOrder) {
-            transferAmount = offer.sellerStakePerUnit * offer.quantity;
+            transferAmount = offer.sellerStake;
         }
 
         // Deposit the amount required to commit to the offer
@@ -423,15 +392,13 @@ contract Order {
             '',
             uint64(block.timestamp),
             false,
-            false,
-            0
+            false
         );
 
-        uint256 total = offer.pricePerUnit * offer.quantity;
-        uint256 toOrderBook = (total * IOrderBook(orderBook).fee()) /
+        uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
-        uint256 toSeller = total - toOrderBook + (offer.sellerStakePerUnit * offer.quantity);
-        uint256 toBuyer = buyerStakePerUnit(offer) * offer.quantity;
+        uint256 toSeller = offer.price - toOrderBook + offer.sellerStake;
+        uint256 toBuyer = buyerStake(offer);
 
         // Transfer payment to the buyer
         bool result0 = token.transfer(buyer(taker), toBuyer);
@@ -482,25 +449,21 @@ contract Order {
             '',
             uint64(block.timestamp),
             false,
-            false,
-            0
+            false
         );
 
         // Transfer the refund to the buyer
-        bool result0 = token.transfer(
-            buyer(taker),
-            refundPerUnit(offer) * offer.quantity
-        );
+        bool result0 = token.transfer(buyer(taker), refund(offer));
         assert(result0);
 
         // Transfers to address(dead)
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
             (
-                buyerStakePerUnit(offer) // buyer's stake
-                + offer.sellerStakePerUnit // seller's stake
-                + offer.pricePerUnit - refundPerUnit(offer) // non-refundable purchase amount
-            ) * offer.quantity
+                buyerStake(offer) + // buyer's stake
+                offer.sellerStake + // seller's stake
+                offer.price - refund(offer) // non-refundable purchase amount
+            ) 
         );
         assert(result1);
 
@@ -540,16 +503,12 @@ contract Order {
         // If both parties canceled, then return the stakes, and the payment to the buyer,
         // and set the offer to closed
         if (offer.makerCanceled && offer.takerCanceled) {
-            uint256 toBuyer = (offer.pricePerUnit +
-                buyerStakePerUnit(offer)) * offer.quantity;
-            uint256 toSeller = offer.sellerStakePerUnit * offer.quantity;
-
             // Transfer the buyer stake back to the buyer along with their payment
-            bool result0 = token.transfer(buyer(taker), toBuyer);
+            bool result0 = token.transfer(buyer(taker), offer.price + buyerStake(offer));
             assert(result0);
 
             // Transfer the seller stake back to the seller
-            bool result1 = token.transfer(seller(taker), toSeller);
+            bool result1 = token.transfer(seller(taker), offer.sellerStake);
             assert(result1);
 
             // Null out the offer
@@ -561,8 +520,7 @@ contract Order {
                 '',
                 uint64(block.timestamp),
                 false,
-                false,
-                0
+                false
             );
         }
 
