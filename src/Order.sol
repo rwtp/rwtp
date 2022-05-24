@@ -279,12 +279,14 @@ contract Order {
             transferAmount = price + buyerStake(offer);
         }
 
-        bool result = token.transferFrom(
-            msg.sender,
-            address(this),
-            transferAmount
-        );
-        require(result, 'Transfer failed');
+        if (transferAmount > 0) {
+            bool result = token.transferFrom(
+                msg.sender,
+                address(this),
+                transferAmount
+            );
+            require(result, 'Transfer failed');
+        }
 
         emit OfferSubmitted(msg.sender, index, price, cost, sellerStake, uri);
     }
@@ -306,8 +308,10 @@ contract Order {
             transferAmount = offer.price + buyerStake(offer);
         }
 
-        bool result = token.transfer(msg.sender, transferAmount);
-        assert(result);
+        if (transferAmount > 0) {
+            bool result = token.transfer(msg.sender, transferAmount);
+            assert(result);
+        }
 
         offers[msg.sender][index] = Offer(
             State.Closed,
@@ -347,12 +351,14 @@ contract Order {
         uint256 allowance = token.allowance(msg.sender, address(this));
         require(allowance >= transferAmount);
 
-        bool result = token.transferFrom(
-            msg.sender,
-            address(this),
-            transferAmount
-        );
-        assert(result);
+        if (transferAmount > 0) {
+            bool result = token.transferFrom(
+                msg.sender,
+                address(this),
+                transferAmount
+            );
+            assert(result);
+        }
 
         emit OfferCommitted(taker, index);
     }
@@ -401,19 +407,25 @@ contract Order {
         uint256 toBuyer = buyerStake(offer);
 
         // Transfer payment to the buyer
-        bool result0 = token.transfer(buyer(taker), toBuyer);
-        assert(result0);
+        if (toBuyer > 0) {
+            bool result0 = token.transfer(buyer(taker), toBuyer);
+            assert(result0);
+        }
 
         // Transfer payment to the seller
-        bool result1 = token.transfer(seller(taker), toSeller);
-        assert(result1);
+        if (toSeller > 0) {
+            bool result1 = token.transfer(seller(taker), toSeller);
+            assert(result1);
+        }
 
         // Transfer payment to the order book
-        bool result2 = token.transfer(
-            IOrderBook(orderBook).owner(),
-            toOrderBook
-        );
-        assert(result2);
+        if (toOrderBook > 0) {
+            bool result2 = token.transfer(
+                IOrderBook(orderBook).owner(),
+                toOrderBook
+            );
+            assert(result2);
+        }
 
         emit OfferConfirmed(taker, index);
     }
@@ -453,17 +465,18 @@ contract Order {
         );
 
         // Transfer the refund to the buyer
-        bool result0 = token.transfer(buyer(taker), refund(offer));
-        assert(result0);
+        if (refund(offer) > 0) {
+            bool result0 = token.transfer(buyer(taker), refund(offer));
+            assert(result0);
+        }
 
         // Transfers to address(dead)
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            (
-                buyerStake(offer) + // buyer's stake
+            (buyerStake(offer) + // buyer's stake
                 offer.sellerStake + // seller's stake
-                offer.price - refund(offer) // non-refundable purchase amount
-            ) 
+                offer.price -
+                refund(offer)) // non-refundable purchase amount
         );
         assert(result1);
 
@@ -504,12 +517,17 @@ contract Order {
         // and set the offer to closed
         if (offer.makerCanceled && offer.takerCanceled) {
             // Transfer the buyer stake back to the buyer along with their payment
-            bool result0 = token.transfer(buyer(taker), offer.price + buyerStake(offer));
+            bool result0 = token.transfer(
+                buyer(taker),
+                offer.price + buyerStake(offer)
+            );
             assert(result0);
 
             // Transfer the seller stake back to the seller
-            bool result1 = token.transfer(seller(taker), offer.sellerStake);
-            assert(result1);
+            if (offer.sellerStake > 0) {
+                bool result1 = token.transfer(seller(taker), offer.sellerStake);
+                assert(result1);
+            }
 
             // Null out the offer
             offers[taker][index] = Offer(
