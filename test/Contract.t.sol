@@ -628,4 +628,68 @@ contract SellOrderTest is Test {
         vm.warp(0);
         refundOffer(taker1, 0);
     }
+
+    function testRefundOfferFuzz(
+        uint32 index,
+        uint32 quantity,
+        uint128 pricePerUnit,
+        uint128 costPerUnit,
+        uint128 sellerStakePerUnit
+    )  public {
+        vm.assume(quantity < 10000000000000000000000000);
+        vm.assume(pricePerUnit < 10000000000000000000000000000);
+        vm.assume(costPerUnit < 10000000000000000000000000000);
+        vm.assume(sellerStakePerUnit < 10000000000000000000000000000);
+        uint128 transferAmount = pricePerUnit * quantity;
+        if (costPerUnit > pricePerUnit) {
+            transferAmount += (costPerUnit + pricePerUnit) * quantity;
+        }
+
+        token.mint(taker1, transferAmount);
+        vm.startPrank(taker1);
+        token.approve(address(sellOrder), transferAmount);
+        vm.stopPrank();
+        submitOffer(taker1, index, quantity, pricePerUnit, costPerUnit, sellerStakePerUnit);
+
+        uint128 makerStakeAmount = sellerStakePerUnit * quantity;
+        token.mint(maker, makerStakeAmount);
+        vm.startPrank(maker);
+        token.approve(address(sellOrder), makerStakeAmount);
+        vm.stopPrank();
+        commitOffer(taker1, index);
+
+        refundOffer(taker1, index);
+
+        (Order.State offerState, , , , , , , , ) = sellOrder.offers(taker1, index);
+        require(offerState == Order.State.Closed, 'incorrect offer state');
+    }
+
+    function testFailRefundOfferExpired() public {
+        vm.warp(0);
+        submitOfferBase(taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(sellOrder), 1);
+        vm.stopPrank();
+        commitOffer(taker1, 0);
+
+        vm.warp(110);
+        refundOffer(taker1, 0);
+    }
+
+    function testFailRefundOfferNotBuyer() public {
+        submitOfferBase(taker1);
+
+        token.mint(maker, 1);
+        vm.startPrank(maker);
+        token.approve(address(sellOrder), 1);
+        vm.stopPrank();
+        commitOffer(taker1, 0);
+
+        // Confirm to an offer from maker
+        vm.startPrank(taker2);
+        sellOrder.refund(taker1, 0);
+        vm.stopPrank();
+    }
 }
