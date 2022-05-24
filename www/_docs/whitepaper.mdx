@@ -10,7 +10,7 @@ RWTP is a peer-to-peer protocol for buying and selling physical goods in untrust
 
 To sell on Real World Trade Protocol, the seller puts down a deposit. If a buyer claims that the seller did not delivered the package, the seller will lose their deposit and the buyer will get their payment back. To prevent an untrusted buyer from abusing this power, the buyer agrees to a "cost" if they press the refund button. The amount the buyer is allowed to refund is calculated as $Refund=Payment-Cost$. If the cost is greater than the payment, then the buyer must put down a deposit as well; which they will lose if they reject the deal.
 
-## Understanding the Payoff Matrix
+### Understanding the Payoff Matrix
 
 - Let $C_b$ be the cost the buyer pays if the deal fails.
 - Let $C_s$ be the cost the seller pays if the deal fails. This is their deposit.
@@ -53,7 +53,11 @@ In this case, the buyer can still reject a failed offer if the seller flakes. If
 
 For example, say 1% of deals from this buyer are rejected, and 99% are confirmed. The expected value for the seller is $5*0.99 + -15 * 0.01 = 4.8$, so the seller should take this deal.
 
-## How does a buyer and seller figure out if the other is trustworthy?
+---
+
+## FAQ
+
+### How does a buyer and seller figure out if the other is trustworthy?
 
 RWTP is agnostic to the way a buyer and a seller determine each other's reputation. You could use the history of past deals, but this could be vulnerable to wash trading. Some potential solutions include:
 
