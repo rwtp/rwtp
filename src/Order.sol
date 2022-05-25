@@ -110,7 +110,7 @@ contract Order is Pausable {
         uint128 timeout;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
-        /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
+        /// @dev the block.timestamp in which commit() was called. 0 otherwise
         uint64 acceptedAt;
         /// @dev canceled by the maker
         bool makerCanceled;
@@ -174,7 +174,7 @@ contract Order is Pausable {
     }
 
     /// @dev returns buyer refund per unit for offer
-    function refund(Offer memory offer)
+    function _refund(Offer memory offer)
         internal
         view
         virtual
@@ -256,7 +256,9 @@ contract Order is Pausable {
 
     /// @dev reverts if msg.sender is not the maker or DAO
     modifier onlyMakerOrDAO() {
-        if (msg.sender != maker && msg.sender != IOrderBook(orderBook).owner()) {
+        if (
+            msg.sender != maker && msg.sender != IOrderBook(orderBook).owner()
+        ) {
             revert MustBeMakerOrDAO();
         }
 
@@ -502,8 +504,8 @@ contract Order is Pausable {
         );
 
         // Transfer the refund to the buyer
-        if (refund(offer) > 0) {
-            bool result0 = token.transfer(buyer(taker), refund(offer));
+        if (_refund(offer) > 0) {
+            bool result0 = token.transfer(buyer(taker), _refund(offer));
             assert(result0);
         }
 
@@ -513,7 +515,7 @@ contract Order is Pausable {
             (buyerStake(offer) + // buyer's stake
                 offer.sellerStake + // seller's stake
                 offer.price -
-                refund(offer)) // non-refundable purchase amount
+                _refund(offer)) // non-refundable purchase amount
         );
         assert(result1);
 
