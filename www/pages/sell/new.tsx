@@ -73,18 +73,19 @@ function NewOrder() {
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
 
-    const cid = await postJSONToIPFS({
-      offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
-      title: state.title,
-      description: state.description,
-      primaryImage: state.primaryImage,
-      encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
-      priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
-      stakeSuggested: toBn(
-        state.buyersStake.toString(),
-        decimals
-      ).toHexString(),
-    });
+    // const cid = await postJSONToIPFS({
+    //   offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
+    //   title: state.title,
+    //   description: state.description,
+    //   primaryImage: state.primaryImage,
+    //   encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
+    //   priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
+    //   stakeSuggested: toBn(
+    //     state.buyersStake.toString(),
+    //     decimals
+    //   ).toHexString(),
+    // });
+    const cid = "QmeyL7uvCCvt4PKECqiELT6UPVmy5zWRBsSSmxm8Foz2Gs";
 
     const tx = await book.writeAsync({
       args: [
