@@ -99,7 +99,6 @@ function NewOrder() {
     const tx = await book.writeAsync({
       args: [
         await signer.data.getAddress(),
-        erc20Address,
         `ipfs://${cid}`,
         false
       ],
