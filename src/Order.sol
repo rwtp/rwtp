@@ -31,6 +31,7 @@ contract Order is Pausable {
     event OfferSubmitted(
         address indexed taker,
         uint128 indexed index,
+        address token,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -66,9 +67,6 @@ contract Order is Pausable {
     /// @dev The order's URI changed
     event OrderURIChanged(string previous, string next);
 
-    /// @dev The token used for payment & staking, such as wETH, DAI, or USDC.
-    IERC20 public token;
-
     /// @dev The maker of this order book entry (as in, the "market maker")
     address public maker;
 
@@ -100,6 +98,8 @@ contract Order is Pausable {
     struct Offer {
         /// @dev the state of the offer
         State state;
+        /// @dev The token used for payment & staking, such as wETH, DAI, or USDC.
+        IERC20 token;
         /// @dev the amount the buyer will pay
         uint128 price;
         /// @dev the amount the buyer gets when refunded
@@ -134,13 +134,11 @@ contract Order is Pausable {
     /// @dev Creates a new sell order.
     constructor(
         address maker_,
-        IERC20 token_,
         string memory uri_,
         OrderType orderType_
     ) {
         orderBook = msg.sender;
         maker = maker_;
-        token = token_;
         _uri = uri_;
         active = true;
         orderType = orderType_;
@@ -277,6 +275,7 @@ contract Order is Pausable {
     /// @dev creates an offer
     function submitOffer(
         uint128 index,
+        IERC20 token,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -294,6 +293,7 @@ contract Order is Pausable {
 
         Offer storage offer = offers[msg.sender][index];
         offer.state = State.Open;
+        offer.token = token;
         offer.price = price;
         offer.buyersCost = buyersCost;
         offer.timeout = timeout;
@@ -318,7 +318,7 @@ contract Order is Pausable {
             require(result, 'Transfer failed');
         }
 
-        emit OfferSubmitted(msg.sender, index, price, buyersCost, sellerStake, timeout, uri);
+        emit OfferSubmitted(msg.sender, index, address(token), price, buyersCost, sellerStake, timeout, uri);
     }
 
     /// @dev allows a taker to withdraw a previous offer
@@ -340,13 +340,14 @@ contract Order is Pausable {
         }
 
         if (transferAmount > 0) {
-            bool result = token.transfer(msg.sender, transferAmount);
+            bool result = offer.token.transfer(msg.sender, transferAmount);
             assert(result);
         }
 
         offers[msg.sender][index] = Offer(
             State.Closed,
-            0,
+                IERC20(address(0)),
+                0,
             0,
             0,
             0,
@@ -381,11 +382,11 @@ contract Order is Pausable {
         }
 
         // Deposit the amount required to commit to the offer
-        uint256 allowance = token.allowance(msg.sender, address(this));
+        uint256 allowance = offer.token.allowance(msg.sender, address(this));
         require(allowance >= transferAmount);
 
         if (transferAmount > 0) {
-            bool result = token.transferFrom(
+            bool result = offer.token.transferFrom(
                 msg.sender,
                 address(this),
                 transferAmount
@@ -427,7 +428,8 @@ contract Order is Pausable {
         // Close the offer
         offers[taker][index] = Offer(
             State.Closed,
-            0,
+                IERC20(address(0)),
+                0,
             0,
             0,
             0,
@@ -444,19 +446,19 @@ contract Order is Pausable {
 
         // Transfer payment to the buyer
         if (toBuyer > 0) {
-            bool result0 = token.transfer(_buyer(taker), toBuyer);
+            bool result0 = offer.token.transfer(_buyer(taker), toBuyer);
             assert(result0);
         }
 
         // Transfer payment to the seller
         if (toSeller > 0) {
-            bool result1 = token.transfer(_seller(taker), toSeller);
+            bool result1 = offer.token.transfer(_seller(taker), toSeller);
             assert(result1);
         }
 
         // Transfer payment to the order book
         if (toOrderBook > 0) {
-            bool result2 = token.transfer(
+            bool result2 = offer.token.transfer(
                 IOrderBook(orderBook).owner(),
                 toOrderBook
             );
@@ -493,7 +495,8 @@ contract Order is Pausable {
         // Close the offer
         offers[taker][index] = Offer(
             State.Closed,
-            0,
+                IERC20(address(0)),
+                0,
             0,
             0,
             0,
@@ -505,12 +508,12 @@ contract Order is Pausable {
 
         // Transfer the refund to the buyer
         if (_refund(offer) > 0) {
-            bool result0 = token.transfer(_buyer(taker), _refund(offer));
+            bool result0 = offer.token.transfer(_buyer(taker), _refund(offer));
             assert(result0);
         }
 
         // Transfers to address(dead)
-        bool result1 = token.transfer(
+        bool result1 = offer.token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
             (_buyerStake(offer) + // buyer's stake
                 offer.sellerStake + // seller's stake
@@ -558,7 +561,7 @@ contract Order is Pausable {
         // and set the offer to closed
         if (offer.makerCanceled && offer.takerCanceled) {
             // Transfer the buyer stake back to the buyer along with their payment
-            bool result0 = token.transfer(
+            bool result0 = offer.token.transfer(
                 _buyer(taker),
                 offer.price + _buyerStake(offer)
             );
@@ -566,13 +569,14 @@ contract Order is Pausable {
 
             // Transfer the seller stake back to the seller
             if (offer.sellerStake > 0) {
-                bool result1 = token.transfer(_seller(taker), offer.sellerStake);
+                bool result1 = offer.token.transfer(_seller(taker), offer.sellerStake);
                 assert(result1);
             }
 
             // Null out the offer
             offers[taker][index] = Offer(
                 State.Closed,
+                IERC20(address(0)),
                 0,
                 0,
                 0,

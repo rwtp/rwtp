@@ -21,7 +21,6 @@ interface IOrderBook {
 
     function createOrder(
         address maker,
-        IERC20 token,
         string memory uri,
         bool isBuyOrder
     ) external returns (Order);

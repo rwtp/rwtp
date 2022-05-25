@@ -67,7 +67,6 @@ contract OrderBook is IOrderBook, Pausable {
     /// @dev Creates a new order that can be easily indexed by something like theGraph.
     function createOrder(
         address maker,
-        IERC20 token,
         string memory uri,
         bool isBuyOrder
     ) external whenNotPaused returns (Order) {
@@ -77,7 +76,7 @@ contract OrderBook is IOrderBook, Pausable {
         } else {
             orderType = Order.OrderType.SellOrder;
         }
-        Order order = new Order(maker, token, uri, orderType);
+        Order order = new Order(maker, uri, orderType);
         emit OrderCreated(address(order));
         orders[address(order)] = true;
         return order;
