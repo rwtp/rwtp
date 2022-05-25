@@ -32,7 +32,7 @@ contract Order is Pausable {
         address indexed taker,
         uint32 indexed index,
         uint128 price,
-        uint128 cost,
+        uint128 buyersCost,
         uint128 sellerStake,
         string uri
     );
@@ -105,7 +105,7 @@ contract Order is Pausable {
         /// @dev the amount the buyer will pay
         uint128 price;
         /// @dev the amount the buyer gets when refunded
-        uint128 cost;
+        uint128 buyersCost;
         /// @dev the amount the seller is willing to stake
         uint128 sellerStake;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
@@ -182,8 +182,8 @@ contract Order is Pausable {
         virtual
         returns (uint256)
     {
-        if (offer.price > offer.cost) {
-            return offer.price - offer.cost;
+        if (offer.price > offer.buyersCost) {
+            return offer.price - offer.buyersCost;
         } else {
             return 0;
         }
@@ -196,8 +196,8 @@ contract Order is Pausable {
         virtual
         returns (uint256)
     {
-        if (offer.cost > offer.price) {
-            return offer.cost - offer.price;
+        if (offer.buyersCost > offer.price) {
+            return offer.buyersCost - offer.price;
         } else {
             return 0;
         }
@@ -278,7 +278,7 @@ contract Order is Pausable {
     function submitOffer(
         uint32 index,
         uint128 price,
-        uint128 cost,
+        uint128 buyersCost,
         uint128 sellerStake,
         string memory uri
     )
@@ -294,7 +294,7 @@ contract Order is Pausable {
         Offer storage offer = offers[msg.sender][index];
         offer.state = State.Open;
         offer.price = price;
-        offer.cost = cost;
+        offer.buyersCost = buyersCost;
         offer.sellerStake = sellerStake;
         offer.uri = uri;
 
@@ -316,7 +316,7 @@ contract Order is Pausable {
             require(result, 'Transfer failed');
         }
 
-        emit OfferSubmitted(msg.sender, index, price, cost, sellerStake, uri);
+        emit OfferSubmitted(msg.sender, index, price, buyersCost, sellerStake, uri);
     }
 
     /// @dev allows a taker to withdraw a previous offer
