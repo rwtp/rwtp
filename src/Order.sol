@@ -34,6 +34,7 @@ contract Order is Pausable {
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
+        uint128 timeout,
         string uri
     );
 
@@ -315,7 +316,7 @@ contract Order is Pausable {
             require(result, 'Transfer failed');
         }
 
-        emit OfferSubmitted(msg.sender, index, price, buyersCost, sellerStake, uri);
+        emit OfferSubmitted(msg.sender, index, price, buyersCost, sellerStake, timeout, uri);
     }
 
     /// @dev allows a taker to withdraw a previous offer
