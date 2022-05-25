@@ -71,9 +71,6 @@ contract Order is Pausable {
     /// @dev The maker of this order book entry (as in, the "market maker")
     address public maker;
 
-    /// @dev the maximum delivery time before the order can said to have failed.
-    uint256 public timeout;
-
     /// @dev order book
     address public orderBook;
 
@@ -108,6 +105,8 @@ contract Order is Pausable {
         uint128 buyersCost;
         /// @dev the amount the seller is willing to stake
         uint128 sellerStake;
+        /// @dev the maximum delivery time before the order can said to have failed.
+        uint128 timeout;
         /// @dev the uri of metadata that can contain shipping information (typically encrypted)
         string uri;
         /// @dev the block.timestamp in which acceptOffer() was called. 0 otherwise
@@ -136,14 +135,12 @@ contract Order is Pausable {
         address maker_,
         IERC20 token_,
         string memory uri_,
-        uint256 timeout_,
         OrderType orderType_
     ) {
         orderBook = msg.sender;
         maker = maker_;
         token = token_;
         _uri = uri_;
-        timeout = timeout_;
         active = true;
         orderType = orderType_;
     }
@@ -280,6 +277,7 @@ contract Order is Pausable {
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
+        uint128 timeout,
         string memory uri
     )
         external
@@ -295,6 +293,7 @@ contract Order is Pausable {
         offer.state = State.Open;
         offer.price = price;
         offer.buyersCost = buyersCost;
+        offer.timeout = timeout;
         offer.sellerStake = sellerStake;
         offer.uri = uri;
 
@@ -344,6 +343,7 @@ contract Order is Pausable {
 
         offers[msg.sender][index] = Offer(
             State.Closed,
+            0,
             0,
             0,
             0,
@@ -415,7 +415,7 @@ contract Order is Pausable {
         Offer memory offer = offers[taker][index];
 
         // Only buyer can confirm before timeout
-        if (block.timestamp < timeout + offer.acceptedAt) {
+        if (block.timestamp < offer.timeout + offer.acceptedAt) {
             if (msg.sender != buyer(taker)) {
                 revert MustBeBuyer();
             }
@@ -424,6 +424,7 @@ contract Order is Pausable {
         // Close the offer
         offers[taker][index] = Offer(
             State.Closed,
+            0,
             0,
             0,
             0,
@@ -482,13 +483,14 @@ contract Order is Pausable {
         onlyBuyer(taker)
     {
         Offer memory offer = offers[taker][index];
-        if (block.timestamp > timeout + offer.acceptedAt) {
+        if (block.timestamp > offer.timeout + offer.acceptedAt) {
             revert TimeoutExpired();
         }
 
         // Close the offer
         offers[taker][index] = Offer(
             State.Closed,
+            0,
             0,
             0,
             0,
@@ -568,6 +570,7 @@ contract Order is Pausable {
             // Null out the offer
             offers[taker][index] = Offer(
                 State.Closed,
+                0,
                 0,
                 0,
                 0,

@@ -69,7 +69,6 @@ contract OrderBook is IOrderBook, Pausable {
         address maker,
         IERC20 token,
         string memory uri,
-        uint256 timeout,
         bool isBuyOrder
     ) external whenNotPaused returns (Order) {
         Order.OrderType orderType;
@@ -78,7 +77,7 @@ contract OrderBook is IOrderBook, Pausable {
         } else {
             orderType = Order.OrderType.SellOrder;
         }
-        Order order = new Order(maker, token, uri, timeout, orderType);
+        Order order = new Order(maker, token, uri, orderType);
         emit OrderCreated(address(order));
         orders[address(order)] = true;
         return order;

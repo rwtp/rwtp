@@ -23,7 +23,6 @@ interface IOrderBook {
         address maker,
         IERC20 token,
         string memory uri,
-        uint256 timeout,
         bool isBuyOrder
     ) external returns (Order);
 }
