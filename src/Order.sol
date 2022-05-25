@@ -30,7 +30,7 @@ contract Order is Pausable {
     /// @dev Emitted when `taker` submits an offer.
     event OfferSubmitted(
         address indexed taker,
-        uint32 indexed index,
+        uint128 indexed index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -39,16 +39,16 @@ contract Order is Pausable {
     );
 
     /// @dev Emitted when `taker` withdrew an offer.
-    event OfferWithdrawn(address indexed taker, uint32 indexed index);
+    event OfferWithdrawn(address indexed taker, uint128 indexed index);
 
     /// @dev Emitted when `taker`'s offer was committed too.
-    event OfferCommitted(address indexed taker, uint32 indexed index);
+    event OfferCommitted(address indexed taker, uint128 indexed index);
 
     /// @dev Emitted when `taker` confirmed an offer was completed.
-    event OfferConfirmed(address indexed taker, uint32 indexed index);
+    event OfferConfirmed(address indexed taker, uint128 indexed index);
 
     /// @dev Emitted when an offer was refunded.
-    event OfferRefunded(address indexed taker, uint32 indexed index);
+    event OfferRefunded(address indexed taker, uint128 indexed index);
 
     /// @dev Emitted when `maker` sets the order active or inactive.
     event ActiveToggled(bool active);
@@ -58,7 +58,7 @@ contract Order is Pausable {
     ///      true.
     event OfferCanceled(
         address indexed taker,
-        uint32 indexed index,
+        uint128 indexed index,
         bool makerCanceled,
         bool takerCanceled
     );
@@ -119,14 +119,14 @@ contract Order is Pausable {
     }
 
     /// @dev A mapping of potential offers to the amount of tokens they are willing to stake
-    ///     a "uint32" here means you can have 2^32 open offers from any given address.
-    ///     uint32 was chosen over uint8 to support the use case of a program that's buying
+    ///     a "uint128" here means you can have 2^32 open offers from any given address.
+    ///     uint128 was chosen over uint8 to support the use case of a program that's buying
     ///     on behalf of a large number of users.
     ///
     ///     If, for some reason, ~2 billion open offers does not support your use case, you
     ///     could just create another address for your additonal takers (shard), implement a
     ///     queue, or we could just release a new version.
-    mapping(address => mapping(uint32 => Offer)) public offers;
+    mapping(address => mapping(uint128 => Offer)) public offers;
 
     /// @dev The denominator of parts per million
     uint256 constant ONE_MILLION = 1000000;
@@ -188,7 +188,7 @@ contract Order is Pausable {
     }
 
     /// @dev returns buyer stake per unit for offer
-    function buyerStake(Offer memory offer)
+    function _buyerStake(Offer memory offer)
         internal
         view
         virtual
@@ -202,7 +202,7 @@ contract Order is Pausable {
     }
 
     /// @dev returns buyer for offer with given taker
-    function buyer(address taker) internal view virtual returns (address) {
+    function _buyer(address taker) internal view virtual returns (address) {
         if (orderType == OrderType.SellOrder) {
             return taker;
         } else if (orderType == OrderType.BuyOrder) {
@@ -213,7 +213,7 @@ contract Order is Pausable {
     }
 
     /// @dev returns seller for offer with given taker
-    function seller(address taker) internal view virtual returns (address) {
+    function _seller(address taker) internal view virtual returns (address) {
         if (orderType == OrderType.SellOrder) {
             return maker;
         } else if (orderType == OrderType.BuyOrder) {
@@ -226,7 +226,7 @@ contract Order is Pausable {
     /// @dev reverts if the function is not at the expected state
     modifier onlyState(
         address taker,
-        uint32 index,
+        uint128 index,
         State expected
     ) {
         if (offers[taker][index].state != expected) {
@@ -238,7 +238,7 @@ contract Order is Pausable {
 
     // @dev reverts if msg.sender is not the buyer
     modifier onlyBuyer(address taker) {
-        if (msg.sender != buyer(taker)) {
+        if (msg.sender != _buyer(taker)) {
             revert MustBeBuyer();
         }
 
@@ -276,7 +276,7 @@ contract Order is Pausable {
 
     /// @dev creates an offer
     function submitOffer(
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -306,7 +306,7 @@ contract Order is Pausable {
             transferAmount = sellerStake;
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
-            transferAmount = price + buyerStake(offer);
+            transferAmount = price + _buyerStake(offer);
         }
 
         if (transferAmount > 0) {
@@ -322,7 +322,7 @@ contract Order is Pausable {
     }
 
     /// @dev allows a taker to withdraw a previous offer
-    function withdrawOffer(uint32 index)
+    function withdrawOffer(uint128 index)
         external
         virtual
         onlyOrderAndBookUnpaused
@@ -336,7 +336,7 @@ contract Order is Pausable {
             transferAmount = offer.sellerStake;
         } else if (orderType == OrderType.SellOrder) {
             // This is a buy offer
-            transferAmount = offer.price + buyerStake(offer);
+            transferAmount = offer.price + _buyerStake(offer);
         }
 
         if (transferAmount > 0) {
@@ -360,7 +360,7 @@ contract Order is Pausable {
     }
 
     /// @dev Commits a maker to an offer
-    function commit(address taker, uint32 index)
+    function commit(address taker, uint128 index)
         public
         virtual
         onlyOrderAndBookUnpaused
@@ -375,7 +375,7 @@ contract Order is Pausable {
 
         uint256 transferAmount;
         if (orderType == OrderType.BuyOrder) {
-            transferAmount = offer.price + buyerStake(offer);
+            transferAmount = offer.price + _buyerStake(offer);
         } else if (orderType == OrderType.SellOrder) {
             transferAmount = offer.sellerStake;
         }
@@ -397,7 +397,7 @@ contract Order is Pausable {
     }
 
     /// @dev Marks all provided offers as committed
-    function commitBatch(address[] calldata takers, uint32[] calldata indices)
+    function commitBatch(address[] calldata takers, uint128[] calldata indices)
         external
         virtual
         onlyOrderAndBookUnpaused
@@ -409,7 +409,7 @@ contract Order is Pausable {
     }
 
     /// @dev Marks the order as sucessfully completed, and transfers the tokens.
-    function confirm(address taker, uint32 index)
+    function confirm(address taker, uint128 index)
         public
         virtual
         onlyOrderAndBookUnpaused
@@ -419,7 +419,7 @@ contract Order is Pausable {
 
         // Only buyer can confirm before timeout
         if (block.timestamp < offer.timeout + offer.acceptedAt) {
-            if (msg.sender != buyer(taker)) {
+            if (msg.sender != _buyer(taker)) {
                 revert MustBeBuyer();
             }
         }
@@ -440,17 +440,17 @@ contract Order is Pausable {
         uint256 toOrderBook = (offer.price * IOrderBook(orderBook).fee()) /
             ONE_MILLION;
         uint256 toSeller = offer.price - toOrderBook + offer.sellerStake;
-        uint256 toBuyer = buyerStake(offer);
+        uint256 toBuyer = _buyerStake(offer);
 
         // Transfer payment to the buyer
         if (toBuyer > 0) {
-            bool result0 = token.transfer(buyer(taker), toBuyer);
+            bool result0 = token.transfer(_buyer(taker), toBuyer);
             assert(result0);
         }
 
         // Transfer payment to the seller
         if (toSeller > 0) {
-            bool result1 = token.transfer(seller(taker), toSeller);
+            bool result1 = token.transfer(_seller(taker), toSeller);
             assert(result1);
         }
 
@@ -467,7 +467,7 @@ contract Order is Pausable {
     }
 
     /// @dev Marks all provided offers as completed
-    function confirmBatch(address[] calldata takers, uint32[] calldata indices)
+    function confirmBatch(address[] calldata takers, uint128[] calldata indices)
         external
         virtual
         onlyOrderAndBookUnpaused
@@ -478,7 +478,7 @@ contract Order is Pausable {
     }
 
     /// @dev Allows the buyer to refund an offer.
-    function refund(address taker, uint32 index)
+    function refund(address taker, uint128 index)
         public
         virtual
         onlyOrderAndBookUnpaused
@@ -505,14 +505,14 @@ contract Order is Pausable {
 
         // Transfer the refund to the buyer
         if (_refund(offer) > 0) {
-            bool result0 = token.transfer(buyer(taker), _refund(offer));
+            bool result0 = token.transfer(_buyer(taker), _refund(offer));
             assert(result0);
         }
 
         // Transfers to address(dead)
         bool result1 = token.transfer(
             address(0x000000000000000000000000000000000000dEaD),
-            (buyerStake(offer) + // buyer's stake
+            (_buyerStake(offer) + // buyer's stake
                 offer.sellerStake + // seller's stake
                 offer.price -
                 _refund(offer)) // non-refundable purchase amount
@@ -523,7 +523,7 @@ contract Order is Pausable {
     }
 
     /// @dev Refunds all provided offers
-    function refundBatch(address[] calldata takers, uint32[] calldata indices)
+    function refundBatch(address[] calldata takers, uint128[] calldata indices)
         external
         virtual
         onlyOrderAndBookUnpaused
@@ -536,7 +536,7 @@ contract Order is Pausable {
 
     /// @dev Allows either the taker or the maker to cancel the offer.
     ///      Only a committed offer can be canceled
-    function cancel(address taker, uint32 index)
+    function cancel(address taker, uint128 index)
         public
         virtual
         onlyOrderAndBookUnpaused
@@ -559,14 +559,14 @@ contract Order is Pausable {
         if (offer.makerCanceled && offer.takerCanceled) {
             // Transfer the buyer stake back to the buyer along with their payment
             bool result0 = token.transfer(
-                buyer(taker),
-                offer.price + buyerStake(offer)
+                _buyer(taker),
+                offer.price + _buyerStake(offer)
             );
             assert(result0);
 
             // Transfer the seller stake back to the seller
             if (offer.sellerStake > 0) {
-                bool result1 = token.transfer(seller(taker), offer.sellerStake);
+                bool result1 = token.transfer(_seller(taker), offer.sellerStake);
                 assert(result1);
             }
 
@@ -593,7 +593,7 @@ contract Order is Pausable {
     }
 
     /// @dev Cancels all provided offers
-    function cancelBatch(address[] calldata takers, uint32[] calldata indices)
+    function cancelBatch(address[] calldata takers, uint128[] calldata indices)
         external
         virtual
         onlyOrderAndBookUnpaused

@@ -76,7 +76,7 @@ contract OrderTest is Test {
     function submitOffer(
         Order order,
         address taker,
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -127,7 +127,7 @@ contract OrderTest is Test {
 
     function testSubmitOfferFuzz(
         bool isBuyOrder,
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -148,7 +148,7 @@ contract OrderTest is Test {
     }
 
     function submitOfferBase(Order order, address taker) public {
-        uint32 index = 0;
+        uint128 index = 0;
         uint128 price = 1;
         uint128 buyersCost = 1;
         uint128 sellerStake = 1;
@@ -168,7 +168,7 @@ contract OrderTest is Test {
     }
 
     function testFailSubmitOfferLacksToken() public {
-        uint32 index = 0;
+        uint128 index = 0;
         uint128 price = 1;
         uint128 buyersCost = 1;
         uint128 sellerStake = 1;
@@ -254,7 +254,7 @@ contract OrderTest is Test {
 
     function testWithdrawOfferFuzz(
         bool isBuyOrder,
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -341,7 +341,7 @@ contract OrderTest is Test {
         vm.stopPrank();
     }
 
-    function commitOffer(Order order, address taker, uint32 index) public {
+    function commitOffer(Order order, address taker, uint128 index) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 orderStartBalance = token.balanceOf(address(order));
@@ -395,7 +395,7 @@ contract OrderTest is Test {
 
     function testCommitOfferFuzz(
         bool isBuyOrder,
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -485,7 +485,7 @@ contract OrderTest is Test {
 
         // Commit to an offer from maker
         address[] memory takers = new address[](2);
-        uint32[] memory indicies = new uint32[](2);
+        uint128[] memory indicies = new uint128[](2);
         takers[0] = taker1;
         indicies[0] = 0;
         takers[1] = taker2;
@@ -511,7 +511,7 @@ contract OrderTest is Test {
         Order order,
         address taker,
         address from,
-        uint32 index
+        uint128 index
     ) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
@@ -643,7 +643,7 @@ contract OrderTest is Test {
 
         vm.warp(110);
         address[] memory takers = new address[](2);
-        uint32[] memory indicies = new uint32[](2);
+        uint128[] memory indicies = new uint128[](2);
         takers[0] = taker1;
         indicies[0] = 0;
         takers[1] = taker2;
@@ -655,7 +655,7 @@ contract OrderTest is Test {
 
     function testConfirmOfferFuzz(
         bool isBuyOrder,
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -695,7 +695,7 @@ contract OrderTest is Test {
         confirmOffer(order, taker1, taker1, 0);
     }
 
-    function refundOffer(Order order, address taker, address from, uint32 index) public {
+    function refundOffer(Order order, address taker, address from, uint128 index) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 takerStartBalance = token.balanceOf(taker);
@@ -759,7 +759,7 @@ contract OrderTest is Test {
 
     function testRefundOfferFuzz(
         bool isBuyOrder,
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
@@ -848,7 +848,7 @@ contract OrderTest is Test {
         Order order,
         address taker,
         address from,
-        uint32 index
+        uint128 index
     ) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
@@ -930,7 +930,7 @@ contract OrderTest is Test {
 
     function testCancelOfferFuzz(
         bool isBuyOrder,
-        uint32 index,
+        uint128 index,
         uint128 price,
         uint128 buyersCost,
         uint128 sellerStake,
