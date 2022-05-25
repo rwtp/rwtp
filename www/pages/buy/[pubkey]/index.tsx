@@ -71,9 +71,9 @@ function Offer(props: {
             <div className="text-lg font-mono">
               {fromBn(
                 BigNumber.from(props.offer.price),
-                props.order.token.decimals
+                props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.order.token.symbol}</span>
+              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
           <div className="flex-1">
@@ -82,9 +82,9 @@ function Offer(props: {
             <div className="text-lg font-mono">
               {fromBn(
                 BigNumber.from(props.offer.buyersCost),
-                props.order.token.decimals
+                props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.order.token.symbol}</span>
+              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
           <div className="flex-1">
@@ -92,9 +92,9 @@ function Offer(props: {
             <div className="text-lg font-mono">
               {fromBn(
                 BigNumber.from(props.offer.sellersStake),
-                props.order.token.decimals
+                props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.order.token.symbol}</span>
+              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
         </div>
@@ -144,10 +144,7 @@ function Offer(props: {
 }
 
 function OrderPage({ order }: { order: OrderData }) {
-  const tokenMethods = useTokenMethods(order.token.address);
-  const orderMethods = useOrderMethods(order.address);
   const offers = useOrderOffers(order.address);
-
   const methods = useOrderMethods(order.address);
 
   async function onConfirm(index: string) {

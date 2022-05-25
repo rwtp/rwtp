@@ -9,8 +9,8 @@ import {
 } from '../../../lib/useOrder';
 import { useTokenMethods } from '../../../lib/tokens';
 import { postToIPFS } from '../../../lib/ipfs';
-import { fromBn, toBn } from 'evm-bn';
-import { ArrowLeftIcon, FingerPrintIcon } from '@heroicons/react/solid';
+import { fromBn } from 'evm-bn';
+import { ArrowLeftIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
 import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
@@ -113,8 +113,8 @@ function BuyPage({ order }: { order: OrderData }) {
                   {order.title}
                 </h1>
                 <p className="pb-2 text-xl mt-2">
-                  {fromBn(price, order.token.decimals)}{' '}
-                  {order.token.symbol}
+                  {fromBn(price, order.tokensSuggested[0].decimals)}{' '}
+                  {order.tokensSuggested[0].symbol}
                 </p>
 
                 <div className="flex mb-2 pt-12 ">
@@ -131,15 +131,15 @@ function BuyPage({ order }: { order: OrderData }) {
                     schema={order.offerSchema}
                     setOfferData={setOfferData}
                     offerData={offerData}
-                    price={fromBn(price, order.token.decimals)}
+                    price={fromBn(price, order.tokensSuggested[0].decimals)}
                     onSubmit={onBuy}
-                    symbol={order.token.symbol} /> :
+                    symbol={order.tokensSuggested[0].symbol} /> :
                   <SimpleOfferForm
                     setOfferData={setOfferData}
                     offerData={offerData}
-                    price={fromBn(price, order.token.decimals)}
+                    price={fromBn(price, order.tokensSuggested[0].decimals)}
                     onSubmit={onBuy}
-                    symbol={order.token.symbol} />
+                    symbol={order.tokensSuggested[0].symbol} />
               }
             </div>
           </div>

@@ -57,7 +57,7 @@ function Results(props: { searchText: string }) {
             sellersStake: +order.sellersStake,
             buyersStake: +order.stakeSuggested,
             price: +order.priceSuggested,
-            token: order.token.address,
+            token: order.tokensSuggested[0].address,
             encryptionPublicKey: '',
           }}
         />
