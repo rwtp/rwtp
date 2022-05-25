@@ -228,9 +228,10 @@ function Offers() {
     return <div className="text-gray-500">There are no open offers.</div>;
   }
 
+  
   let offers: Array<OfferData> = new Array<OfferData>();
   for (const order of orders.data) {
-    offers.concat(order.offers);
+    offers = offers.concat(order.offers);
   }
   
   const allOffers = offers.map((o: OfferData) => {
