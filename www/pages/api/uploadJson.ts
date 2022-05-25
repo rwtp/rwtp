@@ -18,33 +18,38 @@ export default async function handler(
 ) {
   const body = req.body as Body;
 
-  const projectId = "29IXS0LrC2gnQjhwcwIGDX9r4qb";//process.env.INFURA_IPFS_PROJECT_ID;
-  const projectSecret = "6f3ec384f3e4f14b83f713c55b8e75bb";//process.env.INFURA_IPFS_PROJECT_SECRET;
+  const projectId = process.env.INFURA_IPFS_PROJECT_ID;
+  const projectSecret = process.env.INFURA_IPFS_PROJECT_SECRET;
   const auth =
     'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 
-  const client = create({
-      host: 'ipfs.infura.io',
-      port: 5001,
-      protocol: 'https',
-      headers: {
-          authorization: auth,
-      },
+  console.log("uploading to infura ipfs node");
+  const ipfs = create({
+    host: 'ipfs.infura.io',
+    port: 5001,
+    protocol: 'https',
+    headers: {
+      authorization: auth,
+    },
   });
 
-  client.add('Hello World').then((res) => {
-      console.log(res);
+  let input;
+  if (typeof body.data == 'string') {
+    input = body.data;
+  } else {
+    input = JSON.stringify(body.data);
+  }
+  const addResult = await ipfs.add(input);
+
+  console.log("uploading to the graph ipfs node");
+  const graphIpfs = create({
+    host: 'api.thegraph.com',
+    apiPath: 'ipfs/api/v0',
+    protocol: 'https',
+    port: 443,
   });
+  const graphIpfsResult = await graphIpfs.add(input);
+  console.log("uploaded to the graph ipfs node {}", graphIpfsResult);
 
-  // console.log("uploading to the graph ipfs node");
-  // const graphIpfs = create({
-  //   host: 'api.thegraph.com',
-  //   apiPath: 'ipfs/api/v0',
-  //   protocol: 'https',
-  //   port: 443,
-  // });
-  // const graphIpfsResult = await graphIpfs.add(input);
-  // console.log("uploaded to the graph ipfs node {}", graphIpfsResult);
-
-  res.status(200).json({ cid: ""});//addResult.cid.toString() });
+  res.status(200).json({ cid: addResult.cid.toString() });
 }
