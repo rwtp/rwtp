@@ -19,6 +19,7 @@ import dayjs from 'dayjs';
 import { OfferData, useAllOrderOffers } from '../../lib/useOrder';
 import nacl from 'tweetnacl';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
+import { RequiresKeystore, useKeystore } from '../../lib/keystore';
 
 function Spinner(props: { className?: string }) {
   return (
@@ -46,10 +47,28 @@ function Spinner(props: { className?: string }) {
 }
 
 function Offer(props: { offer: OfferData }) {
-  const o = props.offer;
-
+  const account = useAccount();
+  const sellersEncryptionKeypair = useEncryptionKeypair();
   const signer = useSigner();
   const [isLoading, setIsLoading] = useState(false);
+  const [decryptedMessage, setDecryptedMessage] = useState('');
+  const o = props.offer;
+
+  useEffect(() => {
+    if (sellersEncryptionKeypair) {
+      try {
+        const decrypted = nacl.box.open(
+          Buffer.from(o.message, 'hex'),
+          Buffer.from(o.messageNonce, 'hex'),
+          Buffer.from(o.messagePublicKey, 'hex'),
+          sellersEncryptionKeypair.secretKey
+        );
+        setDecryptedMessage(Buffer.from(decrypted!).toString());
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  });
 
   async function onApprove(o: OfferData) {
     if (!signer || !signer.data) return;
@@ -183,12 +202,13 @@ function Offer(props: { offer: OfferData }) {
             </div>
           </div>
         </div>
-        {/* <div className='p-4'>
-          <div className="text-gray-500 text-xs">Offer Data</div>
-          {o.message}
-          {o.messageNonce}
-          {o.messagePublicKey}
-        </div> */}
+        {decryptedMessage && <div className='p-4'>
+          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data</div>
+          <div className='font-mono text-base bg-gray-100 p-4'>
+            {decryptedMessage}
+          </div>
+        </div>
+        }
       </div>
     </FadeIn>
   );
@@ -196,8 +216,6 @@ function Offer(props: { offer: OfferData }) {
 
 function Offers() {
   const account = useAccount();
-  const sellersEncryptionKeypair = useEncryptionKeypair();
-
   const orders = useAllOrderOffers(account.data?.address || '');
 
   if (orders.error) {
@@ -217,30 +235,6 @@ function Offers() {
   for (const order of orders.data) {
     offers = offers.concat(order.offers);
   }
-
-  // Decrypt offer data
-  if (sellersEncryptionKeypair) {
-    for (const offer of offers) {
-      const message = Buffer.from(offer.message, 'hex');
-      const messageNonce = Buffer.from(offer.messageNonce, 'hex');
-      let messagePublicKey = Buffer.from(offer.messagePublicKey, 'hex');
-      if (messagePublicKey.length == 0) {
-        messagePublicKey = Buffer.from(sellersEncryptionKeypair.publicKey);
-      }
-      const decrypted = nacl.box.open(
-        message, 
-        messageNonce, 
-        messagePublicKey, 
-        sellersEncryptionKeypair.secretKey
-      );
-      if (decrypted) {
-        console.log(Buffer.from(decrypted).toString());
-      } else {
-        console.log("Decryption failed");
-      }
-    }
-  }
-  
   const allOffers = offers.map((o: OfferData) => {
     return <Offer key={`${o.index}${o.taker}${o.acceptedAt}`} offer={o} />;
   });
@@ -250,31 +244,34 @@ function Offers() {
 
 export default function Page() {
   return (
-    <ConnectWalletLayout requireConnected={false}>
-      <div className="h-full flex flex-col">
-        <Suspense fallback={<div></div>}>
-          <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
-            <div className="pb-8">
-              <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
-              <p className="pb-4">Learn more about Sell Orders.</p>
-              <div className="flex">
-                <Link href="/sell/new">
-                  <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
-                    New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
-                  </a>
-                </Link>
+    <RequiresKeystore>
+      <ConnectWalletLayout requireConnected={false}>
+        <div className="h-full flex flex-col">
+          <Suspense fallback={<div></div>}>
+            <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
+              <div className="pb-8">
+                <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
+                <p className="pb-4">Learn more about Sell Orders.</p>
+                <div className="flex">
+                  <Link href="/sell/new">
+                    <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
+                      New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
+                    </a>
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex-1 bg-gray-50 border-t">
-            <div className="max-w-6xl mx-auto p-4">
-              <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
-              <Offers />
+            <div className="flex-1 bg-gray-50 border-t">
+              <div className="max-w-6xl mx-auto p-4">
+                <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
+
+                <Offers />
+              </div>
             </div>
-          </div>
-        </Suspense>
-        <Footer />
-      </div>
-    </ConnectWalletLayout>
+          </Suspense>
+          <Footer />
+        </div>
+      </ConnectWalletLayout>
+    </RequiresKeystore>
   );
 }
