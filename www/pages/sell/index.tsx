@@ -47,7 +47,6 @@ function Spinner(props: { className?: string }) {
 }
 
 function Offer(props: { offer: OfferData }) {
-  const account = useAccount();
   const sellersEncryptionKeypair = useEncryptionKeypair();
   const signer = useSigner();
   const [isLoading, setIsLoading] = useState(false);
@@ -207,6 +206,10 @@ function Offer(props: { offer: OfferData }) {
           <div className='font-mono text-base bg-gray-100 p-4'>
             {decryptedMessage}
           </div>
+        </div>
+        }
+        {!decryptedMessage && <div className='p-4'>
+          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data Unavailable</div>
         </div>
         }
       </div>
