@@ -66,7 +66,7 @@ function BuyPage({ order }: { order: OrderData }) {
     await approveTx.wait();
 
     const tx = await orderMethods.submitOffer.writeAsync({
-      args: [0, quantity, price, stake, 'ipfs://' + cid],
+      args: [BigNumber.from(0), price, stake, stake, BigNumber.from(0), 'ipfs://' + cid],
       overrides: {
         gasLimit: 1000000,
       },
@@ -74,6 +74,16 @@ function BuyPage({ order }: { order: OrderData }) {
 
     await tx.wait();
     router.push(`/buy/${order.address}`);
+  }
+
+  let imageComponent = <Image width={256} height={256} src="/rwtp.png" />;
+  if (order.primaryImage && order.primaryImage.length > 0) {
+    if (order.primaryImage.startsWith("https://") || order.primaryImage.startsWith("http://")) {
+      imageComponent = <img className='w-52' src={order.primaryImage} />
+    } else if (order.primaryImage.startsWith("ipfs://")) {
+      const imageUri = order.primaryImage.replace("ipfs://", "https://ipfs.infura.io/ipfs/");
+      imageComponent = <img className='w-52' src={imageUri} />
+    }
   }
 
   return (
@@ -103,7 +113,7 @@ function BuyPage({ order }: { order: OrderData }) {
 
                 <div className="flex mb-2 pt-12 ">
                   <div className="border rounded bg-white">
-                    <Image width={256} height={256} src="/rwtp.png" />
+                   {imageComponent}
                   </div>
                 </div>
               </div>

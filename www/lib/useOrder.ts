@@ -292,7 +292,7 @@ export function useOrderOffers(order: string) {
   };
 }
 
-export function useAllOrderOffers(seller: string) {
+export function useAllOrderOffers(maker: string) {
   const metadata = useSubgraph<{
     orders: Array<
       OrderData & {
@@ -311,7 +311,7 @@ export function useAllOrderOffers(seller: string) {
     }
   `,
     {
-      seller,
+      maker,
     },
   ]);
 

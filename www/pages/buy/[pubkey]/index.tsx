@@ -1,40 +1,54 @@
 import {
   ArrowRightIcon,
   CheckCircleIcon,
-  ChevronRightIcon,
-  QuestionMarkCircleIcon,
+  ChevronRightIcon
 } from '@heroicons/react/solid';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import { useTokenMethods } from '../../../lib/tokens';
 import {
   OrderData,
+  OfferData,
   useOrder,
   useOrderMethods,
   useOrderOffers,
 } from '../../../lib/useOrder';
 import cn from 'classnames';
 import dayjs from 'dayjs';
+import { useSigner } from 'wagmi';
+import { Order } from 'rwtp';
 
 function Offer(props: {
-  offer: {
-    quantity: string;
-    price: string;
-    stake: string;
-    index: string;
-    state: 'Closed' | 'Open' | 'Committed';
-    timestamp: string;
-  };
+  offer: OfferData;
   order: OrderData;
   onConfirm: (index: string) => Promise<any>;
   onCancel: (index: string) => Promise<any>;
 }) {
   const state = props.offer.state;
+  const signer = useSigner();
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function onConfirm() {
+    if (!signer || !signer.data) return;
+
+    setIsLoading(true);
+    const contract = new ethers.Contract(
+      props.order.address,
+      Order.abi,
+      signer.data
+    );
+
+    const commit = await contract.confirm(props.offer.taker, props.offer.index, {
+      gasLimit: 1000000,
+    });
+    await commit.wait();
+    setIsLoading(false);
+  }
 
   return (
     <FadeIn className="flex flex-col py-2">
@@ -63,10 +77,11 @@ function Offer(props: {
             </div>
           </div>
           <div className="flex-1">
-            <div className="text-gray-500 text-xs">Your deposit</div>
+            {/* TODO: update UI to translate cost into refund/deposit amounts */}
+            <div className="text-gray-500 text-xs">Your cost</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.stake),
+                BigNumber.from(props.offer.buyersCost),
                 props.order.token.decimals
               )}{' '}
               <span className="text-sm">{props.order.token.symbol}</span>
@@ -75,10 +90,10 @@ function Offer(props: {
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Seller's Deposit</div>
             <div className="text-lg font-mono">
-              {/* {fromBn(
-                BigNumber.from(props.order.sellersStake),
+              {fromBn(
+                BigNumber.from(props.offer.sellersStake),
                 props.order.token.decimals
-              )}{' '} */}
+              )}{' '}
               <span className="text-sm">{props.order.token.symbol}</span>
             </div>
           </div>
@@ -114,7 +129,11 @@ function Offer(props: {
           )}
 
           {state === 'Committed' && (
-            <button className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50">
+            <button 
+              className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
+              onClick={() => {onConfirm()}}
+              disabled={isLoading}
+            >
               Confirm Order
             </button>
           )}
