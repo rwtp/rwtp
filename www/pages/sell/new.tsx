@@ -56,7 +56,7 @@ function NewOrder() {
   const book = useContractWrite(
     {
       addressOrName:
-        '0x898435D69C5184D4E3A9cca571D9Dd688074ffCF' || OrderBook.address, // TODO, go back to orderbook.address
+        '0x8587256EdF3D11EbF70540180140132c6D36bd29' || OrderBook.address, // TODO, go back to orderbook.address
       contractInterface: OrderBook.abi,
     },
     'createOrder'
