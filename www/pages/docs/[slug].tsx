@@ -8,8 +8,11 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkPrism from 'remark-prism';
-
+import cn from 'classnames';
 import { InformationPageHeader } from '../../components/Layout';
+import { ChevronRightIcon } from '@heroicons/react/solid';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 const CONTENT_PATH = path.join(process.cwd(), '_docs');
 
@@ -26,16 +29,59 @@ const components = {
   Head,
 };
 
+function SidebarItem(props: { children: any; slug: string }) {
+  const router = useRouter();
+
+  return (
+    <Link href={`/docs/${props.slug}`}>
+      <a
+        className={cn({
+          'flex px-2': true,
+          'border-b py-2  border-t border-blue-500 border-l-2 bg-white':
+            props.slug === router.query.slug,
+          'text-gray-600 py-2 ': props.slug !== router.query.slug,
+        })}
+      >
+        {props.children}
+      </a>
+    </Link>
+  );
+}
+
 export default function PostPage({ source, frontMatter }: any) {
   return (
-    <div className="max-w-6xl mx-auto w-full pb-12 relative flex flex-col">
-      <div className="flex flex-col justify-between pt-4 relative">
+    <div className="h-full flex flex-col ">
+      <div className="flex flex-col justify-between py-4 relative border-b bg-gray-50">
         <InformationPageHeader />
       </div>
 
-      <article className="px-4 text-gray-900  prose pt-12 mx-auto prose-headings:font-serif prose-headings:font-medium">
-        <MDXRemote {...source} components={components} />
-      </article>
+      <div className="mx-auto border-b w-full px-4 text-gray-700">
+        <div className="flex items-center py-4 font-mono">
+          <a className="underline" href="/docs">
+            Docs
+          </a>
+          <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
+          <div className="font-mono">{frontMatter.title}</div>
+        </div>
+      </div>
+      <div className="flex flex-1">
+        <div className="text-sm  hidden sm:flex bg-gray-50 border-r flex-col font-mono h-full">
+          <div className="text-xs px-2 pb-1 text-gray-500 py-4"># Basics</div>
+
+          <SidebarItem slug={'whitepaper'}>Whitepaper</SidebarItem>
+          <SidebarItem slug={'contracts'}>Contracts</SidebarItem>
+          {/* 
+          <div className="text-xs px-2 pb-1 text-gray-500 py-4">
+            # Programming
+          </div>
+
+          <div className="px-2 py-1 text-gray-600 ">React</div>
+          <div className="px-2 py-1 text-gray-600 ">Solidity</div> */}
+        </div>
+        <article className="flex-1 px-4 text-gray-900  prose py-12 mx-auto prose-headings:font-serif prose-headings:font-medium ">
+          <MDXRemote {...source} components={components} />
+        </article>
+      </div>
     </div>
   );
 }
