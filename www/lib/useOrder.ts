@@ -228,18 +228,22 @@ export function useOrderSubmitOffer(address: string) {
 
   function submitOffer(args: {
     index: number;
-    quantity: number;
+    token: string,
     price: BigNumber;
-    sellersStake: BigNumber;
+    buyersCost: BigNumber;
+    sellerStake: BigNumber;
+    timeout: BigNumber;
     uri: string;
   }) {
     write({
       args: [
         args.index,
-        args.quantity,
+        args.token,
         args.price,
-        args.sellersStake,
-        args.uri,
+        args.buyersCost,
+        args.sellerStake,
+        args.timeout,
+        args.uri
       ],
     });
   }

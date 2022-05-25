@@ -6,6 +6,7 @@ import {
   OrderData,
   useOrder,
   useOrderMethods,
+  useOrderSubmitOffer,
 } from '../../../lib/useOrder';
 import { useTokenMethods } from '../../../lib/tokens';
 import { postToIPFS } from '../../../lib/ipfs';
@@ -72,7 +73,7 @@ function BuyPage({ order }: { order: OrderData }) {
     await approveTx.wait();
 
     const tx = await orderMethods.submitOffer.writeAsync({
-      args: [BigNumber.from(0), price, stake, stake, BigNumber.from(0), 'ipfs://' + cid],
+      args: [BigNumber.from(0), order.tokenAddressesSuggested[0], price, cost, stake, timeout, 'ipfs://' + cid],
       overrides: {
         gasLimit: 1000000,
       },
