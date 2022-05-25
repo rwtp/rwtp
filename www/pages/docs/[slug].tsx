@@ -32,8 +32,6 @@ const components = {
 function SidebarItem(props: { children: any; slug: string }) {
   const router = useRouter();
 
-  console.log(router.query.slug);
-
   return (
     <Link href={`/docs/${props.slug}`}>
       <a
@@ -52,7 +50,7 @@ function SidebarItem(props: { children: any; slug: string }) {
 
 export default function PostPage({ source, frontMatter }: any) {
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col ">
       <div className="flex flex-col justify-between py-4 relative border-b bg-gray-50">
         <InformationPageHeader />
       </div>
@@ -66,8 +64,8 @@ export default function PostPage({ source, frontMatter }: any) {
           <div className="font-mono">{frontMatter.title}</div>
         </div>
       </div>
-      <div className="flex h-full">
-        <div className="text-sm hidden sm:flex bg-gray-50 border-r flex-col font-mono h-full">
+      <div className="flex flex-1">
+        <div className="text-sm  hidden sm:flex bg-gray-50 border-r flex-col font-mono h-full">
           <div className="text-xs px-2 pb-1 text-gray-500 py-4"># Basics</div>
 
           <SidebarItem slug={'whitepaper'}>Whitepaper</SidebarItem>
@@ -80,7 +78,7 @@ export default function PostPage({ source, frontMatter }: any) {
           <div className="px-2 py-1 text-gray-600 ">React</div>
           <div className="px-2 py-1 text-gray-600 ">Solidity</div> */}
         </div>
-        <article className="flex-1 px-4 text-gray-900  prose pt-12 mx-auto prose-headings:font-serif prose-headings:font-medium">
+        <article className="flex-1 px-4 text-gray-900  prose py-12 mx-auto prose-headings:font-serif prose-headings:font-medium ">
           <MDXRemote {...source} components={components} />
         </article>
       </div>
