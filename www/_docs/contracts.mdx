@@ -5,3 +5,31 @@ title: Contracts
 # Contracts
 
 Real World Trade Protocol is currently implemented for the EVM and deployed across many different chains. However, it seems reasonable that RWTP could be implemented for other smart contract platforms.
+
+## Orders
+
+RWTP has both BuyOrders and SellOrders. If you make a buy order, folks offer to sell you things. If you make a sell order, folks offer to buy your things. Both are defined by the `Order` contract.
+
+### Making an offer
+
+To make an offer on an order, you can use the `submitOffer` function. As the market maker, you get to decide the deal.
+
+```solidity
+offer.submitOffer(
+  // a uint32 that identifies the order
+  index,
+
+  // a uint128 that represents the price to be paid in the token the order specifies
+  price,
+
+  // A uint128 that represents what you'd like the buyer to use as a cost,
+  // as defined in the Whitepaper
+  buyersCost,
+
+  // A uint128 that represents what you'd like the seller to stake, as defined in the Whitepaper
+  sellersStake,
+
+  // An arbitrary URI to metadata
+  uri
+);
+```
