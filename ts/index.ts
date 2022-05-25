@@ -1,4 +1,4 @@
-import SellOrder from '../out/SellOrder.sol/SellOrder.json';
+import Order from '../out/Order.sol/Order.json';
 import OrderBookWithoutAddress from '../out/OrderBook.sol/OrderBook.json';
 
 const OrderBook = {
@@ -8,4 +8,4 @@ const OrderBook = {
   address: '0x667d3ded6c891453e4b1bf6032cd0c22e0c31bac',
 };
 
-export { SellOrder, OrderBook };
+export { Order, OrderBook };
