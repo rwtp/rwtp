@@ -167,9 +167,9 @@ function Offer(props: { offer: OfferData }) {
             <div className="text-lg font-mono">
               {fromBn(
                 BigNumber.from(props.offer.price),
-                o.order.token.decimals
+                o.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{o.order.token.symbol}</span>
+              <span className="text-sm">{o.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
           <div className="flex-1">
@@ -177,9 +177,9 @@ function Offer(props: { offer: OfferData }) {
             <div className="text-lg font-mono">
               {fromBn(
                 BigNumber.from(props.offer.sellersStake),
-                o.order.token.decimals
+                o.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{o.order.token.symbol}</span>
+              <span className="text-sm">{o.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
         </div>

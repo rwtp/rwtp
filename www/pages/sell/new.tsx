@@ -79,7 +79,7 @@ function NewOrder() {
       description: state.description,
       primaryImage: state.primaryImage,
       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
-      tokenAddressSuggested: [erc20Address],
+      tokenAddressesSuggested: [erc20Address],
       priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
       sellersStakeSuggested: toBn(
         state.sellersStake.toString(),

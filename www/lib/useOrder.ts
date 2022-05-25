@@ -3,6 +3,20 @@ import { useSubgraph } from './useSubgraph';
 import { Order } from 'rwtp';
 import { BigNumber } from 'ethers';
 
+export interface ERC20Data {
+  decimals: number;
+  symbol: string;
+  name: string;
+  address: string;
+}
+
+const ERC20_FIELDS = `
+  decimals
+  symbol
+  name
+  address
+`
+
 export interface OrderData {
   id: string,
   address: string,
@@ -11,8 +25,12 @@ export interface OrderData {
   description: string,
   primaryImage: string,
   encryptionPublicKey: string,
+  tokenAddressesSuggested: string[],
+  tokensSuggested: ERC20Data[],
   priceSuggested: string,
-  stakeSuggested: string,
+  sellersStakeSuggested: string,
+  buyersCostSuggested: string,
+  suggestedTimeout: string,
   error: string,
   offers: string,
   offerCount: string,
@@ -29,8 +47,14 @@ const ORDER_FIELDS = `
   description
   primaryImage
   encryptionPublicKey
+  tokenAddressesSuggested
+  tokensSuggested {
+    ${ERC20_FIELDS}
+  }
   priceSuggested
-  stakeSuggested
+  sellersStakeSuggested
+  buyersCostSuggested
+  suggestedTimeout
   error
   offers
   offerCount
@@ -58,12 +82,7 @@ export interface OfferData {
   acceptedAt: string,
   makerCanceled: string,
   takerCanceled: string,
-  token: {
-    decimals: number;
-    symbol: string;
-    name: string;
-    address: string;
-  }
+  
 }
 
 const OFFER_FIELDS = `
@@ -87,10 +106,7 @@ const OFFER_FIELDS = `
   takerCanceled
   tokenAddress
   token {
-    decimals
-    symbol
-    name
-    address
+    ${ERC20_FIELDS}
   }
 `;
 
