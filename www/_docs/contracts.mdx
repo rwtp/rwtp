@@ -8,28 +8,79 @@ Real World Trade Protocol is currently implemented for the EVM and deployed acro
 
 ## Orders
 
-RWTP has both BuyOrders and SellOrders. If you make a buy order, folks offer to sell you things. If you make a sell order, folks offer to buy your things. Both are defined by the `Order` contract.
+RWTP has both Buy Order and Sell Order. If you make a buy order, folks offer to sell you things. If you make a sell order, folks offer to buy your things. Both are defined by the `Order` contract.
+
+To make an `Order` and have it picked up by client apps, use the `OrderBook` contract.
+
+```solidity
+book.createOrder(
+  // The owner of the order. Orders can be made
+  // on behalf of someone else, such as by a client
+  // application willing to pay for the gas.
+  maker,
+
+  // The address of the token you wish to transact in
+  token,
+
+  // A URI to metadata containing
+  uri,
+
+  // The maximum time limit in which the buyer can reject the deal.
+  uint256 timeout,
+
+  //
+  bool isBuyOrder
+);
+```
+
+URIs are expected to point to a JSON object with at least two fields: `$schema` and `$accepts`. `$schema` is a URI to the JSON schema of the object itself. This might define fields like `title`, `description`, `images`, and so on.
+
+`$accepts` is an array of URIs containing schemas the client is willing to accept from an offer.
+
+```javascript
+{
+   "$schema": "ipfs://somecid",
+   "$accepts": ["ipfs://anothercid"],
+   "yourOwnField": "hi"
+}
+```
 
 ### Making an offer
 
-To make an offer on an order, you can use the `submitOffer` function. As the market maker, you get to decide the deal.
+To make an offer on an order, you can use the `submitOffer` function. As the offerer, you get to decide the deal. A market maker can have multiple open offers on a single order, with different indexes.
 
 ```solidity
-offer.submitOffer(
-  // a uint32 that identifies the order
+order.submitOffer(
+  // a uint32 that identifies the order.
   index,
 
   // a uint128 that represents the price to be paid in the token the order specifies
   price,
 
-  // A uint128 that represents what you'd like the buyer to use as a cost,
-  // as defined in the Whitepaper
+  // A uint128 that represents what you'd like the buyer
+  // to use as a cost, as defined in the Whitepaper
   buyersCost,
 
-  // A uint128 that represents what you'd like the seller to stake, as defined in the Whitepaper
+  // A uint128 that represents what you'd like the seller to stake,
+  // as defined in the Whitepaper
   sellersStake,
 
   // An arbitrary URI to metadata
   uri
 );
 ```
+
+If the buyer's cost is greater than the `price`, `submitOffer`
+
+### Accepting an offer
+
+When you accept an offer, you cannot back out unless the other party agrees.
+
+```solidity
+order.commit(
+  taker, // The address of the person who submitted the offer
+  index  // The index of the offer
+);
+```
+
+### Paying out
