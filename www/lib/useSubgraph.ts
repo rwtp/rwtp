@@ -1,8 +1,3 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import cn from 'classnames';
-import { useContract, useProvider } from 'wagmi';
-import { OrderBook } from 'rwtp';
-import { useEffect } from 'react';
 import useSWR from 'swr';
 import { request } from 'graphql-request';
 

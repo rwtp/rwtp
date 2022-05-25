@@ -13,24 +13,24 @@ import { FadeIn } from '../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import { useTokenMethods } from '../../../lib/tokens';
 import {
-  SellOrderData,
-  useSellOrder,
-  useSellOrderMethods,
-  useSellOrderOffers,
-} from '../../../lib/useSellOrder';
+  OrderData,
+  useOrder,
+  useOrderMethods,
+  useOrderOffers,
+} from '../../../lib/useOrder';
 import cn from 'classnames';
 import dayjs from 'dayjs';
 
 function Offer(props: {
   offer: {
     quantity: string;
-    pricePerUnit: string;
-    stakePerUnit: string;
+    price: string;
+    stake: string;
     index: string;
     state: 'Closed' | 'Open' | 'Committed';
     timestamp: string;
   };
-  sellOrder: SellOrderData;
+  order: OrderData;
   onConfirm: (index: string) => Promise<any>;
   onCancel: (index: string) => Promise<any>;
 }) {
@@ -56,30 +56,30 @@ function Offer(props: {
             <div className="text-gray-500 text-xs">Price</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.pricePerUnit),
-                props.sellOrder.token.decimals
+                BigNumber.from(props.offer.price),
+                props.order.token.decimals
               )}{' '}
-              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+              <span className="text-sm">{props.order.token.symbol}</span>
             </div>
           </div>
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Your deposit</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.stakePerUnit),
-                props.sellOrder.token.decimals
+                BigNumber.from(props.offer.stake),
+                props.order.token.decimals
               )}{' '}
-              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+              <span className="text-sm">{props.order.token.symbol}</span>
             </div>
           </div>
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Seller's Deposit</div>
             <div className="text-lg font-mono">
-              {fromBn(
-                BigNumber.from(props.sellOrder.sellersStake),
-                props.sellOrder.token.decimals
-              )}{' '}
-              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+              {/* {fromBn(
+                BigNumber.from(props.order.sellersStake),
+                props.order.token.decimals
+              )}{' '} */}
+              <span className="text-sm">{props.order.token.symbol}</span>
             </div>
           </div>
         </div>
@@ -124,12 +124,12 @@ function Offer(props: {
   );
 }
 
-function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
-  const tokenMethods = useTokenMethods(sellOrder.token.address);
-  const sellOrderMethods = useSellOrderMethods(sellOrder.address);
-  const offers = useSellOrderOffers(sellOrder.address);
+function OrderPage({ order }: { order: OrderData }) {
+  const tokenMethods = useTokenMethods(order.token.address);
+  const orderMethods = useOrderMethods(order.address);
+  const offers = useOrderOffers(order.address);
 
-  const methods = useSellOrderMethods(sellOrder.address);
+  const methods = useOrderMethods(order.address);
 
   async function onConfirm(index: string) {
     const confirmTx = await methods.confirm.writeAsync({
@@ -164,19 +164,19 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
               Sell Orders
             </a>
             <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
-            <div className="font-mono">{`${sellOrder.address.substring(
+            <div className="font-mono">{`${order.address.substring(
               0,
               6
-            )}...${sellOrder.address.substring(
-              sellOrder.address.length - 4,
-              sellOrder.address.length
+            )}...${order.address.substring(
+              order.address.length - 4,
+              order.address.length
             )}`}</div>
           </div>
-          <h1 className="font-serif text-3xl pb-1 pt-12">{sellOrder.title}</h1>
-          <p className="pb-4">{sellOrder.description}</p>
+          <h1 className="font-serif text-3xl pb-1 pt-12">{order.title}</h1>
+          <p className="pb-4">{order.description}</p>
 
           <div className="flex mb-16">
-            <Link href={`/buy/${sellOrder.address}/checkout`}>
+            <Link href={`/buy/${order.address}/checkout`}>
               <a
                 className={cn({
                   'bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center':
@@ -195,7 +195,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
               <Offer
                 key={o.index + o.uri}
                 offer={o}
-                sellOrder={sellOrder}
+                order={order}
                 onConfirm={onConfirm}
                 onCancel={onCancel}
               />
@@ -219,20 +219,20 @@ function Loading() {
 }
 
 function PageWithPubkey(props: { pubkey: string }) {
-  const sellOrder = useSellOrder(props.pubkey);
+  const order = useOrder(props.pubkey);
 
-  if (sellOrder.error) {
+  if (order.error) {
     return (
       <div>
-        <pre>{JSON.stringify(sellOrder.error)}</pre>
+        <pre>{JSON.stringify(order.error)}</pre>
       </div>
     );
   }
 
   // loading
-  if (!sellOrder.data) return <Loading />;
+  if (!order.data) return <Loading />;
 
-  return <SellOrderPage sellOrder={sellOrder.data} />;
+  return <OrderPage order={order.data} />;
 }
 
 export default function Page() {

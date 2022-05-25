@@ -2,7 +2,7 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
 import { ethers, BigNumber, providers } from 'ethers';
-import { SellOrder } from 'rwtp';
+import { Order } from 'rwtp';
 import * as ethUtil from 'ethereumjs-util';
 import * as sigUtil from '@metamask/eth-sig-util';
 import { useRouter } from 'next/router';
@@ -114,14 +114,14 @@ async function switchNetwork(chainId: number) {
 }
 
 const SUPPORTED_CHAIN_IDS = [10, 137];
-const OPTIMISM_SELL_ORDER_ADDRESS =
+const OPTIMISM_ORDER_ADDRESS =
   '0x1b1955f6732691b9d7FBC4F01FF28F640aA52940';
-const POLYGON_SELL_ORDER_ADDRESS = '0x9fCcC594735639B6C18496d375a1C3675Cedd5d8';
-const KOVAN_SELL_ORDER_ADDRESS = '0x4D2787E7C9B19Ec6C68734088767a39250476989';
-const STICKERS_SELL_ORDER =
+const POLYGON_ORDER_ADDRESS = '0x9fCcC594735639B6C18496d375a1C3675Cedd5d8';
+const KOVAN_ORDER_ADDRESS = '0x4D2787E7C9B19Ec6C68734088767a39250476989';
+const STICKERS_ORDER =
   process.env.NODE_ENV === 'production'
-    ? OPTIMISM_SELL_ORDER_ADDRESS // production
-    : KOVAN_SELL_ORDER_ADDRESS; // development
+    ? OPTIMISM_ORDER_ADDRESS // production
+    : KOVAN_ORDER_ADDRESS; // development
 
 function StickerStore() {
   const [email, setEmail] = useState('');
@@ -145,21 +145,21 @@ function StickerStore() {
     }
 
     const signer = provider.getSigner();
-    let sellOrderAddress: string;
+    let orderAddress: string;
     switch (chainId) {
       case 10:
-        sellOrderAddress = OPTIMISM_SELL_ORDER_ADDRESS;
+        orderAddress = OPTIMISM_ORDER_ADDRESS;
         break;
       case 137:
-        sellOrderAddress = POLYGON_SELL_ORDER_ADDRESS;
+        orderAddress = POLYGON_ORDER_ADDRESS;
         break;
       default:
-        sellOrderAddress = KOVAN_SELL_ORDER_ADDRESS;
+        orderAddress = KOVAN_ORDER_ADDRESS;
         break;
     }
-    const sellOrder = new ethers.Contract(
-      sellOrderAddress,
-      SellOrder.abi,
+    const order = new ethers.Contract(
+      orderAddress,
+      Order.abi,
       signer
     );
 
@@ -189,12 +189,12 @@ function StickerStore() {
       'function approve(address spender, uint256 amount)',
       'function decimals() public view returns (uint8)',
     ];
-    const token = await sellOrder.token();
+    const token = await order.token();
     const erc20 = new ethers.Contract(token, erc20ABI, signer);
     const decimals = await erc20.decimals();
 
     const tokenTx = await erc20.approve(
-      sellOrder.address,
+      order.address,
       BigNumber.from(DEFAULT_PRICE + DEFAULT_STAKE).mul(
         BigNumber.from(10).pow(decimals)
       )
@@ -205,7 +205,7 @@ function StickerStore() {
       return;
     }
 
-    const orderTx = await sellOrder.submitOffer(
+    const orderTx = await order.submitOffer(
       BigNumber.from(DEFAULT_PRICE).mul(BigNumber.from(10).pow(decimals)),
       BigNumber.from(DEFAULT_STAKE).mul(BigNumber.from(10).pow(decimals)),
       'ipfs://' + cid
@@ -217,7 +217,7 @@ function StickerStore() {
       return;
     }
 
-    router.push('/orders/' + sellOrderAddress);
+    router.push('/orders/' + orderAddress);
   }
 
   const [days, hours, minutes, seconds] = useCountdown('2022-05-09');

@@ -4,9 +4,9 @@ import { FadeIn } from '../../components/FadeIn';
 import { SearchIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import Tag from '../../components/Tag';
-import { useSellOrders } from '../../lib/useSellOrder';
+import { useOrders } from '../../lib/useOrder';
 
-interface SellOrder {
+interface Order {
   address: string;
   title: string;
   description: string;
@@ -17,7 +17,7 @@ interface SellOrder {
   encryptionPublicKey: string;
 }
 
-function OrderView(props: { order: SellOrder }) {
+function OrderView(props: { order: Order }) {
   return (
     <div className="py-2">
       <div className="flex gap-2 items-center justify-between">
@@ -34,37 +34,37 @@ function OrderView(props: { order: SellOrder }) {
 }
 
 function Results(props: { searchText: string }) {
-  const sellOrders = useSellOrders({
+  const orders = useOrders({
     first: 50,
     skip: 0,
     searchText: props.searchText,
   });
 
-  if (!sellOrders.data) {
+  if (!orders.data) {
     return null;
   }
 
-  const orders = sellOrders.data
+  const orderData = orders.data
     .filter((s: any) => !!s.title) // filter ones without titles
-    .map((sellOrder: any) => {
+    .map((order: any) => {
       return (
         <OrderView
-          key={sellOrder.address}
+          key={order.address}
           order={{
-            address: sellOrder.address,
-            title: sellOrder.title,
-            description: sellOrder.description,
-            sellersStake: +sellOrder.sellersStake,
-            buyersStake: +sellOrder.stakeSuggested,
-            price: +sellOrder.priceSuggested,
-            token: sellOrder.token.address,
+            address: order.address,
+            title: order.title,
+            description: order.description,
+            sellersStake: +order.sellersStake,
+            buyersStake: +order.stakeSuggested,
+            price: +order.priceSuggested,
+            token: order.token.address,
             encryptionPublicKey: '',
           }}
         />
       );
     });
 
-  return <FadeIn>{orders}</FadeIn>;
+  return <FadeIn>{orderData}</FadeIn>;
 }
 
 export default function Page() {

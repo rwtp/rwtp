@@ -10,32 +10,13 @@ import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { useAccount, useSigner } from 'wagmi';
-import { SellOrder } from 'rwtp';
+import { Order } from 'rwtp';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import { useSubgraph } from '../../lib/useSubgraph';
 import { FadeIn } from '../../components/FadeIn';
 import cn from 'classnames';
 import dayjs from 'dayjs';
-import nacl from 'tweetnacl';
-
-type IOffer = {
-  id: string;
-  buyer: string;
-  index: string;
-  state: string;
-  stakePerUnit: string;
-  pricePerUnit: string;
-  quantity: string;
-  timestamp: string;
-  uri: string;
-  sellOrder: {
-    address: string;
-    token: {
-      symbol: string;
-      decimals: number;
-    };
-  };
-};
+import { OfferData, useAllOrderOffers } from '../../lib/useOrder';
 
 function Spinner(props: { className?: string }) {
   return (
@@ -62,23 +43,23 @@ function Spinner(props: { className?: string }) {
   );
 }
 
-function Offer(props: { offer: IOffer }) {
+function Offer(props: { offer: OfferData }) {
   const o = props.offer;
 
   const signer = useSigner();
   const [isLoading, setIsLoading] = useState(false);
 
-  async function onApprove(o: IOffer) {
+  async function onApprove(o: OfferData) {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
     const contract = new ethers.Contract(
-      o.sellOrder.address,
-      SellOrder.abi,
+      o.order.address,
+      Order.abi,
       signer.data
     );
 
-    const commit = await contract.commit(o.buyer, o.index, {
+    const commit = await contract.commit(o.taker, o.index, {
       gasLimit: 1000000,
     });
     const tx = await commit.wait();
@@ -207,20 +188,20 @@ function Offer(props: { offer: IOffer }) {
             <div className="text-gray-500 text-xs">Price</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.pricePerUnit),
-                o.sellOrder.token.decimals
+                BigNumber.from(props.offer.price),
+                o.order.token.decimals
               )}{' '}
-              <span className="text-sm">{o.sellOrder.token.symbol}</span>
+              <span className="text-sm">{o.order.token.symbol}</span>
             </div>
           </div>
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Your deposit</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.stakePerUnit),
-                o.sellOrder.token.decimals
+                BigNumber.from(props.offer.stake),
+                o.order.token.decimals
               )}{' '}
-              <span className="text-sm">{o.sellOrder.token.symbol}</span>
+              <span className="text-sm">{o.order.token.symbol}</span>
             </div>
           </div>
         </div>
@@ -233,49 +214,27 @@ function Offers() {
   const account = useAccount();
   const signer = useSigner();
 
-  const offers = useSubgraph<{
-    offers: Array<IOffer>;
-  }>([
-    `
-    query metadata($seller:String) {
-        offers(where:{seller:$seller}) {
-            id
-            buyer
-            index
-            state
-            stakePerUnit
-            pricePerUnit
-            uri
-            quantity
-            timestamp
-            sellOrder {
-                address
-                token {
-                    symbol
-                }
-            }
-        }
-      }
-  `,
-    {
-      seller: account.data?.address || '',
-    },
-  ]);
+  const orders = useAllOrderOffers(account.data?.address || '');
 
-  if (offers.error) {
-    return <pre>{JSON.stringify(offers.error, null, 2)}</pre>;
+  if (orders.error) {
+    return <pre>{JSON.stringify(orders.error, null, 2)}</pre>;
   }
 
-  if (!offers.data) {
+  if (!orders.data) {
     return null;
   }
 
-  if (offers.data.offers.length === 0) {
+  if (orders.data.length === 0) {
     return <div className="text-gray-500">There are no open offers.</div>;
   }
 
-  const allOffers = offers.data.offers.map((o: IOffer) => {
-    return <Offer key={o.id} offer={o} />;
+  let offers: Array<OfferData> = new Array<OfferData>();
+  for (const order of orders.data) {
+    offers.concat(order.offers);
+  }
+  
+  const allOffers = offers.map((o: OfferData) => {
+    return <Offer key={`${o.index}${o.taker}`} offer={o} />;
   });
 
   return <FadeIn className="">{allOffers}</FadeIn>;

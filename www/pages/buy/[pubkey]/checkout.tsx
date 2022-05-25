@@ -3,10 +3,10 @@ import { BigNumber } from 'ethers';
 import { Suspense, useState } from 'react';
 import Image from 'next/image';
 import {
-  SellOrderData,
-  useSellOrder,
-  useSellOrderMethods,
-} from '../../../lib/useSellOrder';
+  OrderData,
+  useOrder,
+  useOrderMethods,
+} from '../../../lib/useOrder';
 import { useTokenMethods } from '../../../lib/tokens';
 import { postToIPFS } from '../../../lib/ipfs';
 import { fromBn, toBn } from 'evm-bn';
@@ -18,19 +18,19 @@ import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
 import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
 import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
 
-function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
-  const tokenMethods = useTokenMethods(sellOrder.token.address);
-  const sellOrderMethods = useSellOrderMethods(sellOrder.address);
+function BuyPage({ order }: { order: OrderData }) {
+  const tokenMethods = useTokenMethods(order.token.address);
+  const orderMethods = useOrderMethods(order.address);
   const router = useRouter();
   const buyersEncryptionKeypair = useEncryptionKeypair();
   const [offerData, setOfferData] = useState({});
 
   const quantity = 1;
-  const price = sellOrder.priceSuggested
-    ? BigNumber.from(sellOrder.priceSuggested)
+  const price = order.priceSuggested
+    ? BigNumber.from(order.priceSuggested)
     : BigNumber.from(0);
-  const stake = sellOrder.stakeSuggested
-    ? BigNumber.from(sellOrder.stakeSuggested)
+  const stake = order.stakeSuggested
+    ? BigNumber.from(order.stakeSuggested)
     : BigNumber.from(0);
 
   async function onBuy() {
@@ -43,7 +43,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     );
     const nonce = nacl.randomBytes(24);
     const sellersPublicEncryptionKey = Uint8Array.from(
-      Buffer.from(sellOrder.encryptionPublicKey, 'hex')
+      Buffer.from(order.encryptionPublicKey, 'hex')
     );
 
     const encrypted = nacl.box(
@@ -61,11 +61,11 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     const cid = await postToIPFS(data);
 
     const approveTx = await tokenMethods.approve.writeAsync({
-      args: [sellOrder.address, price.add(stake).mul(quantity)],
+      args: [order.address, price.add(stake).mul(quantity)],
     });
     await approveTx.wait();
 
-    const tx = await sellOrderMethods.submitOffer.writeAsync({
+    const tx = await orderMethods.submitOffer.writeAsync({
       args: [0, quantity, price, stake, 'ipfs://' + cid],
       overrides: {
         gasLimit: 1000000,
@@ -73,7 +73,7 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
     });
 
     await tx.wait();
-    router.push(`/buy/${sellOrder.address}`);
+    router.push(`/buy/${order.address}`);
   }
 
   return (
@@ -94,11 +94,11 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
                 </div>
 
                 <h1 className="pt-2 text-sm pt-12 text-gray-700">
-                  {sellOrder.title}
+                  {order.title}
                 </h1>
                 <p className="pb-2 text-xl mt-2">
-                  {fromBn(price, sellOrder.token.decimals)}{' '}
-                  {sellOrder.token.symbol}
+                  {fromBn(price, order.token.decimals)}{' '}
+                  {order.token.symbol}
                 </p>
 
                 <div className="flex mb-2 pt-12 ">
@@ -110,20 +110,20 @@ function BuyPage({ sellOrder }: { sellOrder: SellOrderData }) {
             </div>
             <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
               {
-                sellOrder.offerSchemaUri && sellOrder.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
+                order.offerSchemaUri && order.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
                   <OfferForm
-                    schema={sellOrder.offerSchema}
+                    schema={order.offerSchema}
                     setOfferData={setOfferData}
                     offerData={offerData}
-                    price={fromBn(price, sellOrder.token.decimals)}
+                    price={fromBn(price, order.token.decimals)}
                     onSubmit={onBuy}
-                    symbol={sellOrder.token.symbol} /> :
+                    symbol={order.token.symbol} /> :
                   <SimpleOfferForm
                     setOfferData={setOfferData}
                     offerData={offerData}
-                    price={fromBn(price, sellOrder.token.decimals)}
+                    price={fromBn(price, order.token.decimals)}
                     onSubmit={onBuy}
-                    symbol={sellOrder.token.symbol} />
+                    symbol={order.token.symbol} />
               }
             </div>
           </div>
@@ -139,11 +139,11 @@ function Loading() {
 }
 
 function PageWithPubkey(props: { pubkey: string }) {
-  const sellOrder = useSellOrder(props.pubkey);
+  const order = useOrder(props.pubkey);
 
-  if (!sellOrder.data) return <Loading />;
+  if (!order.data) return <Loading />;
 
-  return <BuyPage sellOrder={sellOrder.data} />;
+  return <BuyPage order={order.data} />;
 }
 
 export default function Page() {

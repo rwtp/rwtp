@@ -72,7 +72,7 @@ const book = new ethers
   .Contract(OrderBook.address, OrderBook.abi, provider);
 
 // Create a sell order
-book.createSellOrder(
+book.createOrder(
     provider.address, 
     usdcAddress,
     100 // 100 USDC staked

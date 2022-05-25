@@ -37,7 +37,7 @@ async function postFileToIPFS(file: Buffer) {
   return cid;
 }
 
-function NewSellOrder() {
+function NewOrder() {
   const [state, setState] = useState({
     title: '',
     description: '',
@@ -59,10 +59,10 @@ function NewSellOrder() {
         '0x0e18a94e59ba260090cd2a1b9d81222b0e0a6abe' || OrderBook.address, // TODO, go back to orderbook.address
       contractInterface: OrderBook.abi,
     },
-    'createSellOrder'
+    'createOrder'
   );
 
-  async function createSellOrder() {
+  async function createOrder() {
     if (!signer || !signer.data) return;
 
     const erc20Address = state.token;
@@ -98,11 +98,11 @@ function NewSellOrder() {
     const result = (await tx.wait()) as any;
     if (!result.events || result.events.length < 1) {
       throw new Error(
-        "Unexpectedly could not find 'events' in the transaction hash of createSellOrder. Maybe an ethers bug? Maybe the CreateSellOrder event isn't picked up fast enough? This basically shouldn't happen."
+        "Unexpectedly could not find 'events' in the transaction hash of createOrder. Maybe an ethers bug? Maybe the CreateOrder event isn't picked up fast enough? This basically shouldn't happen."
       );
     }
-    const sellOrderAddress = result.events[0].args[0];
-    router.push(`/buy/${sellOrderAddress}`);
+    const orderAddress = result.events[0].args[0];
+    router.push(`/buy/${orderAddress}`);
   }
 
   let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
@@ -317,7 +317,7 @@ function NewSellOrder() {
         <div className="mt-8">
           <button
             className="flex items-center px-4 py-2 rounded bg-black text-white border-black hover:opacity-50 transition-all"
-            onClick={() => createSellOrder().catch(console.error)}
+            onClick={() => createOrder().catch(console.error)}
           >
             Publish new sell order <ArrowRightIcon className="w-4 h-4 ml-4" />
           </button>
@@ -330,7 +330,7 @@ function NewSellOrder() {
 export default function Page() {
   return (
     <RequiresKeystore>
-      <NewSellOrder />
+      <NewOrder />
     </RequiresKeystore>
   );
 }

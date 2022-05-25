@@ -15,7 +15,8 @@ import {
 import { chain, createClient, WagmiProvider } from 'wagmi';
 
 const { chains, provider } = configureChains(
-  [chain.mainnet, chain.polygon, chain.optimism, chain.rinkeby],
+  // [chain.mainnet, chain.polygon, chain.optimism, chain.rinkeby],
+  [chain.rinkeby],
   [apiProvider.fallback()]
 );
 
