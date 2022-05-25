@@ -91,8 +91,7 @@ function NewOrder() {
         await signer.data.getAddress(),
         erc20Address,
         toBn(state.sellersStake.toString(), decimals).toHexString(),
-        `ipfs://${cid}`,
-        60 * 60 * 24 * 30,
+        `ipfs://${cid}`
       ],
     });
     const result = (await tx.wait()) as any;
