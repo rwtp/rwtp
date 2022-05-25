@@ -43,7 +43,7 @@ function NewOrder() {
     description: '',
     primaryImage: '',
     sellersStake: 0,
-    buyersStake: 0,
+    buyersCost: 0,
     price: 0,
     token: DEFAULT_TOKEN,
   });
@@ -72,7 +72,6 @@ function NewOrder() {
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
-    // TODO: Separate buyer cost, seller stake, add timeout and quantity
 
     const cid = await postJSONToIPFS({
       offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
@@ -80,9 +79,19 @@ function NewOrder() {
       description: state.description,
       primaryImage: state.primaryImage,
       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
+      tokenAddressSuggested: [erc20Address],
       priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
-      stakeSuggested: toBn(
-        state.buyersStake.toString(),
+      sellersStakeSuggested: toBn(
+        state.sellersStake.toString(),
+        decimals
+      ).toHexString(),
+      buyersCostSuggested: toBn(
+        state.buyersCost.toString(),
+        decimals
+      ).toHexString(),
+      suggestedTimeout: 
+      toBn(
+        (60 * 60 * 24 * 7).toString(),
         decimals
       ).toHexString(),
     });
@@ -298,7 +307,7 @@ function NewOrder() {
             </label>
 
             <label className="flex flex-1 flex-col">
-              <strong className="text-sm mb-1">Buyer's Stake</strong>
+              <strong className="text-sm mb-1">Buyer's Cost</strong>
               <input
                 className="border px-4 py-2 rounded"
                 type="number"
@@ -306,10 +315,10 @@ function NewOrder() {
                 onChange={(e) =>
                   setState((s) => ({
                     ...s,
-                    buyersStake: parseFloat(e.target.value),
+                    buyersCost: parseFloat(e.target.value),
                   }))
                 }
-                value={state.buyersStake}
+                value={state.buyersCost}
               />
             </label>
           </div>

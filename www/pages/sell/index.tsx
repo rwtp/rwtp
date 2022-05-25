@@ -17,6 +17,8 @@ import { FadeIn } from '../../components/FadeIn';
 import cn from 'classnames';
 import dayjs from 'dayjs';
 import { OfferData, useAllOrderOffers } from '../../lib/useOrder';
+import nacl from 'tweetnacl';
+import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 
 function Spinner(props: { className?: string }) {
   return (
@@ -65,30 +67,6 @@ function Offer(props: { offer: OfferData }) {
     const tx = await commit.wait();
     setIsLoading(false);
   }
-
-  const [unencryptedMessage, setUnencryptedMessage] = useState('');
-
-  useEffect(() => {
-    async function load() {
-      const res = await fetch(
-        o.uri.replace('ipfs://', 'https://ipfs.infura.io/ipfs/')
-      );
-
-      const result = await res.json();
-      if (!result.message || !result.encryptionPublicKey || !result.nonce) {
-        return;
-      }
-
-      const msg = Buffer.from(result.message, 'hex');
-      const nonce = Buffer.from(result.nonce, 'hex');
-      const encryptionPublicKey = Buffer.from(
-        result.encryptionPublicKey,
-        'hex'
-      );
-      // nacl.box.open(msg, nonce, encryptionPublicKey);
-    }
-    load().catch(console.error);
-  }, [o]);
 
   let status = (
     <>
@@ -179,7 +157,7 @@ function Offer(props: { offer: OfferData }) {
             </div>
           </div>
         </div>
-        <div className="flex gap-4 justify-between py-4 px-4">
+        <div className="flex gap-4 justify-between p-4">
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Quantity</div>
             <div className="text-lg font-mono">1</div>
@@ -205,6 +183,12 @@ function Offer(props: { offer: OfferData }) {
             </div>
           </div>
         </div>
+        {/* <div className='p-4'>
+          <div className="text-gray-500 text-xs">Offer Data</div>
+          {o.message}
+          {o.messageNonce}
+          {o.messagePublicKey}
+        </div> */}
       </div>
     </FadeIn>
   );
@@ -212,7 +196,7 @@ function Offer(props: { offer: OfferData }) {
 
 function Offers() {
   const account = useAccount();
-  const signer = useSigner();
+  const sellersEncryptionKeypair = useEncryptionKeypair();
 
   const orders = useAllOrderOffers(account.data?.address || '');
 
@@ -228,14 +212,37 @@ function Offers() {
     return <div className="text-gray-500">There are no open offers.</div>;
   }
 
-  
+  // Parse offers from orders
   let offers: Array<OfferData> = new Array<OfferData>();
   for (const order of orders.data) {
     offers = offers.concat(order.offers);
   }
+
+  // Decrypt offer data
+  if (sellersEncryptionKeypair) {
+    for (const offer of offers) {
+      const message = Buffer.from(offer.message, 'hex');
+      const messageNonce = Buffer.from(offer.messageNonce, 'hex');
+      let messagePublicKey = Buffer.from(offer.messagePublicKey, 'hex');
+      if (messagePublicKey.length == 0) {
+        messagePublicKey = Buffer.from(sellersEncryptionKeypair.publicKey);
+      }
+      const decrypted = nacl.box.open(
+        message, 
+        messageNonce, 
+        messagePublicKey, 
+        sellersEncryptionKeypair.secretKey
+      );
+      if (decrypted) {
+        console.log(Buffer.from(decrypted).toString());
+      } else {
+        console.log("Decryption failed");
+      }
+    }
+  }
   
   const allOffers = offers.map((o: OfferData) => {
-    return <Offer key={`${o.index}${o.taker}`} offer={o} />;
+    return <Offer key={`${o.index}${o.taker}${o.acceptedAt}`} offer={o} />;
   });
 
   return <FadeIn className="">{allOffers}</FadeIn>;

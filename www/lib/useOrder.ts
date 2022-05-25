@@ -16,17 +16,10 @@ export interface OrderData {
   error: string,
   offers: string,
   offerCount: string,
-  tokenAddress: string,
   maker: string,
   createdAt: string,
   offerSchema: string,
-  offerSchemaUri: string,
-  token: {
-    decimals: number;
-    symbol: string;
-    name: string;
-    address: string;
-  };
+  offerSchemaUri: string
 }
 
 const ORDER_FIELDS = `
@@ -41,24 +34,17 @@ const ORDER_FIELDS = `
   error
   offers
   offerCount
-  token
-  tokenAddress
   maker
   createdAt
   offerSchema
   offerSchemaUri
-  token {
-    decimals
-    symbol
-    name
-    address
-  }
 `;
 
 export interface OfferData {
   index: string,
   taker: string,
   price: string,
+  tokenAddress: string,
   buyersCost: string,
   sellersStake: string,
   timeout: string,
@@ -71,7 +57,13 @@ export interface OfferData {
   order: OrderData
   acceptedAt: string,
   makerCanceled: string,
-  takerCanceled: string
+  takerCanceled: string,
+  token: {
+    decimals: number;
+    symbol: string;
+    name: string;
+    address: string;
+  }
 }
 
 const OFFER_FIELDS = `
@@ -93,6 +85,13 @@ const OFFER_FIELDS = `
   acceptedAt
   makerCanceled
   takerCanceled
+  tokenAddress
+  token {
+    decimals
+    symbol
+    name
+    address
+  }
 `;
 
 function useOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
