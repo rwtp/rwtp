@@ -198,7 +198,7 @@ function Offer(props: { offer: OfferData }) {
             <div className="text-gray-500 text-xs">Your deposit</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.stake),
+                BigNumber.from(props.offer.sellersStake),
                 o.order.token.decimals
               )}{' '}
               <span className="text-sm">{o.order.token.symbol}</span>
