@@ -252,7 +252,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <PageWithPubkey pubkey={pubkey} />
+      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
     </Suspense>
   );
 }

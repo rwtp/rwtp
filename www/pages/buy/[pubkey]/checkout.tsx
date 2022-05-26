@@ -174,7 +174,7 @@ export default function Page() {
   return (
     <Suspense fallback={<Loading />}>
       <RequiresKeystore>
-        <PageWithPubkey pubkey={pubkey} />
+        <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
       </RequiresKeystore>
     </Suspense>
   );
