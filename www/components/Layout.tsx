@@ -14,19 +14,19 @@ import { useRouter } from 'next/router';
 export function InformationPageHeader() {
   return (
     <div className="flex justify-between px-4 z-50 relative">
-      <div className="flex items-center ">
+      <a className="flex items-center " href="/">
         <Image src="/transitionLogo.png" width={24} height={24} />
-      </div>
+      </a>
       <div className="gap-2 flex items-center">
-        <a className="text-sm flex py-1 px-1 rounded" href="/buy">
+        {/* <a className="text-sm flex py-1 px-1 rounded" href="/buy">
           Buy
         </a>
         <a className="text-sm flex py-1 px-1 rounded" href="/sell">
           Sell
-        </a>
+        </a> */}
         <a
           className="text-sm border flex py-1 px-2 rounded bg-white"
-          href="/docs"
+          href="/docs/whitepaper"
         >
           Docs
         </a>

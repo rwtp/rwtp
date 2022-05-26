@@ -70,13 +70,6 @@ export default function PostPage({ source, frontMatter }: any) {
 
           <SidebarItem slug={'whitepaper'}>Whitepaper</SidebarItem>
           <SidebarItem slug={'contracts'}>Contracts</SidebarItem>
-          {/* 
-          <div className="text-xs px-2 pb-1 text-gray-500 py-4">
-            # Programming
-          </div>
-
-          <div className="px-2 py-1 text-gray-600 ">React</div>
-          <div className="px-2 py-1 text-gray-600 ">Solidity</div> */}
         </div>
         <article className="flex-1 px-4 text-gray-900  prose py-12 mx-auto prose-headings:font-serif prose-headings:font-medium ">
           <MDXRemote {...source} components={components} />

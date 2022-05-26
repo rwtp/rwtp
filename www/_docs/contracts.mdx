@@ -19,13 +19,10 @@ book.createOrder(
   // application willing to pay for the gas.
   maker,
 
-  // The address of the token you wish to transact in
-  token,
-
   // A URI to metadata containing
   uri,
 
-  //
+  // If true, the order is a buy order. If false, it is a sell order.
   bool isBuyOrder
 );
 ```
@@ -50,6 +47,9 @@ To make an offer on an order, you can use the `submitOffer` function. As the off
 order.submitOffer(
   // a uint128 that identifies the order.
   index,
+
+  // The address of the ERC20 token you wish to transact in
+  token,
 
   // a uint128 that represents the price to be paid in the token
   // the order specifies
