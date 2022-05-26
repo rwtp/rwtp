@@ -103,40 +103,31 @@ function Offer(props: {
             Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
           </div>
           <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          <div
-            className={cn({
-              'text-xs flex  py-2 border-gray-600 text-gray-600': true,
-              'opacity-50': state !== 'Committed',
-            })}
-          >
-            Offer Accepted{' '}
-            {state === 'Committed' ? (
-              <CheckCircleIcon className="h-4 w-4 ml-2" />
-            ) : (
-              <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
-            )}
-          </div>
-          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          {state !== 'Committed' && (
-            <div
-              className={
-                'opacity-50 border-gray-600 text-gray-600 flex items-center text-xs'
-              }
-            >
-              Order Delivered{' '}
-              <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+          {state == 'Open' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
+              Offer Committed <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
             </div>
-          )}
-
-          {state === 'Committed' && (
-            <button 
+          </>}
+          {state == 'Committed' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <button
               className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
-              onClick={() => {onConfirm()}}
+              onClick={() => { onConfirm() }}
               disabled={isLoading}
             >
               Confirm Order
             </button>
-          )}
+          </>}
+          {state == 'Confirmed' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+          </>}
         </div>
       </div>
     </FadeIn>

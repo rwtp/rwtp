@@ -92,12 +92,7 @@ function Offer(props: { offer: OfferData }) {
         Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
       </div>
       <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-      <button
-        onClick={() => onApprove(o).catch(console.error)}
-        className="bg-black text-white rounded text-sm px-4 py-1 flex items-center hover:opacity-50"
-      >
-        Accept Offer {isLoading && <Spinner className="h-4 w-4 ml-2" />}
-      </button>
+      
     </>
   );
   if (o.state === 'Committed') {
@@ -164,7 +159,36 @@ function Offer(props: { offer: OfferData }) {
     <FadeIn className="flex flex-col py-2">
       <div className="bg-white border">
         <div className="flex gap-2 items-center p-4 border-b px-4">
-          {status}
+          <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+            Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
+          </div>
+          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+          {o.state == 'Open' && <>
+          <button
+            onClick={() => onApprove(o).catch(console.error)}
+            className="bg-black text-white rounded text-sm px-4 py-1 flex items-center hover:opacity-50"
+          >
+            Accept Offer {isLoading && <Spinner className="h-4 w-4 ml-2" />}
+          </button>
+          </>}
+          {o.state == 'Committed' && <>
+          <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
+              Offer Confirmed <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+            </div>
+          </>}
+          {o.state == 'Confirmed' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+          </>}
         </div>
 
         <div className="flex px-4 pt-4">
