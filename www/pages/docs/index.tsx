@@ -1,5 +1,7 @@
 import { ArrowRightIcon } from '@heroicons/react/solid';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { InformationPageHeader } from '../../components/Layout';
 
 function DocLink(props: { title: string; description: string; slug: string }) {
@@ -19,6 +21,12 @@ function DocLink(props: { title: string; description: string; slug: string }) {
 }
 
 export default function DocsPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/docs/whitepaper');
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       <div className="max-w-6xl mx-auto w-full pb-12 relative flex flex-col">
