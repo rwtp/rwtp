@@ -16,7 +16,7 @@ To sell on Real World Trade Protocol, the seller puts down a deposit. If a buyer
 - Let $C_s$ be the cost the seller pays if the deal fails. This is their deposit.
 - Let $P$ be the payment.
 - Let $I_s$ be the original value of the item to the seller, such as the expenses of manufacturing the item. A rational seller will not agree to the deal if $P < I_s$.
-- Let $I_b$ be the actual value of the item to the buyer. A rational buyer will not agree to the deal if $P < I_b$.[^1]
+- Let $I_b$ be the actual value of the item to the buyer. A rational buyer will not agree to the deal if $P > I_b$.[^1]
 
 |               | Buyer Confirms  | Buyer Rejects                  |
 | ------------- | --------------- | ------------------------------ |
@@ -29,7 +29,7 @@ However, in situations where either the buyer or the seller is not trusted, the 
 
 ### Trusted seller, untrusted buyer
 
-Imagine the situation where a trusted seller is interacting with an unknown buyer. Say $P = 10$, $I_b = 15$, $I_s = 5$. Regardless of what the seller stakes; the seller can protect themselves by only agreeing to offers where $C_b \geq P + C_b$, such as $C_b = 25$.
+Imagine the situation where a trusted seller is interacting with an unknown buyer. Say $P = 10$, $I_b = 15$, $I_s = 5$. Regardless of what the seller stakes; the seller can protect themselves by only agreeing to offers where $C_b \geq P + I_b$, such as $C_b = 25$.
 
 |               | Buyer Confirms | Buyer Rejects    |
 | ------------- | -------------- | ---------------- |
