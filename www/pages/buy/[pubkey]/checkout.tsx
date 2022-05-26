@@ -25,6 +25,8 @@ function BuyPage({ order }: { order: OrderData }) {
   const router = useRouter();
   const buyersEncryptionKeypair = useEncryptionKeypair();
   const [offerData, setOfferData] = useState({});
+  const [txHash, setTxHash] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const quantity = 1;
   const price = order.priceSuggested
@@ -39,10 +41,11 @@ function BuyPage({ order }: { order: OrderData }) {
   const timeout = order.buyersCostSuggested
     ? BigNumber.from(order.buyersCostSuggested)
     : BigNumber.from(60 * 60 * 24 * 7);
-  
+
   async function onBuy() {
     if (!offerData) return;
     if (!buyersEncryptionKeypair) return;
+    setIsLoading(true);
     console.log('Submitting offer: ', offerData);
     const secretData = Buffer.from(
       JSON.stringify(offerData),
@@ -70,7 +73,10 @@ function BuyPage({ order }: { order: OrderData }) {
     const approveTx = await tokenMethods.approve.writeAsync({
       args: [order.address, price.add(stake).mul(quantity)],
     });
+    
+    setTxHash(approveTx.hash);
     await approveTx.wait();
+    setTxHash('');
 
     const tx = await orderMethods.submitOffer.writeAsync({
       args: [BigNumber.from(0), order.tokenAddressesSuggested[0], price, cost, stake, timeout, 'ipfs://' + cid],
@@ -78,8 +84,12 @@ function BuyPage({ order }: { order: OrderData }) {
         gasLimit: 1000000,
       },
     });
-
+    
+    setTxHash(tx.hash);
     await tx.wait();
+    setTxHash('');
+    setIsLoading(false);
+    
     router.push(`/buy/${order.address}`);
   }
 
@@ -94,7 +104,7 @@ function BuyPage({ order }: { order: OrderData }) {
   }
 
   return (
-    <ConnectWalletLayout requireConnected={true}>
+    <ConnectWalletLayout requireConnected={true} txHash={txHash}>
       <div className="h-full w-full flex flex-col border-t">
         <div className="h-full flex w-full">
           <div className="flex w-full border-l border-r mx-auto">
@@ -120,28 +130,30 @@ function BuyPage({ order }: { order: OrderData }) {
 
                 <div className="flex mb-2 pt-12 ">
                   <div className="border rounded bg-white">
-                   {imageComponent}
+                    {imageComponent}
                   </div>
                 </div>
               </div>
             </div>
             <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-              {
-                order.offerSchemaUri && order.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
+              <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}> 
+                {
+                  order.offerSchemaUri && order.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
                   <OfferForm
-                    schema={order.offerSchema}
-                    setOfferData={setOfferData}
-                    offerData={offerData}
-                    price={fromBn(price, order.tokensSuggested[0].decimals)}
-                    onSubmit={onBuy}
-                    symbol={order.tokensSuggested[0].symbol} /> :
+                  schema={order.offerSchema}
+                  setOfferData={setOfferData}
+                  offerData={offerData}
+                  price={fromBn(price, order.tokensSuggested[0].decimals)}
+                  onSubmit={onBuy}
+                  symbol={order.tokensSuggested[0].symbol} /> :
                   <SimpleOfferForm
-                    setOfferData={setOfferData}
-                    offerData={offerData}
-                    price={fromBn(price, order.tokensSuggested[0].decimals)}
-                    onSubmit={onBuy}
-                    symbol={order.tokensSuggested[0].symbol} />
-              }
+                  setOfferData={setOfferData}
+                  offerData={offerData}
+                  price={fromBn(price, order.tokensSuggested[0].decimals)}
+                  onSubmit={onBuy}
+                  symbol={order.tokensSuggested[0].symbol} />
+                }
+              </div>
             </div>
           </div>
         </div>

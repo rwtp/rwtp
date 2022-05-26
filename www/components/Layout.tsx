@@ -2,6 +2,7 @@ import {
   ChevronDoubleRightIcon,
   ChevronRightIcon,
   FingerPrintIcon,
+  RefreshIcon,
   SwitchHorizontalIcon,
 } from '@heroicons/react/solid';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -10,6 +11,7 @@ import Link from 'next/link';
 import { FadeIn } from './FadeIn';
 import cn from 'classnames';
 import { useRouter } from 'next/router';
+import { useWaitForTransaction } from 'wagmi';
 
 export function InformationPageHeader() {
   return (
@@ -82,8 +84,12 @@ export function TabBar(props: { tab: 'buy' | 'sell' }) {
 export function ConnectWalletLayout(props: {
   requireConnected: boolean;
   children: React.ReactNode;
+  txHash: string;
 }) {
   const router = useRouter();
+  const waitForTransaction = useWaitForTransaction({
+    hash: props.txHash,
+  })
 
   return (
     <div className="flex flex-col h-full">
@@ -152,13 +158,21 @@ export function ConnectWalletLayout(props: {
                       {chain.name}
                       <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
                     </button>
-                    <button
-                      className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
-                      onClick={() => openAccountModal()}
-                    >
-                      {account.ensName ? account.ensName : keyDetails}
-                      <FingerPrintIcon className="h-4 w-4 ml-2" />
-                    </button>
+                    {waitForTransaction.status == "idle" &&
+                      <button
+                        className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
+                        onClick={() => openAccountModal()}
+                      >
+                        {account.ensName ? account.ensName : keyDetails}
+                        <FingerPrintIcon className="h-4 w-4 ml-2" />
+                      </button>
+                    }
+                    {waitForTransaction.status == "loading" &&
+                      <div className="animate-pulse bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50">
+                        Transaction pending
+                        <RefreshIcon className='animate-spin h-4 w-4 ml-2'/>
+                    </div>
+                    }
                   </FadeIn>
                 );
               }}
