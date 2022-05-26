@@ -5,7 +5,7 @@ const OrderBook = {
   ...OrderBookWithoutAddress,
 
   // The address of the deployed contract
-  address: '0xbd2e1dbe56053ee310249ce5969208ad7aa72dd0',
+  address: '0x8587256EdF3D11EbF70540180140132c6D36bd29',
 };
 
 export { Order, OrderBook };
