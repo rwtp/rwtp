@@ -1,0 +1,41 @@
+---
+title: Quick Start
+---
+
+# Quick Start
+
+Install [ethers.js](https://docs.ethers.io/) and the [rwtp](https://github.com/rwtp/rwtp). The `rwtp` npm package is not the protocol itself, but a client that contains useful helpers for interacting with it.
+
+```bash
+yarn add rwtp ethers
+```
+
+## Connect to Ethereum
+
+You'll need a testnet RPC endpoint. You can get one for free from [infura.io](https://infura.io). You may also want some testnet ETH, you can get some from a faucet, [like this one](https://faucet.paradigm.xyz/).
+
+```ts
+import { ethers } from 'ethers';
+
+const provider = new ethers.providers.JsonRpcProvider('YourEndpoint');
+```
+
+## Connect to an OrderBook
+
+An order book is a master list of all the buy and sell orders.
+
+```ts
+import { OrderBook } from 'rwtp';
+
+// ...
+
+const book = new ethers.Contract(OrderBook.address, OrderBook.abi, provider);
+```
+
+## Create a Sell Order
+
+Use the OrderBook to create a new sell order.
+
+```ts
+book.createOrder();
+```

@@ -34,6 +34,12 @@ export function InformationPageHeader() {
         </a>
 
         <a
+          href="https://discord.gg/ekBqgYG2GW"
+          className="flex items-center px-1"
+        >
+          <Image src={'/discord.svg'} width={16} height={16} />
+        </a>
+        <a
           href="https://github.com/rwtp/rwtp"
           className="flex items-center px-1"
         >
