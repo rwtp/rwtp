@@ -70,7 +70,7 @@ function Offer(props: { offer: OfferData }) {
   });
 
   async function onApprove(o: OfferData) {
-    if (!signer || !signer.data) return;
+    if (!signer || !signer.data || isLoading) return;
 
     setIsLoading(true);
     const contract = new ethers.Contract(
@@ -79,10 +79,11 @@ function Offer(props: { offer: OfferData }) {
       signer.data
     );
 
-    const commit = await contract.commit(o.taker, o.index, {
+    const tx = await contract.commit(o.taker, o.index, {
       gasLimit: 1000000,
     });
-    const tx = await commit.wait();
+    tx.hash
+    await tx.wait();
     setIsLoading(false);
   }
 
@@ -272,7 +273,7 @@ function Offers() {
 export default function Page() {
   return (
     <RequiresKeystore>
-      <ConnectWalletLayout requireConnected={false}>
+      <ConnectWalletLayout requireConnected={false} txHash="">
         <div className="h-full flex flex-col">
           <Suspense fallback={<div></div>}>
             <div className=" p-4 max-w-6xl mx-auto w-full mt-8">

@@ -52,6 +52,8 @@ function NewOrder() {
   const signer = useSigner();
   const router = useRouter();
   const sellersEncryptionKeypair = useEncryptionKeypair();
+  const [isLoading, setIsLoading] = useState(false);
+  const [txHash, setTxHash] = useState('');
 
   const book = useContractWrite(
     {
@@ -64,6 +66,7 @@ function NewOrder() {
 
   async function createOrder() {
     if (!signer || !signer.data) return;
+    setIsLoading(true);
 
     const erc20Address = state.token;
     const erc20ABI = [
@@ -103,20 +106,24 @@ function NewOrder() {
         false
       ],
     });
+
+    setTxHash(tx.hash);
     const result = (await tx.wait()) as any;
+    setTxHash('');
     if (!result.events || result.events.length < 1) {
       throw new Error(
         "Unexpectedly could not find 'events' in the transaction hash of createOrder. Maybe an ethers bug? Maybe the CreateOrder event isn't picked up fast enough? This basically shouldn't happen."
       );
     }
     const orderAddress = result.events[0].args[0];
+    setIsLoading(false);
     router.push(`/buy/${orderAddress}`);
   }
 
   let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
 
   return (
-    <ConnectWalletLayout requireConnected={true}>
+    <ConnectWalletLayout requireConnected={true} txHash={txHash}>
       <div className="px-4 py-4 max-w-6xl mx-auto">
         <div className="font-serif mb-12 mt-12 text-2xl">
           Create a new sell listing
@@ -324,7 +331,11 @@ function NewOrder() {
         </div>
         <div className="mt-8">
           <button
-            className="flex items-center px-4 py-2 rounded bg-black text-white border-black hover:opacity-50 transition-all"
+            className={
+              "flex items-center px-4 py-2 rounded bg-black text-white border-black hover:opacity-50 transition-all ".concat(
+                isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
+              )
+            }
             onClick={() => createOrder().catch(console.error)}
           >
             Publish new sell order <ArrowRightIcon className="w-4 h-4 ml-4" />

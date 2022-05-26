@@ -163,7 +163,7 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   return (
-    <ConnectWalletLayout requireConnected={true}>
+    <ConnectWalletLayout requireConnected={true} txHash="">
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
           <div className="pb-4 text-sm flex items-center text-gray-600">

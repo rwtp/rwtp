@@ -70,7 +70,7 @@ function Results(props: { searchText: string }) {
 export default function Page() {
   const [searchText, setSearchText] = useState('');
   return (
-    <ConnectWalletLayout requireConnected={false}>
+    <ConnectWalletLayout requireConnected={false} txHash="">
       <div className="h-full flex flex-col">
         <div className="p-4 max-w-6xl mx-auto w-full mt-8">
           <div className="pb-8">
