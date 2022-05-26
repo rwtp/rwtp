@@ -164,7 +164,7 @@ export function ConnectWalletLayout(props: {
                       {chain.name}
                       <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
                     </button>
-                    {waitForTransaction.status == "idle" &&
+                    {waitForTransaction.status != "loading" &&
                       <button
                         className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
                         onClick={() => openAccountModal()}
