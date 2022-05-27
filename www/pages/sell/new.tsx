@@ -1,7 +1,12 @@
-import { useContractWrite, useSigner } from 'wagmi';
+import { chainId, useContractWrite, useSigner } from 'wagmi';
 import { OrderBook } from 'rwtp';
 import { useState } from 'react';
-import { ArrowRightIcon, RefreshIcon, XIcon } from '@heroicons/react/solid';
+import {
+  ArrowRightIcon,
+  ChevronDownIcon,
+  RefreshIcon,
+  XIcon,
+} from '@heroicons/react/solid';
 import { ethers } from 'ethers';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
@@ -9,10 +14,12 @@ import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import SelectSearch from 'react-select-search';
-import { renderToken, optimismList } from '../../lib/tokenDropdown';
+import { renderToken, networkDropDown } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
 import cn from 'classnames';
 import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
+import { useNetwork } from 'wagmi';
+import { valueFromAST } from 'graphql';
 
 async function postJSONToIPFS(data: any) {
   const result = await fetch('/api/uploadJson', {
@@ -31,13 +38,16 @@ async function postJSONToIPFS(data: any) {
 async function postFileToIPFS(file: Buffer) {
   const result = await fetch('/api/uploadFile', {
     method: 'POST',
-    body: file.toString("base64"),
+    body: file.toString('base64'),
   });
   const { cid } = await result.json();
   return cid;
 }
 
 function NewOrder() {
+  const { activeChain, chains, error, pendingChainId, switchNetwork } =
+    useNetwork();
+
   const [state, setState] = useState({
     title: '',
     description: '',
@@ -91,19 +101,14 @@ function NewOrder() {
         state.buyersCost.toString(),
         decimals
       ).toHexString(),
-      suggestedTimeout: 
-      toBn(
+      suggestedTimeout: toBn(
         (60 * 60 * 24 * 7).toString(),
         decimals
       ).toHexString(),
     });
 
     const tx = await book.writeAsync({
-      args: [
-        await signer.data.getAddress(),
-        `ipfs://${cid}`,
-        false
-      ],
+      args: [await signer.data.getAddress(), `ipfs://${cid}`, false],
     });
 
     setTxHash(tx.hash);
@@ -123,14 +128,14 @@ function NewOrder() {
 
   return (
     <ConnectWalletLayout requireConnected={true} txHash={txHash}>
-      <div className="px-4 py-4 max-w-6xl mx-auto">
-        <div className="font-serif mb-12 mt-12 text-2xl">
+      <div className="px-4 py-4 max-w-3xl mx-auto">
+        <div className="font-serif mb-2 mt-12 text-2xl">
           Create a new sell listing
         </div>
-        <p className="mb-8">Sell anything, from a pack of gum to a ferrari.</p>
+        <p className="mb-10">Sell anything, from a pack of gum to a ferrari.</p>
 
-        <div className="flex flex-col">
-          <label className="flex flex-col mb-8">
+        <div className="flex flex-col space-y-8">
+          <label className="flex flex-col">
             <strong className="mb-1 text-sm">Title</strong>
             <input
               className="font-sans border px-4 py-2 rounded"
@@ -141,7 +146,7 @@ function NewOrder() {
               value={state.title}
             />
           </label>
-          <label className="flex flex-col mb-8">
+          <label className="flex flex-col">
             <strong className="mb-1 text-sm">Description</strong>
             <textarea
               className="border px-4 py-2 rounded"
@@ -152,24 +157,25 @@ function NewOrder() {
               value={state.description}
             />
           </label>
-          <div className="flex flex-col mb-8">
+          <div className="flex flex-col">
             <strong className="mb-1 text-sm">Image</strong>
-            <label className='flex flex-row content-center'>
+            <label className="flex flex-row content-center">
               <input
                 type="text"
-                className="px-4 py-2 border my-auto flex-grow"
-                placeholder='ipfs://cid or https://image.jpg'
+                className="px-4 py-2 border rounded my-auto flex-grow"
+                placeholder="ipfs://cid or https://image.jpg"
                 hidden={imageUploading}
                 value={state.primaryImage}
                 onChange={(e) => {
                   setShowImagePreview(false);
-                  setState((s) => ({ ...s, primaryImage: e.target.value }))
+                  setState((s) => ({ ...s, primaryImage: e.target.value }));
                 }}
                 onBlur={() => setShowImagePreview(true)}
               />
               <p
-                className='my-auto px-5 text-center'
-                hidden={!!state.primaryImage || imageUploading}>
+                className="my-auto px-5 text-center"
+                hidden={!!state.primaryImage || imageUploading}
+              >
                 or
               </p>
               <input
@@ -185,55 +191,63 @@ function NewOrder() {
 
                   // Error if file is over 3MB
                   if (file.size > 3_000_000) {
-                    alert("Error: Image must be less than 3 MB");
+                    alert('Error: Image must be less than 3 MB');
                     e.target.value = '';
                     setImageUploading(false);
                     return;
                   }
 
-                  const arrayBuffer = await file.arrayBuffer()
+                  const arrayBuffer = await file.arrayBuffer();
                   const cid = await postFileToIPFS(Buffer.from(arrayBuffer));
                   setImageUploading(false);
                   setShowImagePreview(true);
-                  setState((s) => ({ ...s, primaryImage: `ipfs://${cid}` }))
+                  setState((s) => ({ ...s, primaryImage: `ipfs://${cid}` }));
                 }}
               />
-              <div
-                className='my-auto'
-                hidden={!imageUploading}
-              >
-                <p className='my-auto animate-pulse'>Loading...</p>
+              <div className="my-auto" hidden={!imageUploading}>
+                <p className="my-auto animate-pulse">Loading...</p>
               </div>
-              <div 
-                className='relative h-20 ml-5'
-                hidden={imageUploading || !state.primaryImage || !showImagePreview}
+              <div
+                className="relative h-20 ml-5"
+                hidden={
+                  imageUploading || !state.primaryImage || !showImagePreview
+                }
               >
-                <img 
-                  className='h-full' 
-                  src={showImagePreview ? state.primaryImage.replace("ipfs://", "https://infura-ipfs.io/ipfs/") : ''}
-                  onLoadStart={() => (setShowImagePreview(false))}
-                  onLoad={() => (setShowImagePreview(true))} 
-                  onError={() => (setShowImagePreview(false))} 
+                <img
+                  className="h-full"
+                  src={
+                    showImagePreview
+                      ? state.primaryImage.replace(
+                          'ipfs://',
+                          'https://infura-ipfs.io/ipfs/'
+                        )
+                      : ''
+                  }
+                  onLoadStart={() => setShowImagePreview(false)}
+                  onLoad={() => setShowImagePreview(true)}
+                  onError={() => setShowImagePreview(false)}
                 ></img>
-                <button 
-                  className='absolute top-0 right-0'
+                <button
+                  className="absolute top-0 right-0"
                   onClick={() => {
-                    setState((s) => ({ ...s, primaryImage: "" }))
+                    setState((s) => ({ ...s, primaryImage: '' }));
                   }}
                 >
-                  <XIcon className="w-5 h-5 text-white bg-black rounded-full p-1 m-1"/>
+                  <XIcon className="w-5 h-5 text-white bg-black rounded-full p-1 m-1" />
                 </button>
               </div>
-              <div 
-                className='my-auto ml-5'
-                hidden={imageUploading || !state.primaryImage || showImagePreview}
+              <div
+                className="my-auto ml-5"
+                hidden={
+                  imageUploading || !state.primaryImage || showImagePreview
+                }
               >
-                <RefreshIcon className="animate-spin w-5 h-5 text-black"/>
+                <RefreshIcon className="animate-spin w-5 h-5 text-black" />
               </div>
             </label>
           </div>
-          <div className="flex mb-8">
-            <label className="flex flex-1 flex-col mr-4">
+          <div className="flex flex-col md:flex-row gap-x-4 gap-y-8">
+            <label className="flex flex-1 flex-col max-w-full md:max-w-33">
               <strong className="mb-1 text-sm">Price</strong>
               <input
                 className="border px-4 py-2 rounded"
@@ -248,53 +262,55 @@ function NewOrder() {
                 value={state.price}
               />
             </label>
-
-            <label className="flex-col">
-              <strong className="mb-1 text-sm">Token</strong>
-              <SelectSearch
-                className={(classes: string) =>
-                  cn({
-                    'w-40': true,
-                    'px-4 py-2 border rounded-l': classes === 'input',
-                    'px-4 py-2 w-full hover:bg-slate-50': classes === 'option',
-                    'border rounded-b absolute bg-white drop-shadow':
-                      classes === 'options',
-                  })
-                }
-                options={optimismList}
-                placeholder={customTokenDisabled ? 'USDC' : 'Custom Token'}
-                onChange={(opt: any) => {
-                  if (opt === 'Custom') {
-                    setCustomTokenDisabled(false);
-                    setState((s) => ({ ...s, token: '' }));
-                  } else {
-                    setState((s) => ({ ...s, token: opt }));
-                    setCustomTokenDisabled(true);
+            <div className="flex flex-1 flex-row max-w-full">
+              <label className="flex flex-col">
+                <strong className="mb-1 text-sm">Token</strong>
+                <SelectSearch
+                  className={(classes: string) =>
+                    cn({
+                      'w-40': true,
+                      'px-4 py-2 border rounded-l': classes === 'input',
+                      'px-4 py-2 w-full hover:bg-slate-50':
+                        classes === 'option',
+                      'border rounded-b absolute bg-white drop-shadow':
+                        classes === 'options',
+                    })
                   }
-                }}
-                search
-                renderOption={renderToken}
-                value={state.token}
-              />
-            </label>
+                  options={networkDropDown(activeChain?.name!)}
+                  placeholder={customTokenDisabled ? 'USDC' : 'Custom Token'}
+                  onChange={(opt: any) => {
+                    if (opt === 'Custom') {
+                      setCustomTokenDisabled(false);
+                      setState((s) => ({ ...s, token: '' }));
+                    } else {
+                      setState((s) => ({ ...s, token: opt }));
+                      setCustomTokenDisabled(true);
+                    }
+                  }}
+                  search
+                  renderOption={renderToken}
+                  value={state.token}
+                />
+              </label>
 
-            <label className="flex flex-1 flex-col">
-              <strong className="mb-1 text-sm">Token Address</strong>
-              <input
-                className="border-r border-t border-b px-4 py-2 rounded-r"
-                placeholder={DEFAULT_TOKEN}
-                disabled={customTokenDisabled}
-                onChange={(e) =>
-                  setState((s) => ({
-                    ...s,
-                    token: e.target.value,
-                  }))
-                }
-                value={state.token}
-              />
-            </label>
+              <label className="flex flex-1 flex-col">
+                <strong className="mb-1 text-sm">Token Address</strong>
+                <input
+                  className="border-r border-t border-b px-4 py-2 rounded-r"
+                  placeholder={DEFAULT_TOKEN}
+                  disabled={customTokenDisabled}
+                  onChange={(e) =>
+                    setState((s) => ({
+                      ...s,
+                      token: e.target.value,
+                    }))
+                  }
+                  value={state.token}
+                />
+              </label>
+            </div>
           </div>
-          <div className="flex">
+          <div className="flex flex-col md:flex-row gap-x-4 gap-y-8">
             <label className="flex flex-1 flex-col">
               <strong className="mb-1 text-sm">Seller's Stake</strong>
               <input
@@ -328,16 +344,15 @@ function NewOrder() {
             </label>
           </div>
         </div>
-        <div className="mt-8">
+        <div className="mt-12">
           <button
-            className={
-              "flex items-center px-4 py-2 rounded bg-black text-white border-black hover:opacity-50 transition-all ".concat(
-                isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
-              )
-            }
+            className={'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'.concat(
+              isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
+            )}
             onClick={() => createOrder().catch(console.error)}
           >
-            Publish new sell order <ArrowRightIcon className="w-4 h-4 ml-4" />
+            Publish new sell order
+            {/* <ArrowRightIcon className="w-4 h-4 ml-4" /> */}
           </button>
         </div>
       </div>
