@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { FadeIn } from './FadeIn';
 import cn from 'classnames';
 import { useRouter } from 'next/router';
-import { useWaitForTransaction } from 'wagmi';
+import { useWaitForTransaction, chain } from 'wagmi';
 
 export function InformationPageHeader() {
   return (
@@ -87,6 +87,10 @@ export function TabBar(props: { tab: 'buy' | 'sell' }) {
   );
 }
 
+export function getNetwork(props: any) {
+  return props.chain;
+}
+
 export function ConnectWalletLayout(props: {
   requireConnected: boolean;
   children: React.ReactNode;
@@ -95,7 +99,7 @@ export function ConnectWalletLayout(props: {
   const router = useRouter();
   const waitForTransaction = useWaitForTransaction({
     hash: props.txHash,
-  })
+  });
 
   return (
     <div className="flex flex-col h-full">
@@ -164,7 +168,7 @@ export function ConnectWalletLayout(props: {
                       {chain.name}
                       <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
                     </button>
-                    {waitForTransaction.status != "loading" &&
+                    {waitForTransaction.status != 'loading' && (
                       <button
                         className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
                         onClick={() => openAccountModal()}
@@ -172,13 +176,13 @@ export function ConnectWalletLayout(props: {
                         {account.ensName ? account.ensName : keyDetails}
                         <FingerPrintIcon className="h-4 w-4 ml-2" />
                       </button>
-                    }
-                    {waitForTransaction.status == "loading" &&
+                    )}
+                    {waitForTransaction.status == 'loading' && (
                       <div className="animate-pulse bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50">
                         Transaction pending
-                        <RefreshIcon className='animate-spin h-4 w-4 ml-2'/>
-                    </div>
-                    }
+                        <RefreshIcon className="animate-spin h-4 w-4 ml-2" />
+                      </div>
+                    )}
                   </FadeIn>
                 );
               }}

@@ -547,9 +547,9 @@
     chai "^4.3.4"
     ethers "^5.5.4"
 
-"@eth-optimism/tokenlist@git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git":
+"@eth-optimism/tokenlist@git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#af613ec3c5e511dbd0dc7c9cdd3d6eda311905c6":
   version "1.0.0"
-  resolved "git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#f095e947c829d046cf0bf0fa3fd0bbdfbd743be3"
+  resolved "git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#af613ec3c5e511dbd0dc7c9cdd3d6eda311905c6"
   dependencies:
     "@actions/core" "^1.4.0"
     "@changesets/cli" "^2.16.0"
@@ -6531,6 +6531,10 @@ pngjs@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-5.0.0.tgz#e79dd2b215767fd9c04561c01236df960bce7fbb"
   integrity sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==
+
+"polygon-token-list@git+https://github.com/maticnetwork/polygon-token-list.git#ce24aa9288aeb30db2dc788213706424bd34c540":
+  version "1.0.0"
+  resolved "git+https://github.com/maticnetwork/polygon-token-list.git#ce24aa9288aeb30db2dc788213706424bd34c540"
 
 postcss-js@^4.0.0:
   version "4.0.0"

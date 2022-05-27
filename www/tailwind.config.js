@@ -13,6 +13,9 @@ module.exports = {
         gray: colors.stone,
         blue: colors.indigo,
       },
+      maxWidth: {
+        '33':'33%'
+      }
     },
   },
   plugins: [require('@tailwindcss/typography')],
