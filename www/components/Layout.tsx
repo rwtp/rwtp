@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { FadeIn } from './FadeIn';
 import cn from 'classnames';
 import { useRouter } from 'next/router';
-import { useWaitForTransaction, chain } from 'wagmi';
+import { useWaitForTransaction } from 'wagmi';
 
 export function InformationPageHeader() {
   return (
@@ -87,10 +87,6 @@ export function TabBar(props: { tab: 'buy' | 'sell' }) {
   );
 }
 
-export function getNetwork(props: any) {
-  return props.chain;
-}
-
 export function ConnectWalletLayout(props: {
   requireConnected: boolean;
   children: React.ReactNode;
@@ -100,7 +96,6 @@ export function ConnectWalletLayout(props: {
   const waitForTransaction = useWaitForTransaction({
     hash: props.txHash,
   });
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex px-4 py-4  justify-between items-center w-full max-w-6xl mx-auto w-full">

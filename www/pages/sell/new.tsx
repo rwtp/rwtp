@@ -124,14 +124,6 @@ function NewOrder() {
     router.push(`/buy/${orderAddress}`);
   }
 
-  function setTokenState(opt: any) {
-    if (opt === 'Custom') {
-      setState((s) => ({ ...s, token: '' }));
-    } else {
-      setState((s) => ({ ...s, token: opt }));
-    }
-  }
-
   let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
 
   return (
