@@ -1,0 +1,45 @@
+---
+title: FAQ
+---
+
+# FAQ
+
+## Why would anyone want this?
+
+It lets you safely buy and sell real-world items on the internet with crypto.
+
+A seller can solve this problem today by selling on their own website; but that requires them to have an existing business and limits sale to only their website. RWTP allows you to safely purchase from new, untrusted businesses and lets existing businesses sell to large global market.
+
+## Why does RWTP let you sell to a large market?
+
+All the buy orders and sell orders are on a blockchain; a shared global database. You can buy from any client application, and sell on client application. If you list something on your own website, it's also purchasable (under the same price and terms) on the rest of the RWTP marketplace.
+
+## Does that mean I don't get control of where the product is sold?
+
+Just because someone offers to purchase your product from anywhere doesn't mean you have to accept their offer. You can limit where product is sold, by only accepting offers that originate from certain sources.
+
+## You say you can "program the economy", what does that mean?
+
+RWTP lets you place a buy order, in human language, with a few lines of code.
+
+For example, you can create a buy order for "vintage clothing". You don't even need to specify _what type_ of vintage clothing or an exact SKU. Instead, you can just say "vintage clothing plz" and let the market provide you with offers.
+
+Here's an example in Javascript of doing such a thing:
+
+```typescript
+import { OrderBook } from 'rwtp';
+
+const book = new ethers.Contract(OrderBook.address, OrderBook.abi, provider);
+
+book.createOrder(
+  yourWalletAddress,
+  'ipfs://Qmc1Jz9Pwj9mgrwfSB2qw6wu2sPwv2cUf9bM7xdF5PE4mU',
+  true // isBuyOrder = true
+);
+```
+
+And here's an example with a fictional command line application:
+
+```bash
+rwtp order create --buy "Vintage clothing in the style of the late 90s"
+```
