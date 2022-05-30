@@ -127,7 +127,7 @@ function useOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
 }
 
 export function useOrders(args: { first: number; skip: number, searchText: string }) {
-  const searchArg = args.searchText ? `sellOrderSearch(first:$first, skip:$skip, text:"${args.searchText}:*")` : `orders(first:$first, skip:$skip)`;
+  const searchArg = args.searchText ? `orderSearch(first:$first, skip:$skip, text:"${args.searchText}:*")` : `orders(first:$first, skip:$skip)`;
   let res = useOrdersWrapperWithMetaData(
     `
     ${searchArg} {
@@ -139,7 +139,7 @@ export function useOrders(args: { first: number; skip: number, searchText: strin
       first: args.first,
     }
   ) as any;
-  const data = args.searchText ? res.data?.sellOrderSearch : res.data?.orders;
+  const data = args.searchText ? res.data?.orderSearch : res.data?.orders;
   return {
     ...res.metadata,
     data: data,
