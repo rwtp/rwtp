@@ -70,6 +70,7 @@ export default function PostPage({ source, frontMatter }: any) {
 
           <SidebarItem slug={'whitepaper'}>Whitepaper</SidebarItem>
           <SidebarItem slug={'contracts'}>Contracts</SidebarItem>
+          <SidebarItem slug={'metadata'}>Metadata</SidebarItem>
           <SidebarItem slug={'faq'}>FAQ</SidebarItem>
         </div>
         <article className="flex-1 px-4 text-gray-900  prose py-12 mx-auto prose-headings:font-serif prose-headings:font-medium ">
