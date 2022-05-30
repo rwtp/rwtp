@@ -14,7 +14,7 @@ import { ConnectWalletLayout } from '../../components/Layout';
 import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import SelectSearch from 'react-select-search';
-import { renderToken, networkDropDown } from '../../lib/tokenDropdown';
+import { renderToken, getNetworkList } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
 import cn from 'classnames';
 import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
@@ -276,7 +276,7 @@ function NewOrder() {
                         classes === 'options',
                     })
                   }
-                  options={networkDropDown(activeChain?.name!)}
+                  options={getNetworkList(activeChain?.name!)}
                   placeholder={customTokenDisabled ? 'USDC' : 'Custom Token'}
                   onChange={(opt: any) => {
                     if (opt === 'Custom') {

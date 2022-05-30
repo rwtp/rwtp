@@ -1,7 +1,7 @@
 import {
   ArrowRightIcon,
   CheckCircleIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
 } from '@heroicons/react/solid';
 import { BigNumber, ethers } from 'ethers';
 import { fromBn } from 'evm-bn';
@@ -11,6 +11,7 @@ import { Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import { useTokenMethods } from '../../../lib/tokens';
+import { getPrimaryImageLink } from '../../../lib/image';
 import {
   OrderData,
   OfferData,
@@ -22,6 +23,7 @@ import cn from 'classnames';
 import dayjs from 'dayjs';
 import { useSigner } from 'wagmi';
 import { Order } from 'rwtp';
+import { utils } from 'ethers';
 
 function Offer(props: {
   offer: OfferData;
@@ -43,9 +45,13 @@ function Offer(props: {
       signer.data
     );
 
-    const commit = await contract.confirm(props.offer.taker, props.offer.index, {
-      gasLimit: 1000000,
-    });
+    const commit = await contract.confirm(
+      props.offer.taker,
+      props.offer.index,
+      {
+        gasLimit: 1000000,
+      }
+    );
     await commit.wait();
     setIsLoading(false);
   }
@@ -57,7 +63,9 @@ function Offer(props: {
           <div className="flex flex-col">
             <div className="text-gray-500 text-xs">Ordered on</div>
             <div className="text-lg font-serif">
-              {dayjs.unix(Number.parseInt(props.offer.timestamp)).format("MMM D YYYY, h:mm a")}
+              {dayjs
+                .unix(Number.parseInt(props.offer.timestamp))
+                .format('MMM D YYYY, h:mm a')}
             </div>
           </div>
         </div>
@@ -73,7 +81,9 @@ function Offer(props: {
                 BigNumber.from(props.offer.price),
                 props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
+              <span className="text-sm">
+                {props.order.tokensSuggested[0].symbol}
+              </span>
             </div>
           </div>
           <div className="flex-1">
@@ -84,7 +94,9 @@ function Offer(props: {
                 BigNumber.from(props.offer.buyersCost),
                 props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
+              <span className="text-sm">
+                {props.order.tokensSuggested[0].symbol}
+              </span>
             </div>
           </div>
           <div className="flex-1">
@@ -94,7 +106,9 @@ function Offer(props: {
                 BigNumber.from(props.offer.sellersStake),
                 props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
+              <span className="text-sm">
+                {props.order.tokensSuggested[0].symbol}
+              </span>
             </div>
           </div>
         </div>
@@ -103,31 +117,40 @@ function Offer(props: {
             Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
           </div>
           <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          {state == 'Open' && <>
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
-              Offer Committed <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
-            </div>
-          </>}
-          {state == 'Committed' && <>
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-            <button
-              className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
-              onClick={() => { onConfirm() }}
-              disabled={isLoading}
-            >
-              Confirm Order
-            </button>
-          </>}
-          {state == 'Confirmed' && <>
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-          </>}
+          {state == 'Open' && (
+            <>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
+                Offer Committed{' '}
+                <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+              </div>
+            </>
+          )}
+          {state == 'Committed' && (
+            <>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+              <button
+                className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
+                onClick={() => {
+                  onConfirm();
+                }}
+                disabled={isLoading}
+              >
+                Confirm Order
+              </button>
+            </>
+          )}
+          {state == 'Confirmed' && (
+            <>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </FadeIn>
@@ -168,7 +191,7 @@ function OrderPage({ order }: { order: OrderData }) {
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
           <div className="pb-4 text-sm flex items-center text-gray-600">
             <a className="underline" href="/buy">
-              Sell Orders
+              Browse Listings
             </a>
             <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
             <div className="font-mono">{`${order.address.substring(
@@ -179,20 +202,47 @@ function OrderPage({ order }: { order: OrderData }) {
               order.address.length
             )}`}</div>
           </div>
-          <h1 className="font-serif text-3xl pb-1 pt-12">{order.title}</h1>
-          <p className="pb-4">{order.description}</p>
+          <div className="flex flex-col md:flex-row mb-8">
+            <div className="w-full md:w-4/6 mr-8">
+              <img className="object-fill" src={getPrimaryImageLink(order)} />
+            </div>
+            <div className="w-full md:w-2/6 space-y-8">
+              <div>
+                <h1 className="font-serif text-3xl mb-2">{order.title}</h1>
+                <div className="text-3xl">
+                  {utils.formatEther(order.priceSuggested)}
+                </div>
+              </div>
 
-          <div className="flex mb-16">
-            <Link href={`/buy/${order.address}/checkout`}>
-              <a
-                className={cn({
-                  'bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center':
-                    true,
-                })}
-              >
-                Order Now <ArrowRightIcon className="h-4 w-4 ml-2" />
-              </a>
-            </Link>
+              <div className="flex flex-row space-x-4">
+                <div className="flex flex-col w-1/2">
+                  <div className="text-xs font-mono text-gray-400">
+                    Penalize Fee
+                  </div>
+                  <div>{utils.formatEther(order.buyersCostSuggested)}</div>
+                </div>
+                <div className="flex flex-col w-1/2">
+                  <div className="text-xs font-mono text-gray-400">
+                    Seller's Stake
+                  </div>
+                  <div>{utils.formatEther(order.sellersStakeSuggested)}</div>
+                </div>
+              </div>
+              <p>{order.description}</p>
+
+              <div className="flex mb-16">
+                <Link href={`/buy/${order.address}/checkout`}>
+                  <a
+                    className={cn({
+                      'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50':
+                        true,
+                    })}
+                  >
+                    Order
+                  </a>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
 
