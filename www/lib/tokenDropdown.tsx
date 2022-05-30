@@ -48,7 +48,7 @@ const rinkebyList = [
   },
 ];
 
-export function networkDropDown(network: string) {
+export function getNetworkList(network: string) {
   if (network === 'Rinkeby') {
     return ddRinkebyList;
   } else if (network === 'Optimism') {
