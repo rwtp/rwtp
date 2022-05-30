@@ -1,0 +1,25 @@
+---
+title: GraphQL
+---
+
+# GraphQL
+
+You can use [the graph](https://thegraph.com/) to query orders with GraphQL. Use [the RWTP subgraph](https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp) to query orders.
+
+## Example
+
+Use the following query to grab orders. This subgraph attempts to parse common metadata fields like "title", "priceSuggested", "sellersStakeSuggested", and "buyersCostSuggested".
+
+```graphql
+# https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp
+{
+  orders {
+    address
+    title
+    maker
+    priceSuggested
+    sellersStakeSuggested
+    buyersCostSuggested
+  }
+}
+```
