@@ -1,40 +1,54 @@
 import {
   ArrowRightIcon,
   CheckCircleIcon,
-  ChevronRightIcon,
-  QuestionMarkCircleIcon,
+  ChevronRightIcon
 } from '@heroicons/react/solid';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import { useTokenMethods } from '../../../lib/tokens';
 import {
-  SellOrderData,
-  useSellOrder,
-  useSellOrderMethods,
-  useSellOrderOffers,
-} from '../../../lib/useSellOrder';
+  OrderData,
+  OfferData,
+  useOrder,
+  useOrderMethods,
+  useOrderOffers,
+} from '../../../lib/useOrder';
 import cn from 'classnames';
 import dayjs from 'dayjs';
+import { useSigner } from 'wagmi';
+import { Order } from 'rwtp';
 
 function Offer(props: {
-  offer: {
-    quantity: string;
-    pricePerUnit: string;
-    stakePerUnit: string;
-    index: string;
-    state: 'Closed' | 'Open' | 'Committed';
-    timestamp: string;
-  };
-  sellOrder: SellOrderData;
+  offer: OfferData;
+  order: OrderData;
   onConfirm: (index: string) => Promise<any>;
   onCancel: (index: string) => Promise<any>;
 }) {
   const state = props.offer.state;
+  const signer = useSigner();
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function onConfirm() {
+    if (!signer || !signer.data) return;
+
+    setIsLoading(true);
+    const contract = new ethers.Contract(
+      props.order.address,
+      Order.abi,
+      signer.data
+    );
+
+    const commit = await contract.confirm(props.offer.taker, props.offer.index, {
+      gasLimit: 1000000,
+    });
+    await commit.wait();
+    setIsLoading(false);
+  }
 
   return (
     <FadeIn className="flex flex-col py-2">
@@ -56,30 +70,31 @@ function Offer(props: {
             <div className="text-gray-500 text-xs">Price</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.pricePerUnit),
-                props.sellOrder.token.decimals
+                BigNumber.from(props.offer.price),
+                props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
           <div className="flex-1">
-            <div className="text-gray-500 text-xs">Your deposit</div>
+            {/* TODO: update UI to translate cost into refund/deposit amounts */}
+            <div className="text-gray-500 text-xs">Your cost</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.stakePerUnit),
-                props.sellOrder.token.decimals
+                BigNumber.from(props.offer.buyersCost),
+                props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Seller's Deposit</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.sellOrder.sellersStake),
-                props.sellOrder.token.decimals
+                BigNumber.from(props.offer.sellersStake),
+                props.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{props.sellOrder.token.symbol}</span>
+              <span className="text-sm">{props.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
         </div>
@@ -88,48 +103,40 @@ function Offer(props: {
             Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
           </div>
           <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          <div
-            className={cn({
-              'text-xs flex  py-2 border-gray-600 text-gray-600': true,
-              'opacity-50': state !== 'Committed',
-            })}
-          >
-            Offer Accepted{' '}
-            {state === 'Committed' ? (
-              <CheckCircleIcon className="h-4 w-4 ml-2" />
-            ) : (
-              <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
-            )}
-          </div>
-          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          {state !== 'Committed' && (
-            <div
-              className={
-                'opacity-50 border-gray-600 text-gray-600 flex items-center text-xs'
-              }
-            >
-              Order Delivered{' '}
-              <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+          {state == 'Open' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
+              Offer Committed <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
             </div>
-          )}
-
-          {state === 'Committed' && (
-            <button className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50">
+          </>}
+          {state == 'Committed' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <button
+              className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
+              onClick={() => { onConfirm() }}
+              disabled={isLoading}
+            >
               Confirm Order
             </button>
-          )}
+          </>}
+          {state == 'Confirmed' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+          </>}
         </div>
       </div>
     </FadeIn>
   );
 }
 
-function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
-  const tokenMethods = useTokenMethods(sellOrder.token.address);
-  const sellOrderMethods = useSellOrderMethods(sellOrder.address);
-  const offers = useSellOrderOffers(sellOrder.address);
-
-  const methods = useSellOrderMethods(sellOrder.address);
+function OrderPage({ order }: { order: OrderData }) {
+  const offers = useOrderOffers(order.address);
+  const methods = useOrderMethods(order.address);
 
   async function onConfirm(index: string) {
     const confirmTx = await methods.confirm.writeAsync({
@@ -156,7 +163,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
   }
 
   return (
-    <ConnectWalletLayout requireConnected={true}>
+    <ConnectWalletLayout requireConnected={true} txHash="">
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
           <div className="pb-4 text-sm flex items-center text-gray-600">
@@ -164,19 +171,19 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
               Sell Orders
             </a>
             <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
-            <div className="font-mono">{`${sellOrder.address.substring(
+            <div className="font-mono">{`${order.address.substring(
               0,
               6
-            )}...${sellOrder.address.substring(
-              sellOrder.address.length - 4,
-              sellOrder.address.length
+            )}...${order.address.substring(
+              order.address.length - 4,
+              order.address.length
             )}`}</div>
           </div>
-          <h1 className="font-serif text-3xl pb-1 pt-12">{sellOrder.title}</h1>
-          <p className="pb-4">{sellOrder.description}</p>
+          <h1 className="font-serif text-3xl pb-1 pt-12">{order.title}</h1>
+          <p className="pb-4">{order.description}</p>
 
           <div className="flex mb-16">
-            <Link href={`/buy/${sellOrder.address}/checkout`}>
+            <Link href={`/buy/${order.address}/checkout`}>
               <a
                 className={cn({
                   'bg-black transition-all hover:opacity-70 text-white px-4 py-2 rounded flex items-center':
@@ -195,7 +202,7 @@ function SellOrderPage({ sellOrder }: { sellOrder: SellOrderData }) {
               <Offer
                 key={o.index + o.uri}
                 offer={o}
-                sellOrder={sellOrder}
+                order={order}
                 onConfirm={onConfirm}
                 onCancel={onCancel}
               />
@@ -219,20 +226,20 @@ function Loading() {
 }
 
 function PageWithPubkey(props: { pubkey: string }) {
-  const sellOrder = useSellOrder(props.pubkey);
+  const order = useOrder(props.pubkey);
 
-  if (sellOrder.error) {
+  if (order.error) {
     return (
       <div>
-        <pre>{JSON.stringify(sellOrder.error)}</pre>
+        <pre>{JSON.stringify(order.error)}</pre>
       </div>
     );
   }
 
   // loading
-  if (!sellOrder.data) return <Loading />;
+  if (!order.data) return <Loading />;
 
-  return <SellOrderPage sellOrder={sellOrder.data} />;
+  return <OrderPage order={order.data} />;
 }
 
 export default function Page() {
@@ -245,7 +252,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <PageWithPubkey pubkey={pubkey} />
+      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
     </Suspense>
   );
 }

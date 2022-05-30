@@ -1,11 +1,11 @@
-import SellOrder from '../out/SellOrder.sol/SellOrder.json';
+import Order from '../out/Order.sol/Order.json';
 import OrderBookWithoutAddress from '../out/OrderBook.sol/OrderBook.json';
 
 const OrderBook = {
   ...OrderBookWithoutAddress,
 
   // The address of the deployed contract
-  address: '0x667d3ded6c891453e4b1bf6032cd0c22e0c31bac',
+  address: '0xbd2e1dbe56053ee310249ce5969208ad7aa72dd0',
 };
 
-export { SellOrder, OrderBook };
+export { Order, OrderBook };

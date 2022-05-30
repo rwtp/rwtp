@@ -1,0 +1,143 @@
+---
+title: Contracts
+---
+
+# Contracts
+
+Real World Trade Protocol is currently implemented for the EVM and deployed across many different chains. However, it seems reasonable that RWTP could be implemented for other smart contract platforms.
+
+## Orders
+
+RWTP has both Buy Order and Sell Order. If you make a buy order, folks offer to sell you things. If you make a sell order, folks offer to buy your things. Both are defined by the `Order` contract.
+
+To make an `Order` and have it picked up by client apps, use the `OrderBook` contract.
+
+```solidity
+book.createOrder(
+  // The owner of the order. Orders can be made
+  // on behalf of someone else, such as by a client
+  // application willing to pay for the gas.
+  maker,
+
+  // A URI to metadata containing
+  uri,
+
+  // If true, the order is a buy order. If false, it is a sell order.
+  bool isBuyOrder
+);
+```
+
+URIs are expected to point to a JSON object with at least two fields: `$schema` and `$accepts`. `$schema` is a URI to the JSON schema of the object itself. This might define fields like `title`, `description`, `images`, and so on.
+
+`$accepts` is an array of URIs containing schemas the client is willing to accept from an offer.
+
+```javascript
+{
+   "$schema": "ipfs://somecid",
+   "$accepts": ["ipfs://anothercid"],
+   "yourOwnField": "hi"
+}
+```
+
+### Making an offer
+
+To make an offer on an order, you can use the `submitOffer` function. As the offerer, you get to decide the deal.
+
+```solidity
+order.submitOffer(
+  // a uint128 that identifies the order.
+  index,
+
+  // The address of the ERC20 token you wish to transact in
+  token,
+
+  // a uint128 that represents the price to be paid in the token
+  // the order specifies
+  price,
+
+  // A uint128 that represents what you'd like the buyer
+  // to use as a cost, as defined in the Whitepaper
+  buyersCost,
+
+  // A uint128 that represents what you'd like the seller to stake,
+  // as defined in the Whitepaper
+  sellersStake,
+
+  // A timeout (in seconds), after which this deal expires and
+  // the seller can be paid
+  uint128 timeout,
+
+  // An arbitrary URI to metadata
+  uri
+);
+```
+
+#### What is `buyersCost`?
+
+If `buyersCost > price`, then `submitOffer` will transfer `buyersCost - price` into the contract, as a deposit, as well as the `price`. If the deal fails, the buyer will lose this deposit. If `buyersCost < price` then `submitOffer` will just transfer `price` into the escrow.
+
+#### What is `index`?
+
+You may have multiple open offers on a single Buy Order or Sell Order. To differentiate them, use the `index`. Indexes aren't globally unique; they're unique per address of the offerer:
+
+```solidity
+mapping(address => mapping(uint128 => Offer))
+```
+
+### Accepting an offer
+
+When you accept an offer, you cannot back out unless the other party agrees.
+
+```solidity
+order.commit(
+  // The address of the person who submitted the offer
+  taker,
+
+  // The index of the offer
+  index
+);
+```
+
+### Paying out
+
+After some period of time (the `timeout`), the deal can be settled, sending the payment to the seller. Use `order.confirm(address, uint128)` to do this.
+
+```solidity
+order.confirm(
+    // The address of the person who submitted the offer
+    taker,
+
+    // The index of the offer
+    index
+);
+```
+
+So long as it's passed the time limit, anyone can call this function.
+
+### Disputing the deal
+
+If a buyer thinks they've been scammed, they can request a refund. To do so, use `order.refund(address, uint128)`.
+
+```solidity
+order.refund(
+    // The address of the person who submitted the offer
+    taker,
+
+    // The index of the offer
+    index
+);
+```
+
+### Canceling the order
+
+If both the buyer and the seller agree to cancel the deal, then the payment is returned to the buyer and both the buyer and the seller get their deposit back.
+
+```solidity
+order.cancel(
+    // The address of the person who submitted the offer
+    taker,
+
+    // The index of the offer
+    index
+);
+```

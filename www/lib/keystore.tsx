@@ -150,7 +150,7 @@ export function RequiresKeystore(props: { children: ReactNode }) {
   // Loading
   if (login.isLoading) {
     return (
-      <ConnectWalletLayout requireConnected={true}>
+      <ConnectWalletLayout requireConnected={true} txHash="">
         <div></div>
       </ConnectWalletLayout>
     );
@@ -161,7 +161,7 @@ export function RequiresKeystore(props: { children: ReactNode }) {
   }
 
   return (
-    <ConnectWalletLayout requireConnected={true}>
+    <ConnectWalletLayout requireConnected={true} txHash="">
       <FadeIn className="bg-gray-50 h-full p-4 border-t flex items-center justify-center">
         <div className="bg-white border max-w-xl mx-auto">
           <div className="p-8">

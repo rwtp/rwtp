@@ -547,9 +547,9 @@
     chai "^4.3.4"
     ethers "^5.5.4"
 
-"@eth-optimism/tokenlist@git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git":
+"@eth-optimism/tokenlist@git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#af613ec3c5e511dbd0dc7c9cdd3d6eda311905c6":
   version "1.0.0"
-  resolved "git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#f095e947c829d046cf0bf0fa3fd0bbdfbd743be3"
+  resolved "git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#af613ec3c5e511dbd0dc7c9cdd3d6eda311905c6"
   dependencies:
     "@actions/core" "^1.4.0"
     "@changesets/cli" "^2.16.0"
@@ -4680,7 +4680,7 @@ ipfs-core-utils@^0.14.3:
     timeout-abort-controller "^3.0.0"
     uint8arrays "^3.0.0"
 
-ipfs-http-client@^56.0.1:
+ipfs-http-client@^56.0.3:
   version "56.0.3"
   resolved "https://registry.yarnpkg.com/ipfs-http-client/-/ipfs-http-client-56.0.3.tgz#45bbea55347ef13524769d5919cbed84d9d022d6"
   integrity sha512-E3L5ylVl6BjyRUsNehvfuRBYp1hj8vQ8in4zskVPMNzXs6JiCFUbif5a6BtcAlSK4xPQyJCeLNNAWLUeFQTLNA==
@@ -5202,6 +5202,13 @@ katex@^0.13.0:
   version "0.13.24"
   resolved "https://registry.yarnpkg.com/katex/-/katex-0.13.24.tgz#fe55455eb455698cb24b911a353d16a3c855d905"
   integrity sha512-jZxYuKCma3VS5UuxOx/rFV1QyGSl3Uy/i0kTJF3HgQ5xMinCQVF8Zd4bMY/9aI9b9A2pjIBOsjSSm68ykTAr8w==
+  dependencies:
+    commander "^8.0.0"
+
+katex@^0.15.6:
+  version "0.15.6"
+  resolved "https://registry.yarnpkg.com/katex/-/katex-0.15.6.tgz#c4e2f6ced2ac4de1ef6f737fe7c67d3026baa0e5"
+  integrity sha512-UpzJy4yrnqnhXvRPhjEuLA4lcPn6eRngixW7Q3TJErjg3Aw2PuLFBzTkdUb89UtumxjhHTqL3a5GDGETMSwgJA==
   dependencies:
     commander "^8.0.0"
 
@@ -6525,6 +6532,10 @@ pngjs@^5.0.0:
   resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-5.0.0.tgz#e79dd2b215767fd9c04561c01236df960bce7fbb"
   integrity sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==
 
+"polygon-token-list@git+https://github.com/maticnetwork/polygon-token-list.git#ce24aa9288aeb30db2dc788213706424bd34c540":
+  version "1.0.0"
+  resolved "git+https://github.com/maticnetwork/polygon-token-list.git#ce24aa9288aeb30db2dc788213706424bd34c540"
+
 postcss-js@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/postcss-js/-/postcss-js-4.0.0.tgz#31db79889531b80dc7bc9b0ad283e418dce0ac00"
@@ -7212,16 +7223,17 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rwtp@^0.9.1:
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.9.1.tgz#b82069be285da8db50d37c2877727ea3f27e1891"
-  integrity sha512-fCsAd37N6/c29pVbQxGkXzMA/Mfci1Tl9VyRTViCLMiPpdKJSsQBdlTSDc6e3rtSniB2WIrjfm9/PqVpcYhhAw==
+rwtp@^0.10.7:
+  version "0.10.7"
+  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.10.7.tgz#0bed2f69ec426f7a0594fa3cd53b5fce5cd642b2"
+  integrity sha512-JjOWTHq5FCuxvk484J3rzPygWuaTMrb4hpWd2PtsnYPwH3shszJCzg/Nda6Kws37XL9hjaFVTfZde01rxATngg==
   dependencies:
     "@headlessui/react" "^1.6.1"
     "@openzeppelin/contracts" "^4.6.0"
     "@rainbow-me/rainbowkit" "^0.1.0"
     eth-sig-util "^3.0.1"
     evm-bn "^1.1.1"
+    katex "^0.15.6"
     tweetnacl "^1.0.3"
     zustand "^4.0.0-rc.1"
 

@@ -10,32 +10,16 @@ import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { useAccount, useSigner } from 'wagmi';
-import { SellOrder } from 'rwtp';
+import { Order } from 'rwtp';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import { useSubgraph } from '../../lib/useSubgraph';
 import { FadeIn } from '../../components/FadeIn';
 import cn from 'classnames';
 import dayjs from 'dayjs';
+import { OfferData, useAllOrderOffers } from '../../lib/useOrder';
 import nacl from 'tweetnacl';
-
-type IOffer = {
-  id: string;
-  buyer: string;
-  index: string;
-  state: string;
-  stakePerUnit: string;
-  pricePerUnit: string;
-  quantity: string;
-  timestamp: string;
-  uri: string;
-  sellOrder: {
-    address: string;
-    token: {
-      symbol: string;
-      decimals: number;
-    };
-  };
-};
+import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
+import { RequiresKeystore, useKeystore } from '../../lib/keystore';
 
 function Spinner(props: { className?: string }) {
   return (
@@ -62,52 +46,46 @@ function Spinner(props: { className?: string }) {
   );
 }
 
-function Offer(props: { offer: IOffer }) {
-  const o = props.offer;
-
+function Offer(props: { offer: OfferData }) {
+  const sellersEncryptionKeypair = useEncryptionKeypair();
   const signer = useSigner();
   const [isLoading, setIsLoading] = useState(false);
+  const [decryptedMessage, setDecryptedMessage] = useState('');
+  const o = props.offer;
 
-  async function onApprove(o: IOffer) {
-    if (!signer || !signer.data) return;
+  useEffect(() => {
+    if (sellersEncryptionKeypair) {
+      try {
+        const decrypted = nacl.box.open(
+          Buffer.from(o.message, 'hex'),
+          Buffer.from(o.messageNonce, 'hex'),
+          Buffer.from(o.messagePublicKey, 'hex'),
+          sellersEncryptionKeypair.secretKey
+        );
+        setDecryptedMessage(Buffer.from(decrypted!).toString());
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  });
+
+  async function onApprove(o: OfferData) {
+    if (!signer || !signer.data || isLoading) return;
 
     setIsLoading(true);
     const contract = new ethers.Contract(
-      o.sellOrder.address,
-      SellOrder.abi,
+      o.order.address,
+      Order.abi,
       signer.data
     );
 
-    const commit = await contract.commit(o.buyer, o.index, {
+    const tx = await contract.commit(o.taker, o.index, {
       gasLimit: 1000000,
     });
-    const tx = await commit.wait();
+    tx.hash
+    await tx.wait();
     setIsLoading(false);
   }
-
-  const [unencryptedMessage, setUnencryptedMessage] = useState('');
-
-  useEffect(() => {
-    async function load() {
-      const res = await fetch(
-        o.uri.replace('ipfs://', 'https://ipfs.infura.io/ipfs/')
-      );
-
-      const result = await res.json();
-      if (!result.message || !result.encryptionPublicKey || !result.nonce) {
-        return;
-      }
-
-      const msg = Buffer.from(result.message, 'hex');
-      const nonce = Buffer.from(result.nonce, 'hex');
-      const encryptionPublicKey = Buffer.from(
-        result.encryptionPublicKey,
-        'hex'
-      );
-      // nacl.box.open(msg, nonce, encryptionPublicKey);
-    }
-    load().catch(console.error);
-  }, [o]);
 
   let status = (
     <>
@@ -115,12 +93,7 @@ function Offer(props: { offer: IOffer }) {
         Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
       </div>
       <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-      <button
-        onClick={() => onApprove(o).catch(console.error)}
-        className="bg-black text-white rounded text-sm px-4 py-1 flex items-center hover:opacity-50"
-      >
-        Accept Offer {isLoading && <Spinner className="h-4 w-4 ml-2" />}
-      </button>
+      
     </>
   );
   if (o.state === 'Committed') {
@@ -187,7 +160,36 @@ function Offer(props: { offer: IOffer }) {
     <FadeIn className="flex flex-col py-2">
       <div className="bg-white border">
         <div className="flex gap-2 items-center p-4 border-b px-4">
-          {status}
+          <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+            Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
+          </div>
+          <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+          {o.state == 'Open' && <>
+          <button
+            onClick={() => onApprove(o).catch(console.error)}
+            className="bg-black text-white rounded text-sm px-4 py-1 flex items-center hover:opacity-50"
+          >
+            Accept Offer {isLoading && <Spinner className="h-4 w-4 ml-2" />}
+          </button>
+          </>}
+          {o.state == 'Committed' && <>
+          <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
+              Offer Confirmed <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+            </div>
+          </>}
+          {o.state == 'Confirmed' && <>
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+              Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
+            </div>
+          </>}
         </div>
 
         <div className="flex px-4 pt-4">
@@ -198,7 +200,7 @@ function Offer(props: { offer: IOffer }) {
             </div>
           </div>
         </div>
-        <div className="flex gap-4 justify-between py-4 px-4">
+        <div className="flex gap-4 justify-between p-4">
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Quantity</div>
             <div className="text-lg font-mono">1</div>
@@ -207,23 +209,34 @@ function Offer(props: { offer: IOffer }) {
             <div className="text-gray-500 text-xs">Price</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.pricePerUnit),
-                o.sellOrder.token.decimals
+                BigNumber.from(props.offer.price),
+                o.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{o.sellOrder.token.symbol}</span>
+              <span className="text-sm">{o.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
           <div className="flex-1">
             <div className="text-gray-500 text-xs">Your deposit</div>
             <div className="text-lg font-mono">
               {fromBn(
-                BigNumber.from(props.offer.stakePerUnit),
-                o.sellOrder.token.decimals
+                BigNumber.from(props.offer.sellersStake),
+                o.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{o.sellOrder.token.symbol}</span>
+              <span className="text-sm">{o.order.tokensSuggested[0].symbol}</span>
             </div>
           </div>
         </div>
+        {decryptedMessage && <div className='p-4'>
+          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data</div>
+          <div className='font-mono text-base bg-gray-100 p-4'>
+            {decryptedMessage}
+          </div>
+        </div>
+        }
+        {!decryptedMessage && <div className='p-4'>
+          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data Unavailable</div>
+        </div>
+        }
       </div>
     </FadeIn>
   );
@@ -231,51 +244,27 @@ function Offer(props: { offer: IOffer }) {
 
 function Offers() {
   const account = useAccount();
-  const signer = useSigner();
+  const orders = useAllOrderOffers(account.data?.address || '');
 
-  const offers = useSubgraph<{
-    offers: Array<IOffer>;
-  }>([
-    `
-    query metadata($seller:String) {
-        offers(where:{seller:$seller}) {
-            id
-            buyer
-            index
-            state
-            stakePerUnit
-            pricePerUnit
-            uri
-            quantity
-            timestamp
-            sellOrder {
-                address
-                token {
-                    symbol
-                }
-            }
-        }
-      }
-  `,
-    {
-      seller: account.data?.address || '',
-    },
-  ]);
-
-  if (offers.error) {
-    return <pre>{JSON.stringify(offers.error, null, 2)}</pre>;
+  if (orders.error) {
+    return <pre>{JSON.stringify(orders.error, null, 2)}</pre>;
   }
 
-  if (!offers.data) {
+  if (!orders.data) {
     return null;
   }
 
-  if (offers.data.offers.length === 0) {
+  if (orders.data.length === 0) {
     return <div className="text-gray-500">There are no open offers.</div>;
   }
 
-  const allOffers = offers.data.offers.map((o: IOffer) => {
-    return <Offer key={o.id} offer={o} />;
+  // Parse offers from orders
+  let offers: Array<OfferData> = new Array<OfferData>();
+  for (const order of orders.data) {
+    offers = offers.concat(order.offers);
+  }
+  const allOffers = offers.map((o: OfferData) => {
+    return <Offer key={`${o.index}${o.taker}${o.acceptedAt}`} offer={o} />;
   });
 
   return <FadeIn className="">{allOffers}</FadeIn>;
@@ -283,31 +272,34 @@ function Offers() {
 
 export default function Page() {
   return (
-    <ConnectWalletLayout requireConnected={false}>
-      <div className="h-full flex flex-col">
-        <Suspense fallback={<div></div>}>
-          <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
-            <div className="pb-8">
-              <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
-              <p className="pb-4">Learn more about Sell Orders.</p>
-              <div className="flex">
-                <Link href="/sell/new">
-                  <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
-                    New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
-                  </a>
-                </Link>
+    <RequiresKeystore>
+      <ConnectWalletLayout requireConnected={false} txHash="">
+        <div className="h-full flex flex-col">
+          <Suspense fallback={<div></div>}>
+            <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
+              <div className="pb-8">
+                <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
+                <p className="pb-4">Learn more about Sell Orders.</p>
+                <div className="flex">
+                  <Link href="/sell/new">
+                    <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
+                      New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
+                    </a>
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex-1 bg-gray-50 border-t">
-            <div className="max-w-6xl mx-auto p-4">
-              <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
-              <Offers />
+            <div className="flex-1 bg-gray-50 border-t">
+              <div className="max-w-6xl mx-auto p-4">
+                <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
+
+                <Offers />
+              </div>
             </div>
-          </div>
-        </Suspense>
-        <Footer />
-      </div>
-    </ConnectWalletLayout>
+          </Suspense>
+          <Footer />
+        </div>
+      </ConnectWalletLayout>
+    </RequiresKeystore>
   );
 }

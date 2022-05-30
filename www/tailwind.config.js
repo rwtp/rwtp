@@ -7,16 +7,15 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    fontFamily : {
-      'sans':['-apple-system', 'BlinkMacSystemFont'],
-      'serif':['Georgia', 'Times New Roman','ui-serif']
-    },
     extend: {
       colors: {
         ...colors,
         gray: colors.stone,
         blue: colors.indigo,
       },
+      maxWidth: {
+        '33':'33%'
+      }
     },
   },
   plugins: [require('@tailwindcss/typography')],
