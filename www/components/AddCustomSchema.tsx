@@ -29,8 +29,8 @@ export function InputCustomSchema(props: {
     );
 
     return (
-        <div className="flex flex-col">
-            <div>
+        <div className="flex flex-col pt-4">
+            <div className="pb-4">
                 You are currently using the 
                 &nbsp;<a 
                     className="underline decoration-sky-800"
@@ -38,8 +38,7 @@ export function InputCustomSchema(props: {
                 >
                     default 
                 </a>&nbsp;
-                offer schema if
-                you'd like to use a custom one click 
+                offer schema if you'd like to use a custom one click 
                 &nbsp;<a className="underline decoration-sky-800 hover:cursor-pointer" onClick={(e) => {
                     setUseCustomSchemaJSON(true);
                     setUseCustomSchemaIPFS(false);
@@ -58,10 +57,10 @@ export function InputCustomSchema(props: {
             {useCustomSchemaJSON && (
                 <div className="flex flex-col">
                     <label className="flex flex-col mb-2">
-                        <div className="font-sans mb-1 text-base">Offer Schema</div>
+                        <div className="font-sans mb-1 text-base font-bold">Offer Schema</div>
                         <textarea
                             rows={10}
-                            className="border px-4 py-2 rounded"
+                            className="border px-4 py-2 rounded font-mono text-sm text-gray-700"
                             placeholder={JSON.stringify(defaultSchema, null, 2)}
                             onChange={(e) =>
                                 setCustomSchemaJSON(e.target.value)
@@ -69,8 +68,7 @@ export function InputCustomSchema(props: {
                         />
                     </label>
                     {/* here are two elements next to eachother */}
-                    <div className="flex flex-row">
-
+                    <div className="flex flex-row pt-2">
                         <span>
                             {cancelButton}
                         </span>
@@ -91,7 +89,7 @@ export function InputCustomSchema(props: {
             {useCustomSchemaIPFS && (
                 <div className="flex flex-col">
                     <label className="flex flex-col mb-2">
-                        <div className="font-sans mb-2 text-base">Offer Schema</div>
+                        <div className="font-sans mb-2 text-base font-bold">Offer Schema</div>
                         <input
                             className="border px-4 py-2 rounded"
                             type="string"
@@ -101,7 +99,7 @@ export function InputCustomSchema(props: {
                             }
                         />
                     </label>
-                    <span>
+                    <span className='pt-2'>
                         {cancelButton}
                     </span>
                 </div>
