@@ -71,6 +71,7 @@ export default function PostPage({ source, frontMatter }: any) {
           <SidebarItem slug={'whitepaper'}>Whitepaper</SidebarItem>
           <SidebarItem slug={'contracts'}>Contracts</SidebarItem>
           <SidebarItem slug={'metadata'}>Metadata</SidebarItem>
+          <SidebarItem slug={'encryption'}>Encryption</SidebarItem>
           <SidebarItem slug={'graphql'}>GraphQL</SidebarItem>
           <SidebarItem slug={'faq'}>FAQ</SidebarItem>
         </div>

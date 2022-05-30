@@ -6,7 +6,7 @@ title: Metadata
 
 RWTP stores things like titles, descriptions, images, shipping address, and contact information off-chain. Client applications should use [IPFS](https://ipfs.io/) to store this data.[^1]
 
-## Schema and Accepts
+## Type and Accepts
 
 An Order contains a `uri` that _must_ point to a JSON object. That object _must_ contain a minimum of two fields:
 
@@ -20,6 +20,16 @@ interface Metadata {
 The `$type` field is a URI pointing to a JSON schema defining metadata for the _order_ (such as the title, description, and photos). The `$accepts` field is an array of JSON schema URIs that define metadata for acceptable _offers_ (such as shipping details, contact information, and names).
 
 `$type` says "here's what I'm buying or selling". `$accepts` says "here's how I'd like you to give me an offer".
+
+### Offer metadata should be encrypted
+
+Before publishing a user's shipping address and other offer information, you should encrypt it. To ensure a the other party can decrypt it, all offers have the form:
+
+```typescript
+interface OfferMetadata {
+  publicKey: string;
+}
+```
 
 ### Example of a `$type` schema
 
