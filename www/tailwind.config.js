@@ -14,7 +14,9 @@ module.exports = {
         blue: colors.indigo,
       },
       maxWidth: {
-        '33':'33%'
+        '33':'33%',
+        '60':'60%',
+        '40':'40%'
       }
     },
   },

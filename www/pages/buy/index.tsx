@@ -7,6 +7,7 @@ import Tag from '../../components/Tag';
 import { useOrders } from '../../lib/useOrder';
 import { Order } from 'rwtp';
 import { utils } from 'ethers';
+import { getPrimaryImageLink } from '../../lib/image';
 interface Order {
   address: string;
   title: string;
@@ -22,23 +23,11 @@ interface Order {
 function OrderView(props: { order: Order }) {
   // console.log(props.order);
   //if has image
-  let imageSrc = '/rwtp.png';
-  if (props.order.primaryImage && props.order.primaryImage.length > 0) {
-    if (
-      props.order.primaryImage.startsWith('https://') ||
-      props.order.primaryImage.startsWith('http://')
-    ) {
-      imageSrc = props.order.primaryImage;
-    } else if (props.order.primaryImage.startsWith('ipfs://')) {
-      const imageUri = props.order.primaryImage.replace(
-        'ipfs://',
-        'https://ipfs.infura.io/ipfs/'
-      );
-      imageSrc = imageUri;
-    }
-  }
   let imageComponent = (
-    <img className="w-full h-40 object-cover rounded-t" src={imageSrc} />
+    <img
+      className="w-full h-40 object-cover rounded-t"
+      src={getPrimaryImageLink(props.order)}
+    />
   );
 
   return (
