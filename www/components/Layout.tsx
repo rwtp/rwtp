@@ -20,12 +20,12 @@ export function InformationPageHeader() {
         <Image src="/transitionLogo.png" width={24} height={24} />
       </a>
       <div className="gap-2 flex items-center">
-        <a className="text-sm flex py-1 px-1 rounded" href="/buy">
+        {/* <a className="text-sm flex py-1 px-1 rounded" href="/buy">
           Buy
         </a>
         <a className="text-sm flex py-1 px-1 rounded" href="/sell">
           Sell
-        </a>
+        </a> */}
         <a
           className="text-sm border flex py-1 px-2 rounded bg-white"
           href="/docs/whitepaper"
