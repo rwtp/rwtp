@@ -66,7 +66,7 @@ export default function PostPage({ source, frontMatter }: any) {
       </div>
       <div className="flex flex-1">
         <div className="text-sm  hidden sm:flex bg-gray-50 border-r flex-col font-mono h-full">
-          <div className="text-xs px-2 pb-1 text-gray-500 py-4"># Basics</div>
+          {/* <div className="text-xs px-2 pb-1 text-gray-500 py-4"># Basics</div> */}
 
           <SidebarItem slug={'whitepaper'}>Whitepaper</SidebarItem>
           <SidebarItem slug={'contracts'}>Contracts</SidebarItem>
