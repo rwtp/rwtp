@@ -1,13 +1,20 @@
 import useSWR from 'swr';
 import { request } from 'graphql-request';
+import { useNetwork } from 'wagmi';
 
-const fetcher = (query: any, variables: any) =>
-  request(
-    'https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp',
-    query,
-    variables
-  );
+const RINKEBY = 'https://api.thegraph.com/subgraphs/name/rwtp/rinkeby';
+const OPTIMISM = 'https://api.thegraph.com/subgraphs/name/rwtp/optimism';
+
+const fetcher = (url: string, query: any, variables: any) =>
+  request(url, query, variables);
 
 export function useSubgraph<T>(args: string | [string, any]) {
-  return useSWR<T>(args, fetcher);
+  const network = useNetwork();
+
+  let chain = OPTIMISM;
+  if (network.activeChain?.id === 4) {
+    chain = RINKEBY;
+  }
+
+  return useSWR<T>([chain, ...[args]].flat(), fetcher);
 }
