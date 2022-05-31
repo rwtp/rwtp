@@ -36,10 +36,12 @@ function SidebarItem(props: { children: any; slug: string }) {
     <Link href={`/docs/${props.slug}`}>
       <a
         className={cn({
-          'flex px-2': true,
+          'flex px-2 underline border-t border-l-2 hover:bg-gray-100 transition-all':
+            true,
           'border-b py-2  border-t border-blue-500 border-l-2 bg-white':
             props.slug === router.query.slug,
-          'text-gray-600 py-2 ': props.slug !== router.query.slug,
+          'text-gray-600 py-2  border-gray-50':
+            props.slug !== router.query.slug,
         })}
       >
         {props.children}
@@ -68,6 +70,7 @@ export default function PostPage({ source, frontMatter }: any) {
         <div className="text-sm  hidden sm:flex bg-gray-50 border-r flex-col font-mono h-full">
           {/* <div className="text-xs px-2 pb-1 text-gray-500 py-4"># Basics</div> */}
 
+          <SidebarItem slug={'quick-start'}>Quick Start</SidebarItem>
           <SidebarItem slug={'whitepaper'}>Whitepaper</SidebarItem>
           <SidebarItem slug={'contracts'}>Contracts</SidebarItem>
           <SidebarItem slug={'metadata'}>Metadata</SidebarItem>

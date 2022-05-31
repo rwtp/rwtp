@@ -4,10 +4,10 @@ title: Quick Start
 
 # Quick Start
 
-Install [ethers.js](https://docs.ethers.io/) and the [rwtp](https://github.com/rwtp/rwtp). The `rwtp` npm package is not the protocol itself, but a client that contains useful helpers for interacting with it.
+Let's install [ethers.js](https://docs.ethers.io/), [rwtp](https://github.com/rwtp/rwtp), and a few other useful helpers. The `rwtp` npm package is not the protocol itself, but a client that contains useful helpers for interacting with it.
 
 ```bash
-yarn add rwtp ethers
+yarn add rwtp ethers graphql-request graphql
 ```
 
 ## Connect to Ethereum
@@ -32,10 +32,80 @@ import { OrderBook } from 'rwtp';
 const book = new ethers.Contract(OrderBook.address, OrderBook.abi, provider);
 ```
 
-## Create a Sell Order
+## Create a Sell & Buy Order
 
-Use the OrderBook to create a new sell order.
+Use the OrderBook to create a new sell order. You'll need a URI to metadata. For the moment, we'll use [an IPFS hash for some metadata we've already uploaded.](https://ipfs.io/ipfs/QmRrTgcD3KqdCbnYeTGnpnMQpoko7juCEb5LzsjM75Dmbr)
 
 ```ts
-book.createOrder();
+const tx = await book.createOrder(
+  // address of the seller
+  provider.address,
+
+  // Metadata
+  'ipfs://QmRrTgcD3KqdCbnYeTGnpnMQpoko7juCEb5LzsjM75Dmbr',
+
+  // isBuyOrder = false
+  false
+);
+
+await tx.wait();
 ```
+
+You can make a buy order by flipping the `isBuyOrder` to true.
+
+```ts
+const tx = await book.createOrder(
+  // address of the buyer
+  provider.address,
+
+  // Metadata
+  'ipfs://QmRrTgcD3KqdCbnYeTGnpnMQpoko7juCEb5LzsjM75Dmbr',
+
+  // isBuyOrder = true
+  true
+);
+
+await tx.wait();
+```
+
+## Get orders
+
+You can get a list of orders on the network either by using the GraphQL subgraph.[^1]
+
+```typescript
+import { request, gql } from 'graphql-request';
+
+const query = gql`
+  {
+    orders {
+      address
+      title
+      maker
+      priceSuggested
+      sellersStakeSuggested
+      buyersCostSuggested
+    }
+  }
+`;
+
+const URL = 'https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp';
+
+const data = await request(URL, query);
+
+// data.orders[0].address
+```
+
+## Connecting to an order
+
+```typescript
+import { Order } from 'rwtp';
+
+const order = new ethers.Contract(
+  // Some address of an order
+  '0x6bf3323273b49ccd62a25df678e0b6051aebe436',
+  OrderBook.abi,
+  provider
+);
+```
+
+[^1]: Learn more about the graph protocol: [https://thegraph.com](https://thegraph.com)
