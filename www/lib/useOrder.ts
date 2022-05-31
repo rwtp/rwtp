@@ -15,29 +15,29 @@ const ERC20_FIELDS = `
   symbol
   name
   address
-`
+`;
 
 export interface OrderData {
-  id: string,
-  address: string,
-  uri: string,
-  title: string,
-  description: string,
-  primaryImage: string,
-  encryptionPublicKey: string,
-  tokenAddressesSuggested: string[],
-  tokensSuggested: ERC20Data[],
-  priceSuggested: string,
-  sellersStakeSuggested: string,
-  buyersCostSuggested: string,
-  suggestedTimeout: string,
-  error: string,
-  offers: string,
-  offerCount: string,
-  maker: string,
-  createdAt: string,
-  offerSchema: string,
-  offerSchemaUri: string
+  id: string;
+  address: string;
+  uri: string;
+  title: string;
+  description: string;
+  primaryImage: string;
+  encryptionPublicKey: string;
+  tokenAddressesSuggested: string[];
+  tokensSuggested: ERC20Data[];
+  priceSuggested: string;
+  sellersStakeSuggested: string;
+  buyersCostSuggested: string;
+  suggestedTimeout: string;
+  error: string;
+  offers: string;
+  offerCount: string;
+  maker: string;
+  createdAt: string;
+  offerSchema: string;
+  offerSchemaUri: string;
 }
 
 const ORDER_FIELDS = `
@@ -65,24 +65,23 @@ const ORDER_FIELDS = `
 `;
 
 export interface OfferData {
-  index: string,
-  taker: string,
-  price: string,
-  tokenAddress: string,
-  buyersCost: string,
-  sellersStake: string,
-  timeout: string,
-  uri: string,
-  messagePublicKey: string,
-  messageNonce: string,
-  message: string,
-  timestamp: string,
-  state: string,
-  order: OrderData
-  acceptedAt: string,
-  makerCanceled: string,
-  takerCanceled: string,
-  
+  index: string;
+  taker: string;
+  price: string;
+  tokenAddress: string;
+  buyersCost: string;
+  sellersStake: string;
+  timeout: string;
+  uri: string;
+  messagePublicKey: string;
+  messageNonce: string;
+  message: string;
+  timestamp: string;
+  state: string;
+  order: OrderData;
+  acceptedAt: string;
+  makerCanceled: string;
+  takerCanceled: string;
 }
 
 const OFFER_FIELDS = `
@@ -123,11 +122,16 @@ function useOrdersWrapperWithMetaData<T>(queryString: string, args: any) {
     metadata: metadata,
     data: metadata.data,
   };
-
 }
 
-export function useOrders(args: { first: number; skip: number, searchText: string }) {
-  const searchArg = args.searchText ? `orderSearch(first:$first, skip:$skip, text:"${args.searchText}:*")` : `orders(first:$first, skip:$skip)`;
+export function useOrders(args: {
+  first: number;
+  skip: number;
+  searchText: string;
+}) {
+  const searchArg = args.searchText
+    ? `orderSearch(first:$first, skip:$skip, text:"${args.searchText}:*")`
+    : `orders(first:$first, skip:$skip)`;
   let res = useOrdersWrapperWithMetaData(
     `
     ${searchArg} {
@@ -143,7 +147,7 @@ export function useOrders(args: { first: number; skip: number, searchText: strin
   return {
     ...res.metadata,
     data: data,
-  }
+  };
 }
 
 // Returns information about a sell order
@@ -228,7 +232,7 @@ export function useOrderSubmitOffer(address: string) {
 
   function submitOffer(args: {
     index: number;
-    token: string,
+    token: string;
     price: BigNumber;
     buyersCost: BigNumber;
     sellerStake: BigNumber;
@@ -243,7 +247,7 @@ export function useOrderSubmitOffer(address: string) {
         args.buyersCost,
         args.sellerStake,
         args.timeout,
-        args.uri
+        args.uri,
       ],
     });
   }
@@ -260,7 +264,7 @@ export function useOrderOffersFrom(order: string, taker: string) {
   const metadata = useSubgraph<{
     order: OrderData & {
       offers: Array<OfferData>;
-    }
+    };
   }>([
     `
     query data($order: ID, $taker: ID){
@@ -288,7 +292,7 @@ export function useOrderOffers(order: string) {
   const metadata = useSubgraph<{
     order: OrderData & {
       offers: Array<OfferData>;
-    }
+    };
   }>([
     `
     query data($order: ID){

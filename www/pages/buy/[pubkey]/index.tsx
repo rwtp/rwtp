@@ -4,7 +4,7 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/solid';
 import { BigNumber, ethers } from 'ethers';
-import { fromBn } from 'evm-bn';
+import { fromBn, toBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense, useState } from 'react';
@@ -157,6 +157,10 @@ function Offer(props: {
   );
 }
 
+function toUIString(amount: string, decimals: number) {
+  return fromBn(BigNumber.from(amount), decimals);
+}
+
 function OrderPage({ order }: { order: OrderData }) {
   const offers = useOrderOffers(order.address);
   const methods = useOrderMethods(order.address);
@@ -210,7 +214,10 @@ function OrderPage({ order }: { order: OrderData }) {
               <div>
                 <h1 className="font-serif text-3xl mb-2">{order.title}</h1>
                 <div className="text-3xl">
-                  {utils.formatEther(order.priceSuggested)}
+                  {toUIString(
+                    order.priceSuggested,
+                    order.tokensSuggested[0].decimals
+                  )}
                 </div>
               </div>
 
@@ -219,13 +226,23 @@ function OrderPage({ order }: { order: OrderData }) {
                   <div className="text-xs font-mono text-gray-400">
                     Penalize Fee
                   </div>
-                  <div>{utils.formatEther(order.buyersCostSuggested)}</div>
+                  <div>
+                    {toUIString(
+                      order.buyersCostSuggested,
+                      order.tokensSuggested[0].decimals
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-col w-1/2">
                   <div className="text-xs font-mono text-gray-400">
                     Seller's Stake
                   </div>
-                  <div>{utils.formatEther(order.sellersStakeSuggested)}</div>
+                  <div>
+                    {toUIString(
+                      order.sellersStakeSuggested,
+                      order.tokensSuggested[0].decimals
+                    )}
+                  </div>
                 </div>
               </div>
               <p>{order.description}</p>

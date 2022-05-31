@@ -8,6 +8,7 @@ import { useOrders } from '../../lib/useOrder';
 import { Order } from 'rwtp';
 import { utils } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
+import { fromBn, toBn } from 'evm-bn';
 interface Order {
   address: string;
   title: string;
@@ -15,7 +16,11 @@ interface Order {
   sellersStake: string;
   buyersCost: string;
   price: string;
-  token: string;
+  token: {
+    address: string;
+    symbol: string;
+    decimals: number;
+  };
   encryptionPublicKey: string;
   primaryImage: string;
 }
@@ -39,14 +44,14 @@ function OrderView(props: { order: Order }) {
             {props.order.title}
           </div>
           {/* TODO: Get token and network from token address */}
-          <b>{utils.formatEther(props.order.price)}</b>
+          <b>{fromBn(toBn(props.order.price, 6), 6)}</b>
           <div className="flex text-sm flex-row">
             <div className="text-gray-400 mr-2">Buyer's Cost: </div>
-            <div>{utils.formatEther(props.order.buyersCost)}</div>
+            {/* <div>{fromBn(props.order.buyersCost)}</div> */}
           </div>
           <div className="flex text-sm flex-row">
             <div className="text-gray-400 mr-2">Seller's Stake: </div>
-            <div>{utils.formatEther(props.order.sellersStake)}</div>
+            {/* <div>{fromBn(props.order.sellersStake)}</div> */}
           </div>
         </div>
       </a>
