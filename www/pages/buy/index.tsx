@@ -49,14 +49,23 @@ function OrderView(props: { order: Order }) {
             {props.order.title}
           </div>
           {/* TODO: Get token and network from token address */}
-          <b>{toUIString(props.order.price, props.order.token.decimals)}</b>
+          <b>
+            {toUIString(props.order.price, props.order.token.decimals)}{' '}
+            {props.order.token.symbol}
+          </b>
           <div className="flex text-sm flex-row">
             <div className="text-gray-400 mr-2">Buyer's Cost: </div>
-            {/* <div>{fromBn(props.order.buyersCost)}</div> */}
+            <div>
+              {toUIString(props.order.buyersCost, props.order.token.decimals)}{' '}
+              {props.order.token.symbol}
+            </div>
           </div>
           <div className="flex text-sm flex-row">
             <div className="text-gray-400 mr-2">Seller's Stake: </div>
-            {/* <div>{fromBn(props.order.sellersStake)}</div> */}
+            <div>
+              {toUIString(props.order.sellersStake, props.order.token.decimals)}{' '}
+              {props.order.token.symbol}
+            </div>
           </div>
         </div>
       </a>

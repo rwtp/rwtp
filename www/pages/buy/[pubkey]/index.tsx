@@ -217,7 +217,8 @@ function OrderPage({ order }: { order: OrderData }) {
                   {toUIString(
                     order.priceSuggested,
                     order.tokensSuggested[0].decimals
-                  )}
+                  )}{' '}
+                  {order.tokensSuggested[0].symbol}
                 </div>
               </div>
 
@@ -230,7 +231,8 @@ function OrderPage({ order }: { order: OrderData }) {
                     {toUIString(
                       order.buyersCostSuggested,
                       order.tokensSuggested[0].decimals
-                    )}
+                    )}{' '}
+                    {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
                 <div className="flex flex-col w-1/2">
@@ -241,7 +243,8 @@ function OrderPage({ order }: { order: OrderData }) {
                     {toUIString(
                       order.sellersStakeSuggested,
                       order.tokensSuggested[0].decimals
-                    )}
+                    )}{' '}
+                    {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
               </div>
