@@ -108,27 +108,4 @@ const order = new ethers.Contract(
 );
 ```
 
-## Submitting an offer
-
-To purchase from a sell order, or sell to a buy order, you can submit an offer.
-
-```typescript
-import { BigNumber } from 'ethers';
-
-function getRandomIndex() {
-  return BigNumber.from(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-}
-
-order.submitOffer(
-  // A random number to use as an ID.
-  getRandomIndex(),
-
-  // the address token, in this case wETH
-  '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
-
-  // The price paid by the buyer
-  ethers.utils.parseEther('0.1')
-);
-```
-
 [^1]: Learn more about the graph protocol: [https://thegraph.com](https://thegraph.com)
