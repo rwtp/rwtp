@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import * as nacl from 'tweetnacl';
 import { useKeystore } from './keystore';
 
-const ENCRYPTION_KEY = 'testrun:0';
+const ENCRYPTION_KEY = 'encryptionKey:0';
 
 /**
  * Grab an encryption key from the keystore
