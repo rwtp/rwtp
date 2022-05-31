@@ -6,9 +6,10 @@ import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import Tag from '../../components/Tag';
 import { useOrders } from '../../lib/useOrder';
 import { Order } from 'rwtp';
-import { utils } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
-import { fromBn, toBn } from 'evm-bn';
+import { fromBn } from 'evm-bn';
+
 interface Order {
   address: string;
   title: string;
@@ -23,6 +24,10 @@ interface Order {
   };
   encryptionPublicKey: string;
   primaryImage: string;
+}
+
+function toUIString(amount: string, decimals: number) {
+  return fromBn(BigNumber.from(amount), decimals);
 }
 
 function OrderView(props: { order: Order }) {
@@ -44,7 +49,7 @@ function OrderView(props: { order: Order }) {
             {props.order.title}
           </div>
           {/* TODO: Get token and network from token address */}
-          <b>{fromBn(toBn(props.order.price, 6), 6)}</b>
+          <b>{toUIString(props.order.price, props.order.token.decimals)}</b>
           <div className="flex text-sm flex-row">
             <div className="text-gray-400 mr-2">Buyer's Cost: </div>
             {/* <div>{fromBn(props.order.buyersCost)}</div> */}
@@ -84,7 +89,7 @@ function Results(props: { searchText: string }) {
             sellersStake: order.sellersStakeSuggested,
             buyersCost: order.buyersCostSuggested,
             price: order.priceSuggested,
-            token: order.tokensSuggested[0].address,
+            token: order.tokensSuggested[0],
             encryptionPublicKey: '',
             primaryImage: order.primaryImage,
           }}

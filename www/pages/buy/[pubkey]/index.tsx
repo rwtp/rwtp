@@ -4,7 +4,7 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/solid';
 import { BigNumber, ethers } from 'ethers';
-import { fromBn, toBn } from 'evm-bn';
+import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense, useState } from 'react';
