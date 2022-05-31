@@ -48,11 +48,7 @@ contract OrderTest is Test {
 
     function createOrder(bool isBuyOrder) public returns (Order) {
         // Create a sell order
-        Order order = book.createOrder(
-            maker,
-            'ipfs://metadata',
-            isBuyOrder
-        );
+        Order order = book.createOrder(maker, 'ipfs://metadata', isBuyOrder);
 
         if (isBuyOrder) {
             assert(order.orderType() == Order.OrderType.BuyOrder);
@@ -80,7 +76,12 @@ contract OrderTest is Test {
         uint128 sellerStake,
         uint128 timeout
     ) public {
-        (, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (, uint128 takerTransferAmount) = getTransferAmounts(
+            order,
+            price,
+            buyersCost,
+            sellerStake
+        );
 
         // Get initial balances
         uint256 takerStartBalance = token.balanceOf(taker);
@@ -109,6 +110,7 @@ contract OrderTest is Test {
             ,
             ,
             ,
+
         ) = order.offers(taker, index);
         require(offerState == Order.State.Open, 'incorrect offer state');
         require(offerPrice == price, 'incorrect offer price');
@@ -138,13 +140,26 @@ contract OrderTest is Test {
         vm.assume(sellerStake < 10000000000000000000000000000);
         Order order = createOrder(isBuyOrder);
 
-        (, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (, uint128 takerTransferAmount) = getTransferAmounts(
+            order,
+            price,
+            buyersCost,
+            sellerStake
+        );
 
         token.mint(taker1, takerTransferAmount);
         vm.startPrank(taker1);
         token.approve(address(order), takerTransferAmount);
         vm.stopPrank();
-        submitOffer(order, taker1, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker1,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
     }
 
     function submitOfferBase(Order order, address taker) public {
@@ -153,13 +168,26 @@ contract OrderTest is Test {
         uint128 buyersCost = 1;
         uint128 sellerStake = 1;
         uint128 timeout = 100;
-        (, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (, uint128 takerTransferAmount) = getTransferAmounts(
+            order,
+            price,
+            buyersCost,
+            sellerStake
+        );
 
         token.mint(taker, takerTransferAmount);
         vm.startPrank(taker);
         token.approve(address(order), takerTransferAmount);
         vm.stopPrank();
-        submitOffer(order, taker, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
     }
 
     function testSubmitOffer() public {
@@ -175,13 +203,26 @@ contract OrderTest is Test {
         uint128 timeout = 1;
         Order order = createOrder(false);
 
-        (, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (, uint128 takerTransferAmount) = getTransferAmounts(
+            order,
+            price,
+            buyersCost,
+            sellerStake
+        );
 
         token.mint(taker1, takerTransferAmount - 1);
         vm.startPrank(taker1);
         token.approve(address(order), takerTransferAmount - 1);
         vm.stopPrank();
-        submitOffer(order, taker1, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker1,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
     }
 
     function testFailSubmitOfferPaused() public {
@@ -206,7 +247,7 @@ contract OrderTest is Test {
         vm.startPrank(maker);
         order.unpause();
         vm.stopPrank();
-        
+
         submitOfferBase(order, taker1);
     }
 
@@ -265,13 +306,26 @@ contract OrderTest is Test {
         vm.assume(sellerStake < 10000000000000000000000000000);
         Order order = createOrder(isBuyOrder);
 
-        (, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (, uint128 takerTransferAmount) = getTransferAmounts(
+            order,
+            price,
+            buyersCost,
+            sellerStake
+        );
 
         token.mint(taker1, takerTransferAmount);
         vm.startPrank(taker1);
         token.approve(address(order), takerTransferAmount);
         vm.stopPrank();
-        submitOffer(order, taker1, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker1,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
 
         vm.startPrank(taker1);
         order.withdrawOffer(index);
@@ -341,7 +395,11 @@ contract OrderTest is Test {
         vm.stopPrank();
     }
 
-    function commitOffer(Order order, address taker, uint128 index) public {
+    function commitOffer(
+        Order order,
+        address taker,
+        uint128 index
+    ) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 orderStartBalance = token.balanceOf(address(order));
@@ -351,9 +409,24 @@ contract OrderTest is Test {
         order.commit(taker, index);
         vm.stopPrank();
 
-        (Order.State offerState, , uint128 price, uint128 buyersCost, uint128 sellerStake, , , , , ) = order
-            .offers(taker, index);
-        (uint128 makerTransferAmount, ) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (
+            Order.State offerState,
+            ,
+            uint128 price,
+            uint128 buyersCost,
+            uint128 sellerStake,
+            ,
+            ,
+            ,
+            ,
+
+        ) = order.offers(taker, index);
+        (uint128 makerTransferAmount, ) = getTransferAmounts(
+            order,
+            price,
+            buyersCost,
+            sellerStake
+        );
         require(offerState == Order.State.Committed, 'incorrect offer state');
 
         require(
@@ -406,13 +479,24 @@ contract OrderTest is Test {
         vm.assume(sellerStake < 10000000000000000000000000000);
         Order order = createOrder(isBuyOrder);
 
-        (uint128 makerTransferAmount, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (
+            uint128 makerTransferAmount,
+            uint128 takerTransferAmount
+        ) = getTransferAmounts(order, price, buyersCost, sellerStake);
 
         token.mint(taker1, takerTransferAmount);
         vm.startPrank(taker1);
         token.approve(address(order), takerTransferAmount);
         vm.stopPrank();
-        submitOffer(order, taker1, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker1,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
 
         token.mint(maker, makerTransferAmount);
         vm.startPrank(maker);
@@ -518,8 +602,18 @@ contract OrderTest is Test {
         uint256 takerStartBalance = token.balanceOf(taker);
         uint256 daoStartBalance = token.balanceOf(DAO);
 
-        (, , uint128 price, uint128 buyersCost, uint128 sellerStake, , , , , ) = order
-            .offers(taker, index);
+        (
+            ,
+            ,
+            uint128 price,
+            uint128 buyersCost,
+            uint128 sellerStake,
+            ,
+            ,
+            ,
+            ,
+
+        ) = order.offers(taker, index);
 
         // Confirm to an offer from maker
         vm.startPrank(from);
@@ -530,16 +624,22 @@ contract OrderTest is Test {
         require(offerState == Order.State.Closed, 'incorrect offer state');
 
         uint256 buyerTransferAmount = 0;
-        if (buyersCost > price ) {
+        if (buyersCost > price) {
             buyerTransferAmount += buyersCost - price;
         }
         uint256 makerTransferAmount;
         uint256 takerTransferAmount;
         if (order.orderType() == Order.OrderType.BuyOrder) {
             makerTransferAmount = buyerTransferAmount;
-            takerTransferAmount = price - ((price * IOrderBook(book).fee()) / 1000000) + sellerStake;
+            takerTransferAmount =
+                price -
+                ((price * IOrderBook(book).fee()) / 1000000) +
+                sellerStake;
         } else {
-            makerTransferAmount = price - ((price * IOrderBook(book).fee()) / 1000000) + sellerStake;
+            makerTransferAmount =
+                price -
+                ((price * IOrderBook(book).fee()) / 1000000) +
+                sellerStake;
             takerTransferAmount = buyerTransferAmount;
         }
 
@@ -554,7 +654,8 @@ contract OrderTest is Test {
         );
 
         require(
-            token.balanceOf(DAO) == daoStartBalance + ((price * IOrderBook(book).fee()) / 1000000),
+            token.balanceOf(DAO) ==
+                daoStartBalance + ((price * IOrderBook(book).fee()) / 1000000),
             'incorrect transfer to DAO'
         );
 
@@ -665,13 +766,24 @@ contract OrderTest is Test {
         vm.assume(buyersCost < 10000000000000000000000000000);
         vm.assume(sellerStake < 10000000000000000000000000000);
         Order order = createOrder(isBuyOrder);
-        (uint128 makerTransferAmount, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (
+            uint128 makerTransferAmount,
+            uint128 takerTransferAmount
+        ) = getTransferAmounts(order, price, buyersCost, sellerStake);
 
         token.mint(taker1, takerTransferAmount);
         vm.startPrank(taker1);
         token.approve(address(order), takerTransferAmount);
         vm.stopPrank();
-        submitOffer(order, taker1, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker1,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
 
         token.mint(maker, makerTransferAmount);
         vm.startPrank(maker);
@@ -695,7 +807,12 @@ contract OrderTest is Test {
         confirmOffer(order, taker1, taker1, 0);
     }
 
-    function refundOffer(Order order, address taker, address from, uint128 index) public {
+    function refundOffer(
+        Order order,
+        address taker,
+        address from,
+        uint128 index
+    ) public {
         // Get initial balances
         uint256 makerStartBalance = token.balanceOf(maker);
         uint256 takerStartBalance = token.balanceOf(taker);
@@ -769,14 +886,24 @@ contract OrderTest is Test {
         vm.assume(buyersCost < 10000000000000000000000000000);
         vm.assume(sellerStake < 10000000000000000000000000000);
         Order order = createOrder(isBuyOrder);
-        (uint128 makerTransferAmount, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
-
+        (
+            uint128 makerTransferAmount,
+            uint128 takerTransferAmount
+        ) = getTransferAmounts(order, price, buyersCost, sellerStake);
 
         token.mint(taker1, takerTransferAmount);
         vm.startPrank(taker1);
         token.approve(address(order), takerTransferAmount);
         vm.stopPrank();
-        submitOffer(order, taker1, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker1,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
 
         token.mint(maker, makerTransferAmount);
         vm.startPrank(maker);
@@ -880,13 +1007,18 @@ contract OrderTest is Test {
                 token.balanceOf(address(order)) == 0,
                 'sell order should have no balance'
             );
-            (uint128 makerTransferAmount, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+            (
+                uint128 makerTransferAmount,
+                uint128 takerTransferAmount
+            ) = getTransferAmounts(order, price, buyersCost, sellerStake);
             require(
-                token.balanceOf(maker) == makerStartBalance + makerTransferAmount,
+                token.balanceOf(maker) ==
+                    makerStartBalance + makerTransferAmount,
                 'incorrect transfer to maker'
             );
             require(
-                token.balanceOf(taker) == takerStartBalance + takerTransferAmount,
+                token.balanceOf(taker) ==
+                    takerStartBalance + takerTransferAmount,
                 'incorrect transfer to taker'
             );
         } else {
@@ -941,13 +1073,24 @@ contract OrderTest is Test {
         vm.assume(buyersCost < 10000000000000000000000000000);
         vm.assume(sellerStake < 10000000000000000000000000000);
         Order order = createOrder(isBuyOrder);
-        (uint128 makerTransferAmount, uint128 takerTransferAmount) = getTransferAmounts(order, price, buyersCost, sellerStake);
+        (
+            uint128 makerTransferAmount,
+            uint128 takerTransferAmount
+        ) = getTransferAmounts(order, price, buyersCost, sellerStake);
 
         token.mint(taker1, takerTransferAmount);
         vm.startPrank(taker1);
         token.approve(address(order), takerTransferAmount);
         vm.stopPrank();
-        submitOffer(order, taker1, index, price, buyersCost, sellerStake, timeout);
+        submitOffer(
+            order,
+            taker1,
+            index,
+            price,
+            buyersCost,
+            sellerStake,
+            timeout
+        );
 
         token.mint(maker, makerTransferAmount);
         vm.startPrank(maker);
@@ -1030,6 +1173,40 @@ contract OrderTest is Test {
     }
 }
 
+contract GasTest is Test {
+    address DAO = address(0x4234567890123456784012345678901234567821);
+    address maker = address(0x1234567890123456784012345678901234567829);
+    address taker1 = address(0x2234567890123456754012345678901234567821);
+    address taker2 = address(0x5234567890123456754012345678901234567822);
+    ERC20Mock token;
+    OrderBook book;
+    Order order;
+    uint128 sellersStake = 5;
+
+    function setUp() public {
+        vm.prank(DAO);
+        book = new OrderBook();
+        token = new ERC20Mock('wETH', 'WETH', address(this), 20000);
+        order = book.createOrder(maker, 'ipfs://metadata', false);
+        token.mint(taker1, 1);
+        vm.startPrank(taker1);
+        token.approve(address(order), 1);
+        vm.stopPrank();
+    }
+
+    function testApproveToken() public {
+        vm.startPrank(taker1);
+        token.approve(address(order), 1);
+        vm.stopPrank();
+    }
+
+    function testSubmitOffer() public {
+        vm.startPrank(taker1);
+        order.submitOffer(0, token, 1, 1, 1, 100, '');
+        vm.stopPrank();
+    }
+}
+
 contract OrderBookTest is Test {
     address DAO = address(0x4234567890123456784012345678901234567821);
     address maker = address(0x1234567890123456784012345678901234567829);
@@ -1040,7 +1217,7 @@ contract OrderBookTest is Test {
     function setUp() public {
         token = new ERC20Mock('wETH', 'WETH', address(this), 20000);
     }
-    
+
     function testFailOnlyDAOCanSetFees() public {
         vm.prank(DAO);
         OrderBook book = new OrderBook();
@@ -1084,7 +1261,7 @@ contract OrderBookTest is Test {
         vm.startPrank(DAO);
         OrderBook book = new OrderBook();
         vm.stopPrank();
-        
+
         vm.startPrank(maker);
         book.pause();
         vm.stopPrank();
@@ -1096,11 +1273,7 @@ contract OrderBookTest is Test {
         book.pause();
         vm.stopPrank();
 
-        book.createOrder(
-            maker,
-            'ipfs://metadata',
-            false
-        );
+        book.createOrder(maker, 'ipfs://metadata', false);
     }
 
     function testPauseUnpauseBookCreateOrder() public {
@@ -1115,12 +1288,8 @@ contract OrderBookTest is Test {
         vm.startPrank(DAO);
         book.unpause();
         vm.stopPrank();
-        
-        book.createOrder(
-            maker,
-            'ipfs://metadata',
-            false
-        );
+
+        book.createOrder(maker, 'ipfs://metadata', false);
     }
 
     function testFailPauseSubmitOffer() public {
@@ -1128,21 +1297,16 @@ contract OrderBookTest is Test {
         OrderBook book = new OrderBook();
         vm.stopPrank();
 
-        Order order = book.createOrder(
-            maker,
-            'ipfs://metadata',
-            false
-        );
-        
+        Order order = book.createOrder(maker, 'ipfs://metadata', false);
+
         vm.startPrank(DAO);
         book.pause();
         vm.stopPrank();
-        
+
         token.mint(taker1, 1);
         vm.startPrank(taker1);
         token.approve(address(order), 1);
-        order.submitOffer(0, token, 1, 1, 1, 0, "");
+        order.submitOffer(0, token, 1, 1, 1, 0, '');
         vm.stopPrank();
     }
 }
-
