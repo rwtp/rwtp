@@ -37,7 +37,7 @@ function Offer(props: {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
-    props.onConfirm(props.offer.index);
+    await props.onConfirm(props.offer.index);
     setIsLoading(false);
   }
 
@@ -45,7 +45,7 @@ function Offer(props: {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
-    props.onWithdraw(props.offer.index);
+    await props.onWithdraw(props.offer.index);
     setIsLoading(false);
   }
 
@@ -134,9 +134,7 @@ function Offer(props: {
               <ChevronRightIcon className="h-4 w-4 text-gray-400" />
               <button
                 className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
-                onClick={() => {
-                  onConfirm();
-                }}
+                onClick={() => onConfirm()}
                 disabled={isLoading}
               >
                 Confirm Order
@@ -170,8 +168,9 @@ function OrderPage({ order }: { order: OrderData }) {
   const methods = useOrderMethods(order.address);
 
   async function onConfirm(index: string) {
+    if (!account.data?.address) return;
     const confirmTx = await methods.confirm.writeAsync({
-      args: [index],
+      args: [account.data?.address, index],
       overrides: {
         gasLimit: 100000,
       },
