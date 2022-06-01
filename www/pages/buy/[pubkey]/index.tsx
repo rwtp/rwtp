@@ -1,5 +1,4 @@
 import {
-  ArrowRightIcon,
   CheckCircleIcon,
   ChevronRightIcon,
 } from '@heroicons/react/solid';
@@ -7,30 +6,28 @@ import { BigNumber, ethers } from 'ethers';
 import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Suspense, useState } from 'react';
+import { Dispatch, SetStateAction, Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../components/Layout';
-import { useTokenMethods } from '../../../lib/tokens';
 import { getPrimaryImageLink } from '../../../lib/image';
 import {
   OrderData,
   OfferData,
   useOrder,
   useOrderMethods,
-  useOrderOffers,
   useOrderOffersFrom,
 } from '../../../lib/useOrder';
 import cn from 'classnames';
 import dayjs from 'dayjs';
 import { useAccount, useSigner } from 'wagmi';
 import { Order } from 'rwtp';
-import { utils } from 'ethers';
 
 function Offer(props: {
   offer: OfferData;
   order: OrderData;
   onConfirm: (index: string) => Promise<any>;
   onCancel: (index: string) => Promise<any>;
+  setTxHash: Dispatch<SetStateAction<string>>;
 }) {
   const state = props.offer.state;
   const signer = useSigner();
@@ -46,20 +43,44 @@ function Offer(props: {
       signer.data
     );
 
-    const commit = await contract.confirm(
+    const tx = await contract.confirm(
       props.offer.taker,
       props.offer.index,
       {
         gasLimit: 1000000,
       }
     );
-    await commit.wait();
+    props.setTxHash(tx.hash);
+    await tx.wait();
+    props.setTxHash('');
+    setIsLoading(false);
+  }
+
+  async function onWithdraw() {
+    if (!signer || !signer.data) return;
+
+    setIsLoading(true);
+    const contract = new ethers.Contract(
+      props.order.address,
+      Order.abi,
+      signer.data
+    );
+
+    const tx = await contract.withdrawOffer(
+      props.offer.index,
+      {
+        gasLimit: 1000000,
+      }
+    );
+    props.setTxHash(tx.hash);
+    await tx.wait();
+    props.setTxHash('');
     setIsLoading(false);
   }
 
   return (
     <FadeIn className="flex flex-col py-2">
-      <div className="bg-white border">
+      <div hidden={state != "Open" && state != "Committed" && state != "Confirmed"} className="bg-white border">
         <div className="flex px-4 pt-4">
           <div className="flex flex-col">
             <div className="text-gray-500 text-xs">Ordered on</div>
@@ -121,15 +142,23 @@ function Offer(props: {
           {state == 'Open' && (
             <>
               <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
-                Offer Committed{' '}
+                Seller Committed{' '}
                 <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
               </div>
+              <div className='flex-grow'></div>
+              <button
+                className='flex px-4 rounded text-sm py-1 bg-red-500 text-white hover:opacity-50 disabled:opacity-10'
+                onClick={() => onWithdraw()}
+                disabled={isLoading}
+              >
+                Withdraw Offer
+              </button>
             </>
           )}
           {state == 'Committed' && (
             <>
               <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+                Seller Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
               </div>
               <ChevronRightIcon className="h-4 w-4 text-gray-400" />
               <button
@@ -146,7 +175,7 @@ function Offer(props: {
           {state == 'Confirmed' && (
             <>
               <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+                Seller Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
               </div>
               <div className="text-xs flex py-2 border-gray-600 text-gray-600">
                 Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
@@ -165,6 +194,7 @@ function toUIString(amount: string, decimals: number) {
 
 function OrderPage({ order }: { order: OrderData }) {
   const account = useAccount();
+  const [txHash, setTxHash] = useState('');
   const offers = useOrderOffersFrom(order.address, account.data?.address ?? "");
   const methods = useOrderMethods(order.address);
 
@@ -193,7 +223,7 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   return (
-    <ConnectWalletLayout requireConnected={true} txHash="">
+    <ConnectWalletLayout requireConnected={true} txHash={txHash}>
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
           <div className="pb-4 text-sm flex items-center text-gray-600">
@@ -278,6 +308,7 @@ function OrderPage({ order }: { order: OrderData }) {
                 order={order}
                 onConfirm={onConfirm}
                 onCancel={onCancel}
+                setTxHash={setTxHash}
               />
             ))}
             {offers.data && offers.data?.length === 0 && (
