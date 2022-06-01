@@ -18,10 +18,11 @@ import {
   useOrder,
   useOrderMethods,
   useOrderOffers,
+  useOrderOffersFrom,
 } from '../../../lib/useOrder';
 import cn from 'classnames';
 import dayjs from 'dayjs';
-import { useSigner } from 'wagmi';
+import { useAccount, useSigner } from 'wagmi';
 import { Order } from 'rwtp';
 import { utils } from 'ethers';
 
@@ -163,7 +164,8 @@ function toUIString(amount: string, decimals: number) {
 }
 
 function OrderPage({ order }: { order: OrderData }) {
-  const offers = useOrderOffers(order.address);
+  const account = useAccount();
+  const offers = useOrderOffersFrom(order.address, account.data?.address ?? "");
   const methods = useOrderMethods(order.address);
 
   async function onConfirm(index: string) {
@@ -189,6 +191,8 @@ function OrderPage({ order }: { order: OrderData }) {
     await cancelTx.wait();
     console.log('canceld');
   }
+
+  console.log(offers);
 
   return (
     <ConnectWalletLayout requireConnected={true} txHash="">
@@ -269,7 +273,7 @@ function OrderPage({ order }: { order: OrderData }) {
 
         <div className="border-t flex-1 bg-gray-50">
           <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-2">
-            {offers.data?.offers.map((o: any) => (
+            {offers.data?.map((o: any) => (
               <Offer
                 key={o.index + o.uri}
                 offer={o}
@@ -278,7 +282,7 @@ function OrderPage({ order }: { order: OrderData }) {
                 onCancel={onCancel}
               />
             ))}
-            {offers.data && offers.data?.offers.length === 0 && (
+            {offers.data && offers.data?.length === 0 && (
               <div className="mt-2 text-sm text-gray-400">
                 No currently open purchases were found.
               </div>

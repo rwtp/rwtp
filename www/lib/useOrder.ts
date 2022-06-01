@@ -262,17 +262,15 @@ export function useOrderSubmitOffer(address: string) {
 
 export function useOrderOffersFrom(order: string, taker: string) {
   const metadata = useSubgraph<{
-    order: OrderData & {
-      offers: Array<OfferData>;
-    };
+    offers: Array<OfferData>
   }>([
     `
     query data($order: ID, $taker: ID){
-      order(id: $order) {
-        ${ORDER_FIELDS}
-        offers(where:{buyerAddress:$taker}) {
-          ${OFFER_FIELDS}
-        }
+      offers(where:{
+        order:$order,
+        taker:$taker
+      }) {
+        ${OFFER_FIELDS}
       }
     }
   `,
@@ -284,7 +282,7 @@ export function useOrderOffersFrom(order: string, taker: string) {
 
   return {
     ...metadata,
-    data: metadata.data?.order,
+    data: metadata.data?.offers,
   };
 }
 
