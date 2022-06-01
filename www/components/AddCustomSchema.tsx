@@ -17,7 +17,7 @@ export function InputCustomSchema(props: {
     const customJSONSchema = props.JSONSchema;
 
     return (
-        <div className="flex flex-col mt-4">
+        <div className="flex flex-col mt-8">
             <div hidden={expanded}>
                 <div onClick={() => setExpanded(true)} className='font-bold text-sm mb-1 flex flex-row'><ChevronRightIcon className='h-4 w-4 my-auto' /> Buyer Fields: {schemaType == 'default' ? 'Default' : 'Custom'}</div>
             </div>
@@ -85,11 +85,11 @@ export function InputCustomSchema(props: {
                             }
                         />
                         {customJSONSchema && is_valid_custom_schema(customJSONSchema) ? (
-                            <div className="text-green-500">
+                            <div className="text-sm text-green-500">
                                 JSON is valid!
                             </div>
                         ) : (
-                            <div className="text-red-500">
+                            <div className="text-sm text-red-500">
                                 Invalid JSON
                             </div>
                         )}
