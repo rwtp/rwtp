@@ -180,6 +180,14 @@ export function useOrderMethods(address: string) {
     'submitOffer'
   );
 
+  const withdrawOffer = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: Order.abi,
+    },
+    'withdrawOffer'
+  );
+
   const cancel = useContractWrite(
     {
       addressOrName: address,
@@ -214,6 +222,7 @@ export function useOrderMethods(address: string) {
 
   return {
     submitOffer,
+    withdrawOffer,
     confirm,
     commit,
     commitBatch,

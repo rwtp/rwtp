@@ -27,7 +27,7 @@ function Offer(props: {
   order: OrderData;
   onConfirm: (index: string) => Promise<any>;
   onCancel: (index: string) => Promise<any>;
-  setTxHash: Dispatch<SetStateAction<string>>;
+  onWithdraw: (index: string) => Promise<any>;
 }) {
   const state = props.offer.state;
   const signer = useSigner();
@@ -37,22 +37,7 @@ function Offer(props: {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
-    const contract = new ethers.Contract(
-      props.order.address,
-      Order.abi,
-      signer.data
-    );
-
-    const tx = await contract.confirm(
-      props.offer.taker,
-      props.offer.index,
-      {
-        gasLimit: 1000000,
-      }
-    );
-    props.setTxHash(tx.hash);
-    await tx.wait();
-    props.setTxHash('');
+    props.onConfirm(props.offer.index);
     setIsLoading(false);
   }
 
@@ -60,21 +45,7 @@ function Offer(props: {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
-    const contract = new ethers.Contract(
-      props.order.address,
-      Order.abi,
-      signer.data
-    );
-
-    const tx = await contract.withdrawOffer(
-      props.offer.index,
-      {
-        gasLimit: 1000000,
-      }
-    );
-    props.setTxHash(tx.hash);
-    await tx.wait();
-    props.setTxHash('');
+    props.onWithdraw(props.offer.index);
     setIsLoading(false);
   }
 
@@ -205,8 +176,10 @@ function OrderPage({ order }: { order: OrderData }) {
         gasLimit: 100000,
       },
     });
-
+    
+    setTxHash(confirmTx.hash);
     await confirmTx.wait();
+    setTxHash('');
     console.log('confirmed');
   }
 
@@ -219,7 +192,21 @@ function OrderPage({ order }: { order: OrderData }) {
     });
 
     await cancelTx.wait();
-    console.log('canceld');
+    console.log('canceled');
+  }
+
+  async function onWithdraw(index: string) {
+    const withdrawTx = await methods.withdrawOffer.writeAsync({
+      args: [index],
+      overrides: {
+        gasLimit: 100000,
+      },
+    });
+
+    setTxHash(withdrawTx.hash);
+    await withdrawTx.wait();
+    setTxHash('');
+    console.log('withdrawn');
   }
 
   return (
@@ -308,7 +295,7 @@ function OrderPage({ order }: { order: OrderData }) {
                 order={order}
                 onConfirm={onConfirm}
                 onCancel={onCancel}
-                setTxHash={setTxHash}
+                onWithdraw={onWithdraw}
               />
             ))}
             {offers.data && offers.data?.length === 0 && (
