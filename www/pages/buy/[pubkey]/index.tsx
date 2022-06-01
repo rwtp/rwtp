@@ -130,6 +130,7 @@ function Offer(props: {
               <div className="text-xs flex py-2 border-gray-600 text-gray-600">
                 Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
               </div>
+              <ChevronRightIcon className="h-4 w-4 text-gray-400" />
               <button
                 className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
                 onClick={() => {
