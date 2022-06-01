@@ -101,7 +101,7 @@ function NewOrder() {
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
-    const offerSchema = getOfferSchema(state.customIPFSSchema, state.customJSONSchema)
+    const offerSchema = await getOfferSchema(state.customIPFSSchema, state.customJSONSchema)
     const cid = await postJSONToIPFS({
       offerSchema: offerSchema,
       title: state.title,
