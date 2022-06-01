@@ -23,15 +23,20 @@ import { InputCustomSchema } from '../../components/AddCustomSchema';
 import { useNetwork } from 'wagmi';
 import { valueFromAST } from 'graphql';
 
-async function postJSONToIPFS(data: any) {
+async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
+  let body = data;
+  if (addDataTag) {
+    body = {
+      data: body
+    };
+  }
+
   const result = await fetch('/api/uploadJson', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      data: data,
-    }),
+    body: JSON.stringify(body),
   });
   const { cid } = await result.json();
   return cid;
@@ -83,7 +88,7 @@ function NewOrder() {
       return customIPFSSchema;
     } else if (customJSONSchema) {
       // TODO handle error if upload fails
-      const cid = await postJSONToIPFS(JSON.parse(customJSONSchema));
+      const cid = await postJSONToIPFS(JSON.parse(customJSONSchema), false);
       return `ipfs://${cid}`;
     } else {
       return `ipfs://${DEFAULT_OFFER_SCHEMA}`;
