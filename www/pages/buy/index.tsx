@@ -42,7 +42,7 @@ function OrderView(props: { order: Order }) {
 
   return (
     <div className="border rounded bg-white hover:bg-gray-100">
-      <a href={`/buy/${props.order.address}`} target="_blank">
+      <a href={`/buy/${props.order.address}`}>
         {imageComponent}
         <div className="p-2">
           <div className="font-serif truncate w-full mr-2">
