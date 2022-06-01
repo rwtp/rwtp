@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { is_valid_custom_schema } from '../lib/schemaValidator';
 import defaultSchema from '../offer_schemas/QmX6CZ7Wf8B79EX5x1PJSityvhtvvFKhkDBCDZK2cd6adF.json';
 import { DEFAULT_OFFER_SCHEMA } from '../lib/constants';
+import { ArrowRightIcon, ArrowsExpandIcon, ArrowSmRightIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/solid';
 
 export function InputCustomSchema(props: {
     JSONSchema: string;
@@ -9,87 +10,59 @@ export function InputCustomSchema(props: {
     setJSONSchema: (schema: string) => void;
     setIPFSSchema: (schema: string) => void;
 }) {
-    const [useCustomSchemaJSON, setUseCustomSchemaJSON] = useState(false);
-    const [useCustomSchemaIPFS, setUseCustomSchemaIPFS] = useState(false);
+    const [expanded, setExpanded] = useState(false);
+    const [schemaType, setSchemaType] = useState('default');
     const setCustomSchemaJSON = props.setJSONSchema;
     const setCustomSchemaIPFS = props.setIPFSSchema;
     const customJSONSchema = props.JSONSchema;
-    const cancelButton = (
-        <button
-            className="flex items-center px-4 py-2 rounded bg-black text-white border-black hover:opacity-50 transition-all"
-            onClick={() => {
-                setUseCustomSchemaJSON(false);
-                setUseCustomSchemaIPFS(false);
-                setCustomSchemaJSON('');
-                setCustomSchemaIPFS('');
-            }}
-        >
-            Cancel
-        </button>
-    );
 
     return (
-        <div className="flex flex-col pt-4">
-            <div className="pb-4">
-                You are currently using the 
-                &nbsp;<a 
-                    className="underline decoration-sky-800"
-                    href="https://github.com/rwtp/rwtp/blob/main/www/offer_schemas/QmX6CZ7Wf8B79EX5x1PJSityvhtvvFKhkDBCDZK2cd6adF.json"
-                >
-                    default 
-                </a>&nbsp;
-                offer schema if you'd like to use a custom one click 
-                &nbsp;<a className="underline decoration-sky-800 hover:cursor-pointer" onClick={(e) => {
-                    setUseCustomSchemaJSON(true);
-                    setUseCustomSchemaIPFS(false);
-                }}>
-                    here
-                </a>&nbsp;
-                to upload a new schema or click 
-                &nbsp;<a className="underline decoration-sky-800 hover:cursor-pointer" onClick={(e) => {
-                    setUseCustomSchemaIPFS(true);
-                    setUseCustomSchemaJSON(false);
-                }}>
-                    here
-                </a>&nbsp;
-                to use an existing schema on ipfs.
+        <div className="flex flex-col mt-4">
+            <div hidden={expanded}>
+                <div onClick={() => setExpanded(true)} className='font-bold text-sm mb-1 flex flex-row'><ChevronRightIcon className='h-4 w-4 my-auto' /> Buyer Fields: {schemaType == 'default' ? 'Default' : 'Custom'}</div>
             </div>
-            {useCustomSchemaJSON && (
-                <div className="flex flex-col">
-                    <label className="flex flex-col mb-2">
-                        <div className="font-sans mb-1 text-base font-bold">Offer Schema</div>
-                        <textarea
-                            rows={10}
-                            className="border px-4 py-2 rounded font-mono text-sm text-gray-700"
-                            placeholder={JSON.stringify(defaultSchema, null, 2)}
-                            onChange={(e) =>
-                                setCustomSchemaJSON(e.target.value)
-                            }
+            <div hidden={!expanded}>
+                <div onClick={() => setExpanded(false)} className='font-bold text-sm mb-1 flex flex-row'><ChevronDownIcon className='h-4 w-4 my-auto' /> Buyer Fields: {schemaType == 'default' ? 'Default' : 'Custom'}</div>
+                <div>Use the <a className='underline' href="https://github.com/rwtp/rwtp/blob/main/www/offer_schemas/QmX6CZ7Wf8B79EX5x1PJSityvhtvvFKhkDBCDZK2cd6adF.json">default set</a> of buyer fields or define your own in <a className="underline" href="https://json-schema.org/">JSON Schema</a>:</div>
+                <div className='flex flex-col mb-4'>
+                    <div className='flex flex-row gap-1 items-center'>
+                        <input
+                            type="radio" value="default" name="schema"
+                            defaultChecked={true}
+                            onClick={() => {
+                                setSchemaType('default');
+                                setCustomSchemaJSON('');
+                                setCustomSchemaIPFS('');
+                            }}
                         />
-                    </label>
-                    {/* here are two elements next to eachother */}
-                    <div className="flex flex-row pt-2">
-                        <span>
-                            {cancelButton}
-                        </span>
-                        <span className='flex items-center px-4 py-2 rounded text-white border-black hover:opacity-50 transition-all mb-2'>
-                            {customJSONSchema && is_valid_custom_schema(customJSONSchema) ? (
-                                <div className="text-green-500">
-                                    JSON is valid!
-                                </div>
-                            ) : (
-                                <div className="text-red-500">
-                                    Invalid JSON
-                                </div>
-                            )}
-                        </span>
+                        <div>Default</div>
+                    </div>
+                    <div className='flex flex-row gap-1 items-center'>
+                        <input
+                            type="radio" value="ipfs" name="schema"
+                            onClick={() => {
+                                setSchemaType('ipfs');
+                                setCustomSchemaJSON('');
+                                setCustomSchemaIPFS('');
+                            }}
+                        />
+                        <div>Custom IPFS URI</div>
+                    </div>
+                    <div className='flex flex-row gap-1 items-center'>
+                        <input
+                            type="radio" value="json" name="schema"
+                            onClick={() => {
+                                setSchemaType('json');
+                                setCustomSchemaJSON('');
+                                setCustomSchemaIPFS('');
+                            }}
+                        />
+                        <div>Custom JSON upload</div>
                     </div>
                 </div>
-            )}
-            {useCustomSchemaIPFS && (
-                <div className="flex flex-col">
-                    <label className="flex flex-col mb-2">
-                        <div className="font-sans mb-2 text-base font-bold">Offer Schema</div>
+                {schemaType == 'ipfs' && <div>
+                    <div className="flex flex-col">
+                        <div className="font-bold text-sm mb-1">Custom Schema</div>
                         <input
                             className="border px-4 py-2 rounded"
                             type="string"
@@ -98,12 +71,31 @@ export function InputCustomSchema(props: {
                                 setCustomSchemaIPFS(e.target.value)
                             }
                         />
-                    </label>
-                    <span className='pt-2'>
-                        {cancelButton}
-                    </span>
-                </div>
-            )}
+                    </div>
+                </div>}
+                {schemaType == 'json' && <div>
+                    <div className="flex flex-col">
+                        <div className="font-bold text-sm mb-1">Custom Schema</div>
+                        <textarea
+                            rows={10}
+                            className="border px-4 py-2 rounded font-mono text-sm text-gray-700"
+                            placeholder={JSON.stringify(defaultSchema, null, 2)}
+                            onChange={(e) =>
+                                setCustomSchemaJSON(e.target.value)
+                            }
+                        />
+                        {customJSONSchema && is_valid_custom_schema(customJSONSchema) ? (
+                            <div className="text-green-500">
+                                JSON is valid!
+                            </div>
+                        ) : (
+                            <div className="text-red-500">
+                                Invalid JSON
+                            </div>
+                        )}
+                    </div>
+                </div>}
+            </div>
         </div>
     );
 }
