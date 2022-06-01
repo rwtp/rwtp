@@ -192,8 +192,6 @@ function OrderPage({ order }: { order: OrderData }) {
     console.log('canceld');
   }
 
-  console.log(offers);
-
   return (
     <ConnectWalletLayout requireConnected={true} txHash="">
       <div className="flex flex-col w-full h-full">
