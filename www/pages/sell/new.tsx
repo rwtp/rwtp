@@ -83,7 +83,7 @@ function NewOrder() {
       return customIPFSSchema;
     } else if (customJSONSchema) {
       // TODO handle error if upload fails
-      const cid = await postJSONToIPFS(customJSONSchema);
+      const cid = await postJSONToIPFS(JSON.parse(customJSONSchema));
       return `ipfs://${cid}`;
     } else {
       return `ipfs://${DEFAULT_OFFER_SCHEMA}`;
