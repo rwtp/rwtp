@@ -40,19 +40,33 @@ function OrderView(props: { order: Order }) {
   );
 
   // User facing buyers stake logic
-  var buyersCost = toUIString(
-    props.order.buyersCost,
+  // var buyersCost = toUIString(
+  //   props.order.buyersCost,
+  //   props.order.token.decimals
+  // );
+  // var buyersCostNum = +buyersCost;
+  // var price = toUIString(props.order.price, props.order.token.decimals);
+  // var priceNum = +price;
+  // var buyersCostName = 'Penalize Fee';
+  // var buyersCostAmount = buyersCostNum - priceNum;
+
+  // if (buyersCostNum <= priceNum) {
+  //   buyersCostName = 'Refund Amount';
+  //   buyersCostAmount = priceNum - buyersCostNum;
+  // }
+  var buyersCostName = 'Penalize Fee';
+  var buyersCostAmount = toUIString(
+    (+props.order.buyersCost - +props.order.price).toString(),
     props.order.token.decimals
   );
-  var buyersCostNum = +buyersCost;
-  var price = toUIString(props.order.price, props.order.token.decimals);
-  var priceNum = +price;
-  var buyersCostName = 'Penalize Fee';
-  var buyersCostAmount = buyersCostNum - priceNum;
+  // var buyersCostAmount = toUIString(
+  //   bigInt(props.order.buyersCost).minus(props.order.price).toString(),
+  //   props.order.token.decimals
+  // );
 
-  if (buyersCostNum <= priceNum) {
+  if (+buyersCostAmount < 0) {
     buyersCostName = 'Refund Amount';
-    buyersCostAmount = priceNum - buyersCostNum;
+    buyersCostAmount = (0 - +buyersCostAmount).toString();
   }
 
   return (

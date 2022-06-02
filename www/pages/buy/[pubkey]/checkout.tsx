@@ -18,6 +18,20 @@ import { RequiresKeystore } from '../../../lib/keystore';
 import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
 import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
 import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
+import { toUIString } from '../../../lib/ui-logic';
+import { getPrimaryImageLink } from '../../../lib/image';
+import Form from '@rjsf/core';
+
+function FormFooter(props: { price: string; symbol: string }) {
+  return (
+    <div className="text-sm mt-4 text-gray-500">
+      If this item doesn't ship to you, the seller be fined{' '}
+      <span className="font-bold">
+        {props.price} {props.symbol}.
+      </span>
+    </div>
+  );
+}
 
 function BuyPage({ order }: { order: OrderData }) {
   const tokenMethods = useTokenMethods(order.tokenAddressesSuggested[0]);
@@ -47,10 +61,7 @@ function BuyPage({ order }: { order: OrderData }) {
     if (!buyersEncryptionKeypair) return;
     setIsLoading(true);
     console.log('Submitting offer: ', offerData);
-    const secretData = Buffer.from(
-      JSON.stringify(offerData),
-      'utf-8'
-    );
+    const secretData = Buffer.from(JSON.stringify(offerData), 'utf-8');
     const nonce = nacl.randomBytes(24);
     const sellersPublicEncryptionKey = Uint8Array.from(
       Buffer.from(order.encryptionPublicKey, 'hex')
@@ -73,87 +84,224 @@ function BuyPage({ order }: { order: OrderData }) {
     const approveTx = await tokenMethods.approve.writeAsync({
       args: [order.address, price.add(stake).mul(quantity)],
     });
-    
+
     setTxHash(approveTx.hash);
     await approveTx.wait();
     setTxHash('');
 
     const tx = await orderMethods.submitOffer.writeAsync({
-      args: [BigNumber.from(0), order.tokenAddressesSuggested[0], price, cost, stake, timeout, 'ipfs://' + cid],
+      args: [
+        BigNumber.from(0),
+        order.tokenAddressesSuggested[0],
+        price,
+        cost,
+        stake,
+        timeout,
+        'ipfs://' + cid,
+      ],
       overrides: {
         gasLimit: 1000000,
       },
     });
-    
+
     setTxHash(tx.hash);
     await tx.wait();
     setTxHash('');
     setIsLoading(false);
-    
+
     router.push(`/buy/${order.address}`);
   }
 
-  let imageComponent = <Image width={256} height={256} src="/rwtp.png" />;
-  if (order.primaryImage && order.primaryImage.length > 0) {
-    if (order.primaryImage.startsWith("https://") || order.primaryImage.startsWith("http://")) {
-      imageComponent = <img className='w-52' src={order.primaryImage} />
-    } else if (order.primaryImage.startsWith("ipfs://")) {
-      const imageUri = order.primaryImage.replace("ipfs://", "https://ipfs.infura.io/ipfs/");
-      imageComponent = <img className='w-52' src={imageUri} />
+  // user facing buyers cost logic ---------------------------------
+  var hasRefund = false;
+  var buyersCostName = 'Penalize Fee';
+  var buyersCostAmount = toUIString(
+    (+order.buyersCostSuggested - +order.priceSuggested).toString(),
+    order.tokensSuggested[0].decimals
+  );
+
+  if (+buyersCostAmount <= 0) {
+    buyersCostName = 'Refund Amount';
+    buyersCostAmount = (0 - +buyersCostAmount).toString();
+    hasRefund = true;
+  }
+
+  function getTotalPrice(hasRefund: boolean) {
+    if (hasRefund) {
+      return toUIString(
+        order.priceSuggested,
+        order.tokensSuggested[0].decimals
+      );
+    } else {
+      return toUIString(
+        order.buyersCostSuggested.toString(),
+        order.tokensSuggested[0].decimals
+      );
     }
   }
 
+  function renderPenalizeFee(
+    hasRefund: boolean,
+    buyersCostName: string,
+    buyersCostAmount: string
+  ) {
+    if (!hasRefund) {
+      return (
+        <div className="flex flex-row gap-4">
+          <div className="text-base w-full">{buyersCostName}</div>
+          <div className="text-base whitespace-nowrap">
+            + {buyersCostAmount} {order.tokensSuggested[0].symbol}
+          </div>
+        </div>
+      );
+    } else {
+      return null;
+    }
+  }
+
+  function renderPenalizeExplanation(
+    hasRefund: boolean,
+    buyersCostAmount: string
+  ) {
+    if (!hasRefund) {
+      return (
+        <p className="text-xs text-gray-400">
+          The additional penalize fee is held in case the order fails and you
+          decide to penalize the seller. If the order is successful,{' '}
+          <b>
+            you will get {buyersCostAmount} {order.tokensSuggested[0].symbol}{' '}
+            back
+          </b>
+          .
+        </p>
+      );
+    } else {
+      return null;
+    }
+  }
+
+  function renderRefund(
+    hasRefund: boolean,
+    buyersCostAmount: string,
+    token: string
+  ) {
+    if (hasRefund) {
+      return (
+        <p className="text-xs text-gray-400">
+          {' '}
+          This purchase is eligible for a refund amount of{' '}
+          <b>
+            {buyersCostAmount} {token}
+          </b>{' '}
+          if the deal fails.
+        </p>
+      );
+    } else {
+      return null;
+    }
+  }
+  // END user facing buyers cost logic ---------------------------------
+  let formChecker: Form<any>;
+
   return (
     <ConnectWalletLayout requireConnected={true} txHash={txHash}>
-      <div className="h-full w-full flex flex-col border-t">
-        <div className="h-full flex w-full">
-          <div className="flex w-full border-l border-r mx-auto">
-            <div className="flex-1 justify-center flex flex-col bg-gray-50 items-center">
-              <div>
-                <div className="flex">
-                  <a
-                    href="/buy"
-                    className="flex gap-2 justify-between items-center py-1 hover:opacity-50 transition-all text-sm text-gray-700"
-                  >
-                    <ArrowLeftIcon className="h-4 w-4" />
-                    <div>Back</div>
-                  </a>
-                </div>
-
-                <h1 className="pt-2 text-sm pt-12 text-gray-700">
-                  {order.title}
-                </h1>
-                <p className="pb-2 text-xl mt-2">
-                  {fromBn(price, order.tokensSuggested[0].decimals)}{' '}
-                  {order.tokensSuggested[0].symbol}
-                </p>
-
-                <div className="flex mb-2 pt-12 ">
-                  <div className="border rounded bg-white">
-                    {imageComponent}
+      <div className="flex flex-col max-w-6xl mx-auto mt-12 px-4 md:flex-row gap-8">
+        <div className="flex flex-col bg-white md:w-3/5 d">
+          <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
+            {order.offerSchemaUri &&
+            order.offerSchemaUri.replace('ipfs://', '') !=
+              DEFAULT_OFFER_SCHEMA ? (
+              <OfferForm
+                schema={order.offerSchema}
+                setOfferData={setOfferData}
+                offerData={offerData}
+                price={fromBn(price, order.tokensSuggested[0].decimals)}
+                refHandler={(form) => {
+                  formChecker = form;
+                }}
+                symbol={order.tokensSuggested[0].symbol}
+              />
+            ) : (
+              <SimpleOfferForm
+                setOfferData={setOfferData}
+                offerData={offerData}
+                price={fromBn(price, order.tokensSuggested[0].decimals)}
+                onSubmit={onBuy}
+                symbol={order.tokensSuggested[0].symbol}
+              />
+            )}
+          </div>
+        </div>
+        {/* PRODUCT INFO */}
+        <div className="flex-1 flex flex-col md:w-2/5">
+          <div className="bg-gray-50 px-8">
+            <div className="flex flex-row gap-4 mt-8">
+              <div className="h-24 w-24">
+                <img className="object-fill" src={getPrimaryImageLink(order)} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1">
+                  <h1 className="text-base font-serif">{order.title}</h1>
+                  <div className="flex flex-row gap-2">
+                    <div className="text-sm text-gray-400 whitespace-nowrap">
+                      Seller's Deposit:
+                    </div>
+                    <p className="text-sm whitespace-nowrap">
+                      {toUIString(
+                        order.priceSuggested,
+                        order.tokensSuggested[0].decimals
+                      )}{' '}
+                      {order.tokensSuggested[0].symbol}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-              <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}> 
-                {
-                  order.offerSchemaUri && order.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
-                  <OfferForm
-                  schema={order.offerSchema}
-                  setOfferData={setOfferData}
-                  offerData={offerData}
-                  price={fromBn(price, order.tokensSuggested[0].decimals)}
-                  onSubmit={onBuy}
-                  symbol={order.tokensSuggested[0].symbol} /> :
-                  <SimpleOfferForm
-                  setOfferData={setOfferData}
-                  offerData={offerData}
-                  price={fromBn(price, order.tokensSuggested[0].decimals)}
-                  onSubmit={onBuy}
-                  symbol={order.tokensSuggested[0].symbol} />
-                }
+            {/* END PRODUCT INFO */}
+            <hr className="my-8"></hr>
+            {/* RECEIPT */}
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-row gap-4">
+                <div className="text-base w-full">Item</div>
+                <div className="text-base whitespace-nowrap">
+                  {toUIString(
+                    order.priceSuggested,
+                    order.tokensSuggested[0].decimals
+                  )}{' '}
+                  {order.tokensSuggested[0].symbol}
+                </div>
               </div>
+              {renderPenalizeFee(hasRefund, buyersCostName, buyersCostAmount)}
+              <div className="flex flex-row gap-4 font-bold">
+                <div className="text-base w-full">Total Today</div>
+                <div className="text-base whitespace-nowrap">
+                  {getTotalPrice(hasRefund)} {order.tokensSuggested[0].symbol}
+                </div>
+              </div>
+            </div>
+            {/* END RECEIPT */}
+
+            <button
+              className="bg-black rounded text-white w-full text-base px-4 py-2 hover:opacity-50 disabled:opacity-10 mt-12"
+              onClick={() => {
+                console.log(formChecker);
+                formChecker.validate({});
+
+                // if () {
+                //   onBuy().catch(console.error);
+                // }
+              }}
+              disabled={isLoading}
+            >
+              Send Order
+            </button>
+            <div className="mt-4 mb-8">
+              {renderPenalizeExplanation(hasRefund, buyersCostAmount)}
+              {renderRefund(
+                hasRefund,
+                buyersCostAmount,
+                order.tokensSuggested[0].symbol
+              )}
             </div>
           </div>
         </div>
@@ -161,7 +309,6 @@ function BuyPage({ order }: { order: OrderData }) {
     </ConnectWalletLayout>
   );
 }
-
 
 function Loading() {
   return <div className="bg-gray-50 animate-pulse h-screen w-screen"></div>;

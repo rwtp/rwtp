@@ -2,33 +2,15 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { FingerPrintIcon } from '@heroicons/react/solid';
 import Form from '@rjsf/core';
 
-
-function FormFooter(props: {
-  price: string,
-  symbol: string,
-}) {
-  return (<div className="text-sm mt-4 text-gray-500">
-    If this item doesn't ship to you, the seller be fined{' '}
-    <span className="font-bold">
-      {props.price}{' '}{props.symbol}.
-    </span>
-  </div>);
-}
-
-
-function SubmitOfferButton(props: {
-  onClick?: () => void,
-  price: string,
-  symbol: string
-}) {
+function FormFooter(props: { price: string; symbol: string }) {
   return (
-    <button className="mt-4 bg-black text-white px-4 py-2 w-full flex justify-between font-bold rounded"
-      onClick={props.onClick}
-    >
-      <div>Submit Offer</div>
-      <div>{props.price} {props.symbol}</div>
-    </button>
-  )
+    <div className="text-sm mt-4 text-gray-500">
+      If this item doesn't ship to you, the seller be fined{' '}
+      <span className="font-bold">
+        {props.price} {props.symbol}.
+      </span>
+    </div>
+  );
 }
 
 const fields = {
@@ -41,13 +23,15 @@ const fields = {
   // SchemaField: CustomSchemaField
 };
 
-function ObjectFieldTemplate(props: {
-  properties: any
-}) {
+function ObjectFieldTemplate(props: { properties: any }) {
   return (
     <div>
       {/* Let's omit the {props.title} {props.description}*/}
-      {props.properties.map((element: any) => <div key={element.name} className="property-wrapper w-full">{element.content}</div>)}
+      {props.properties.map((element: any) => (
+        <div key={element.name} className="property-wrapper w-full">
+          {element.content}
+        </div>
+      ))}
     </div>
   );
 }
@@ -55,8 +39,9 @@ function ObjectFieldTemplate(props: {
 const customWidgets = {
   TextWidget: (props: any) => {
     return (
-      <div className='w-full'>
-        <input type="text"
+      <div className="w-full">
+        <input
+          type="text"
           className="px-2 py-2 border rounded w-full"
           value={props.value}
           required={props.required}
@@ -64,16 +49,29 @@ const customWidgets = {
           onChange={(event) => props.onChange(event.target.value)}
         />
       </div>
-    )
-  }
+    );
+  },
 };
 
-
 function CustomFieldTemplate(props: any) {
-  const { id, classNames, label, help, required, description, errors, children } = props;
+  const {
+    id,
+    classNames,
+    label,
+    help,
+    required,
+    description,
+    errors,
+    children,
+  } = props;
   return (
     <div className={classNames + ' w-full'}>
-      {id === 'root' || <label htmlFor={id} className="text-xs font-bold py-1">{label}{required ? "*" : null}</label>}
+      {id === 'root' || (
+        <label htmlFor={id} className="text-xs font-bold py-1">
+          {label}
+          {required ? '*' : null}
+        </label>
+      )}
       {description}
       {children}
       {errors}
@@ -84,23 +82,24 @@ function CustomFieldTemplate(props: any) {
 
 // Form that will auto generate a schema and format the fields to match our UI style mainly.
 export function OfferForm(props: {
-  schema: string,
-  setOfferData: (data: any) => void,
-  offerData: any,
-  price: string,
-  onSubmit: () => Promise<void>,
-  symbol: string,
+  schema: string;
+  setOfferData: (data: any) => void;
+  offerData: any;
+  price: string;
+  refHandler: (form: any) => void;
+  symbol: string;
 }) {
   let schema = JSON.parse(props.schema);
   return (
-
-    <div className="flex w-full">
+    <div className="flex flex-1 flex-col w-full">
+      <div className="font-serif mb-2 text-2xl">Checkout</div>
       <Form
-        className='w-full mt-4'
+        className="w-full mt-4"
         schema={schema}
         widgets={customWidgets}
         fields={fields}
-        onSubmit={() => props.onSubmit().catch(console.error)}
+        onSubmit={() => {}}
+        ref={props.refHandler}
         ObjectFieldTemplate={ObjectFieldTemplate}
         FieldTemplate={CustomFieldTemplate}
         onChange={(e) => {
@@ -116,12 +115,10 @@ export function OfferForm(props: {
           props.setOfferData(data);
         }}
       >
-        <div className='mt-4'>
-          <SubmitOfferButton price={props.price} symbol={props.symbol} />
-          <FormFooter price={props.price} symbol={props.symbol} />
+        <div className="mt-4">
+          {/* <FormFooter price={props.price} symbol={props.symbol} /> */}
         </div>
       </Form>
-
     </div>
   );
 }
@@ -132,44 +129,170 @@ export function OfferForm(props: {
 
 // This is an hand rolled form that is a 1:1 matching with `ipfs://QmX6CZ7Wf8B79EX5x1PJSityvhtvvFKhkDBCDZK2cd6adF`
 export function SimpleOfferForm(props: {
-  setOfferData: (data: any) => void,
-  offerData: any,
-  price: string,
-  symbol: string,
-  onSubmit: () => Promise<void>,
+  setOfferData: (data: any) => void;
+  offerData: any;
+  price: string;
+  symbol: string;
+  onSubmit: () => Promise<void>;
 }) {
   return (
-    <div>
-      <label className="flex flex-col mt-2">
-        <div className="text-xs font-bold py-1">Shipping Address</div>
-        <input
-          type={'text'}
-          className={'px-2 py-2 border rounded'}
-          name="address"
-          placeholder="100 Saddle Point; San Fransokyo, CA 94112"
-          onChange={(e) => props.setOfferData({
-            ...props.offerData,
-            shippingAddress: e.target.value
-          })}
-        />
-      </label>
-
-      <label className="flex flex-col  mt-2">
-        <div className="text-xs font-bold py-1">Email</div>
-        <input
-          type={'text'}
-          className={'px-2 py-2 border rounded'}
-          name="address"
-          placeholder="you@ethereum.org"
-          onChange={(e) => props.setOfferData({
-            ...props.offerData,
-            email: e.target.value
-          })}
-        />
-      </label>
-      <div className="mt-4">
-        <SubmitOfferButton price={props.price} symbol={props.symbol} onClick={() => props.onSubmit().catch(console.error)} />
-        <FormFooter price={props.price} symbol={props.symbol} />
+    <div className="relative w-full">
+      <div className="font-serif mb-2 text-2xl">Checkout</div>
+      <div className="flex mt-8 flex-col gap-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:w-1/2">
+            <div className="text-sm font-bold py-1">First Name*</div>
+            <input
+              type={'text'}
+              className={'px-4 py-2 border rounded'}
+              name="First Name"
+              placeholder="Heinz"
+              onChange={(e) =>
+                props.setOfferData({
+                  ...props.offerData,
+                  firstName: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col md:w-1/2">
+            <div className="text-sm font-bold py-1">Last Name*</div>
+            <input
+              type={'text'}
+              className={'px-4 py-2 border rounded'}
+              name="Last Name"
+              placeholder="Doofenshmirtz"
+              onChange={(e) =>
+                props.setOfferData({
+                  ...props.offerData,
+                  lastName: e.target.value,
+                })
+              }
+            />
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:w-1/2">
+            <div className="text-sm font-bold py-1">Email*</div>
+            <input
+              type={'text'}
+              className={'px-4 py-2 border rounded'}
+              name="email"
+              placeholder="myemail@gmail.com"
+              onChange={(e) =>
+                props.setOfferData({
+                  ...props.offerData,
+                  email: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col md:w-1/2">
+            <div className="text-sm font-bold py-1">Phone</div>
+            <input
+              type={'text'}
+              className={'px-4 py-2 border rounded'}
+              name="phone"
+              placeholder="888-888-8888"
+              onChange={(e) =>
+                props.setOfferData({
+                  ...props.offerData,
+                  phone: e.target.value,
+                })
+              }
+            />
+          </div>
+        </div>
+        <div className="text-base font-bold py-1 mt-8">Shipping Address</div>
+        <div className="flex flex-col">
+          <div className="text-sm font-bold py-1">Country*</div>
+          <input
+            type={'text'}
+            className={'px-4 py-2 border rounded'}
+            name="country"
+            placeholder="United States"
+            onChange={(e) =>
+              props.setOfferData({
+                ...props.offerData,
+                shippingCountry: e.target.value,
+              })
+            }
+          />
+        </div>
+        <div className="flex flex-col">
+          <div className="text-sm font-bold py-1">Address*</div>
+          <input
+            type={'text'}
+            className={'px-4 py-2 border rounded'}
+            name="address1"
+            placeholder="888 Berry St"
+            onChange={(e) =>
+              props.setOfferData({
+                ...props.offerData,
+                shippingAddress1: e.target.value,
+              })
+            }
+          />
+          <input
+            type={'text'}
+            className={'px-4 py-2 border rounded mt-2'}
+            name="address2"
+            placeholder="APT 1510"
+            onChange={(e) =>
+              props.setOfferData({
+                ...props.offerData,
+                shippingAddress2: e.target.value,
+              })
+            }
+          />
+        </div>
+        <div className="overflow-hidden flex flex-initial flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:w-1/3">
+            <div className="text-sm font-bold py-1">City*</div>
+            <input
+              type={'text'}
+              className={'overflow-hidden px-4 py-2 border rounded'}
+              name="city"
+              placeholder="Austin"
+              onChange={(e) =>
+                props.setOfferData({
+                  ...props.offerData,
+                  shippingCity: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="overflow-hidden flex flex-col">
+            <div className="text-sm font-bold py-1 md:w-1/3">State</div>
+            <input
+              type={'text'}
+              className={'overflow-hidden px-4 py-2 border rounded'}
+              name="state"
+              placeholder="TX"
+              onChange={(e) =>
+                props.setOfferData({
+                  ...props.offerData,
+                  shippingState: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="overflow-hidden flex flex-col whitespace-nowrap">
+            <div className="text-sm font-bold py-1 md:w-1/3">Zip Code*</div>
+            <input
+              type={'text'}
+              className={'overflow-hidden px-4 py-2 border rounded'}
+              name="zipCode"
+              placeholder="12345"
+              onChange={(e) =>
+                props.setOfferData({
+                  ...props.offerData,
+                  shippingZipCode: e.target.value,
+                })
+              }
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

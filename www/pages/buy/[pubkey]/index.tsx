@@ -1,6 +1,5 @@
 import { CheckCircleIcon, ChevronRightIcon } from '@heroicons/react/solid';
 import { BigNumber, ethers } from 'ethers';
-import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, Suspense, useState } from 'react';
@@ -18,6 +17,9 @@ import cn from 'classnames';
 import dayjs from 'dayjs';
 import { useAccount, useSigner } from 'wagmi';
 import { Order } from 'rwtp';
+import { fromBn } from 'evm-bn';
+import { toUIString } from '../../../lib/ui-logic';
+//import { minus } from 'big-integer';
 
 function Offer(props: {
   offer: OfferData;
@@ -157,10 +159,6 @@ function Offer(props: {
   );
 }
 
-function toUIString(amount: string, decimals: number) {
-  return fromBn(BigNumber.from(amount), decimals);
-}
-
 function OrderPage({ order }: { order: OrderData }) {
   const account = useAccount();
   const [txHash, setTxHash] = useState('');
@@ -208,22 +206,16 @@ function OrderPage({ order }: { order: OrderData }) {
     console.log('withdrawn');
   }
 
-  var buyersCost = toUIString(
-    order.buyersCostSuggested,
-    order.tokensSuggested[0].decimals
-  );
-  var buyersCostNum = +buyersCost;
-  var price = toUIString(
-    order.priceSuggested,
-    order.tokensSuggested[0].decimals
-  );
-  var priceNum = +price;
+  // user facing buyers cost logic
   var buyersCostName = 'Penalize Fee';
-  var buyersCostAmount = buyersCostNum - priceNum;
+  var buyersCostAmount = toUIString(
+    (+order.buyersCostSuggested - +order.priceSuggested).toString(),
+    order.tokensSuggested[0].decimals
+  );
 
-  if (buyersCostNum <= priceNum) {
+  if (+buyersCostAmount <= 0) {
     buyersCostName = 'Refund Amount';
-    buyersCostAmount = priceNum - buyersCostNum;
+    buyersCostAmount = (0 - +buyersCostAmount).toString();
   }
 
   return (
