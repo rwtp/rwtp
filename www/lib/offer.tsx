@@ -116,8 +116,8 @@ export function OfferForm(props: {
           props.setOfferData(data);
         }}
       >
-        <div className='mt-4'>
-          <SubmitOfferButton price={props.price} symbol={props.symbol} />
+        <div className="mt-4">
+          <SubmitOfferButton price={props.price} symbol={props.symbol} onClick={() => props.onSubmit().catch(console.error)} />
           <FormFooter price={props.price} symbol={props.symbol} />
         </div>
       </Form>
