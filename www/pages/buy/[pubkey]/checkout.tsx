@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { BigNumber } from 'ethers';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, createRef } from 'react';
 import Image from 'next/image';
 import {
   OrderData,
@@ -11,7 +11,7 @@ import {
 import { useTokenMethods } from '../../../lib/tokens';
 import { postToIPFS } from '../../../lib/ipfs';
 import { fromBn } from 'evm-bn';
-import { ArrowLeftIcon } from '@heroicons/react/solid';
+import { ArrowLeftIcon, ChevronRightIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
 import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
@@ -150,7 +150,7 @@ function BuyPage({ order }: { order: OrderData }) {
         <div className="flex flex-row gap-4">
           <div className="text-base w-full">{buyersCostName}</div>
           <div className="text-base whitespace-nowrap">
-            + {buyersCostAmount} {order.tokensSuggested[0].symbol}
+            {buyersCostAmount} {order.tokensSuggested[0].symbol}
           </div>
         </div>
       );
@@ -165,7 +165,7 @@ function BuyPage({ order }: { order: OrderData }) {
   ) {
     if (!hasRefund) {
       return (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs">
           The additional penalize fee is held in case the order fails and you
           decide to penalize the seller. If the order is successful,{' '}
           <b>
@@ -187,7 +187,7 @@ function BuyPage({ order }: { order: OrderData }) {
   ) {
     if (hasRefund) {
       return (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs">
           {' '}
           This purchase is eligible for a refund amount of{' '}
           <b>
@@ -201,107 +201,140 @@ function BuyPage({ order }: { order: OrderData }) {
     }
   }
   // END user facing buyers cost logic ---------------------------------
-  let formChecker: Form<any>;
+
+  let [formChecker, setFormChecker] = useState<Form<any> | undefined>();
+  let submitFormRef = createRef<HTMLButtonElement>();
 
   return (
     <ConnectWalletLayout requireConnected={true} txHash={txHash}>
-      <div className="flex flex-col max-w-6xl mx-auto mt-12 px-4 md:flex-row gap-8">
-        <div className="flex flex-col bg-white md:w-3/5 d">
-          <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
-            {order.offerSchemaUri &&
-            order.offerSchemaUri.replace('ipfs://', '') !=
-              DEFAULT_OFFER_SCHEMA ? (
-              <OfferForm
-                schema={order.offerSchema}
-                setOfferData={setOfferData}
-                offerData={offerData}
-                price={fromBn(price, order.tokensSuggested[0].decimals)}
-                refHandler={(form) => {
-                  formChecker = form;
-                }}
-                symbol={order.tokensSuggested[0].symbol}
-              />
-            ) : (
-              <SimpleOfferForm
-                setOfferData={setOfferData}
-                offerData={offerData}
-                price={fromBn(price, order.tokensSuggested[0].decimals)}
-                onSubmit={onBuy}
-                symbol={order.tokensSuggested[0].symbol}
-              />
-            )}
-          </div>
+      {/* HEADER */}
+      <div className="flex flex-col max-w-6xl mx-auto py-2 px-4">
+        <div className="pb-2 text-sm flex items-center text-gray-400">
+          <a className="underline" href="/buy">
+            Browse Listings
+          </a>
+          <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
+          <a className="underline" href={`/buy/${order.address}`}>
+            <div className="font-mono">{`${order.address.substring(
+              0,
+              6
+            )}...${order.address.substring(
+              order.address.length - 4,
+              order.address.length
+            )}`}</div>
+          </a>
+          <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
+          <div>Checkout</div>
         </div>
-        {/* PRODUCT INFO */}
-        <div className="flex-1 flex flex-col md:w-2/5">
-          <div className="bg-gray-50 px-8">
-            <div className="flex flex-row gap-4 mt-8">
-              <div className="h-24 w-24">
-                <img className="object-fill" src={getPrimaryImageLink(order)} />
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-col gap-1">
-                  <h1 className="text-base font-serif">{order.title}</h1>
-                  <div className="flex flex-row gap-2">
-                    <div className="text-sm text-gray-400 whitespace-nowrap">
-                      Seller's Deposit:
+        {/* END HEADER */}
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex flex-col bg-white md:w-3/5 d">
+            <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
+              {order.offerSchemaUri &&
+              order.offerSchemaUri.replace('ipfs://', '') !=
+                DEFAULT_OFFER_SCHEMA ? (
+                <OfferForm
+                  schema={order.offerSchema}
+                  submitFormRef={submitFormRef}
+                  setOfferData={setOfferData}
+                  offerData={offerData}
+                  price={fromBn(price, order.tokensSuggested[0].decimals)}
+                  refHandler={(form) => {
+                    setFormChecker(form);
+                  }}
+                  symbol={order.tokensSuggested[0].symbol}
+                />
+              ) : (
+                <SimpleOfferForm
+                  setOfferData={setOfferData}
+                  offerData={offerData}
+                  price={fromBn(price, order.tokensSuggested[0].decimals)}
+                  onSubmit={onBuy}
+                  symbol={order.tokensSuggested[0].symbol}
+                />
+              )}
+            </div>
+          </div>
+          {/* PRODUCT INFO */}
+          <div className="flex-1 flex flex-col md:w-2/5">
+            <div className="bg-gray-50 px-8">
+              <div className="flex flex-row gap-4 mt-8">
+                <img
+                  className="h-24 w-24 object-cover"
+                  src={getPrimaryImageLink(order)}
+                />
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1">
+                    <h1 className="text-base font-serif">{order.title}</h1>
+                    <div className="flex flex-row gap-2">
+                      <div className="text-sm text-gray-400 whitespace-nowrap">
+                        Seller's Deposit:
+                      </div>
+                      <p className="text-sm whitespace-nowrap">
+                        {toUIString(
+                          order.priceSuggested,
+                          order.tokensSuggested[0].decimals
+                        )}{' '}
+                        {order.tokensSuggested[0].symbol}
+                      </p>
                     </div>
-                    <p className="text-sm whitespace-nowrap">
-                      {toUIString(
-                        order.priceSuggested,
-                        order.tokensSuggested[0].decimals
-                      )}{' '}
-                      {order.tokensSuggested[0].symbol}
-                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-            {/* END PRODUCT INFO */}
-            <hr className="my-8"></hr>
-            {/* RECEIPT */}
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-row gap-4">
-                <div className="text-base w-full">Item</div>
-                <div className="text-base whitespace-nowrap">
-                  {toUIString(
-                    order.priceSuggested,
-                    order.tokensSuggested[0].decimals
-                  )}{' '}
-                  {order.tokensSuggested[0].symbol}
+              {/* END PRODUCT INFO */}
+              <hr className="my-8"></hr>
+              {/* RECEIPT */}
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-row gap-4">
+                  <div className="text-base w-full">Item</div>
+                  <div className="text-base whitespace-nowrap">
+                    {toUIString(
+                      order.priceSuggested,
+                      order.tokensSuggested[0].decimals
+                    )}{' '}
+                    {order.tokensSuggested[0].symbol}
+                  </div>
+                </div>
+                {renderPenalizeFee(hasRefund, buyersCostName, buyersCostAmount)}
+                <div className="flex flex-row gap-4 font-bold">
+                  <div className="text-base w-full">Total Today</div>
+                  <div className="text-base whitespace-nowrap">
+                    {getTotalPrice(hasRefund)} {order.tokensSuggested[0].symbol}
+                  </div>
                 </div>
               </div>
-              {renderPenalizeFee(hasRefund, buyersCostName, buyersCostAmount)}
-              <div className="flex flex-row gap-4 font-bold">
-                <div className="text-base w-full">Total Today</div>
-                <div className="text-base whitespace-nowrap">
-                  {getTotalPrice(hasRefund)} {order.tokensSuggested[0].symbol}
-                </div>
+              {/* END RECEIPT */}
+
+              <button
+                className="bg-black rounded text-white w-full text-base px-4 py-2 hover:opacity-50 disabled:opacity-10 mt-12"
+                onClick={() => {
+                  git;
+                  // This will hightlight error fields in OfferForm.
+                  submitFormRef.current !== null &&
+                    submitFormRef.current.click();
+                  let valid =
+                    formChecker !== undefined &&
+                    formChecker.validate(offerData).errors.length === 0;
+
+                  if (valid) {
+                    onBuy().catch(console.error);
+                  } else {
+                    console.log('bad!');
+                  }
+                }}
+                disabled={isLoading}
+              >
+                Send Order
+              </button>
+              <div className="mt-4 mb-8">
+                {renderPenalizeExplanation(hasRefund, buyersCostAmount)}
+                {renderRefund(
+                  hasRefund,
+                  buyersCostAmount,
+                  order.tokensSuggested[0].symbol
+                )}
               </div>
-            </div>
-            {/* END RECEIPT */}
-
-            <button
-              className="bg-black rounded text-white w-full text-base px-4 py-2 hover:opacity-50 disabled:opacity-10 mt-12"
-              onClick={() => {
-                console.log(formChecker);
-                formChecker.validate({});
-
-                // if () {
-                //   onBuy().catch(console.error);
-                // }
-              }}
-              disabled={isLoading}
-            >
-              Send Order
-            </button>
-            <div className="mt-4 mb-8">
-              {renderPenalizeExplanation(hasRefund, buyersCostAmount)}
-              {renderRefund(
-                hasRefund,
-                buyersCostAmount,
-                order.tokensSuggested[0].symbol
-              )}
             </div>
           </div>
         </div>

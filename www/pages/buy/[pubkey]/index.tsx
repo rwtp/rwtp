@@ -222,7 +222,7 @@ function OrderPage({ order }: { order: OrderData }) {
     <ConnectWalletLayout requireConnected={false} txHash={txHash}>
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
-          <div className="pb-4 text-sm flex items-center text-gray-600">
+          <div className="pb-2 text-sm flex items-center text-gray-400">
             <a className="underline" href="/buy">
               Browse Listings
             </a>
@@ -241,7 +241,9 @@ function OrderPage({ order }: { order: OrderData }) {
             </div>
             <div className="w-full md:w-2/6 space-y-8">
               <div>
-                <h1 className="font-serif text-3xl mb-2">{order.title}</h1>
+                <h1 className="font-serif text-3xl mb-2 mt-4 mg:mt-0">
+                  {order.title}
+                </h1>
                 <div className="text-3xl">
                   {toUIString(
                     order.priceSuggested,

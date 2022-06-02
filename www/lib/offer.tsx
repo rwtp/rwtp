@@ -1,6 +1,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { FingerPrintIcon } from '@heroicons/react/solid';
 import Form from '@rjsf/core';
+import { createRef } from 'react';
 
 function FormFooter(props: { price: string; symbol: string }) {
   return (
@@ -42,7 +43,7 @@ const customWidgets = {
       <div className="w-full">
         <input
           type="text"
-          className="px-2 py-2 border rounded w-full"
+          className="px-2 py-2 border rounded w-full "
           value={props.value}
           required={props.required}
           placeholder={props.uiSchema['ui:placeholder']}
@@ -65,7 +66,7 @@ function CustomFieldTemplate(props: any) {
     children,
   } = props;
   return (
-    <div className={classNames + ' w-full'}>
+    <div className={classNames + ' w-full mt-4'}>
       {id === 'root' || (
         <label htmlFor={id} className="text-xs font-bold py-1">
           {label}
@@ -86,7 +87,9 @@ export function OfferForm(props: {
   setOfferData: (data: any) => void;
   offerData: any;
   price: string;
+  // onSubmit: () => Promise<void>;
   refHandler: (form: any) => void;
+  submitFormRef: any;
   symbol: string;
 }) {
   let schema = JSON.parse(props.schema);
@@ -98,7 +101,6 @@ export function OfferForm(props: {
         schema={schema}
         widgets={customWidgets}
         fields={fields}
-        onSubmit={() => {}}
         ref={props.refHandler}
         ObjectFieldTemplate={ObjectFieldTemplate}
         FieldTemplate={CustomFieldTemplate}
@@ -115,9 +117,12 @@ export function OfferForm(props: {
           props.setOfferData(data);
         }}
       >
-        <div className="mt-4">
-          {/* <FormFooter price={props.price} symbol={props.symbol} /> */}
-        </div>
+        {/* Using this implementation https://github.com/rjsf-team/react-jsonschema-form/issues/500#issuecomment-743116788 */}
+        <button
+          ref={props.submitFormRef}
+          type="submit"
+          style={{ display: 'none' }}
+        ></button>
       </Form>
     </div>
   );

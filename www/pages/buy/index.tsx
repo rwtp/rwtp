@@ -39,38 +39,19 @@ function OrderView(props: { order: Order }) {
     />
   );
 
-  // User facing buyers stake logic
-  // var buyersCost = toUIString(
-  //   props.order.buyersCost,
-  //   props.order.token.decimals
-  // );
-  // var buyersCostNum = +buyersCost;
-  // var price = toUIString(props.order.price, props.order.token.decimals);
-  // var priceNum = +price;
-  // var buyersCostName = 'Penalize Fee';
-  // var buyersCostAmount = buyersCostNum - priceNum;
-
-  // if (buyersCostNum <= priceNum) {
-  //   buyersCostName = 'Refund Amount';
-  //   buyersCostAmount = priceNum - buyersCostNum;
-  // }
+  // user facing buyers cost logic
   var buyersCostName = 'Penalize Fee';
   var buyersCostAmount = toUIString(
     (+props.order.buyersCost - +props.order.price).toString(),
     props.order.token.decimals
   );
-  // var buyersCostAmount = toUIString(
-  //   bigInt(props.order.buyersCost).minus(props.order.price).toString(),
-  //   props.order.token.decimals
-  // );
-
   if (+buyersCostAmount < 0) {
     buyersCostName = 'Refund Amount';
     buyersCostAmount = (0 - +buyersCostAmount).toString();
   }
 
   return (
-    <div className="border rounded bg-white hover:bg-gray-100">
+    <div className="border overflow-hidden rounded bg-white hover:bg-gray-100">
       <a href={`/buy/${props.order.address}`}>
         {imageComponent}
         <div className="p-2">
@@ -82,17 +63,22 @@ function OrderView(props: { order: Order }) {
             {toUIString(props.order.price, props.order.token.decimals)}{' '}
             {props.order.token.symbol}
           </b>
-          <div className="flex text-sm flex-row">
-            <div className="text-gray-400 mr-2">{buyersCostName}: </div>
-            <div>
-              {buyersCostAmount} {props.order.token.symbol}
+          <div className="flex flex-col gap-1 md:gap-0">
+            <div className="flex text-xs md:text-sm flex-row">
+              <div className="text-gray-400 mr-2">{buyersCostName}: </div>
+              <div className="whitespace-nowrap">
+                {buyersCostAmount} {props.order.token.symbol}
+              </div>
             </div>
-          </div>
-          <div className="flex text-sm flex-row">
-            <div className="text-gray-400 mr-2">Seller's Stake: </div>
-            <div>
-              {toUIString(props.order.sellersStake, props.order.token.decimals)}{' '}
-              {props.order.token.symbol}
+            <div className="flex text-xs md:text-sm flex-row">
+              <div className="text-gray-400 mr-2">Seller's Stake: </div>
+              <div className="whitespace-nowrap">
+                {toUIString(
+                  props.order.sellersStake,
+                  props.order.token.decimals
+                )}{' '}
+                {props.order.token.symbol}
+              </div>
             </div>
           </div>
         </div>
