@@ -18,18 +18,25 @@ import { renderToken, getNetworkList } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
 import cn from 'classnames';
 import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
+import { InputCustomSchema } from '../../components/AddCustomSchema';
+
 import { useNetwork } from 'wagmi';
 import { valueFromAST } from 'graphql';
 
-async function postJSONToIPFS(data: any) {
+async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
+  let body = data;
+  if (addDataTag) {
+    body = {
+      data: body
+    };
+  }
+
   const result = await fetch('/api/uploadJson', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      data: data,
-    }),
+    body: JSON.stringify(body),
   });
   const { cid } = await result.json();
   return cid;
@@ -56,6 +63,8 @@ function NewOrder() {
     buyersCost: 0,
     price: 0,
     token: DEFAULT_TOKEN,
+    customIPFSSchema: '',
+    customJSONSchema: '',
   });
   const [imageUploading, setImageUploading] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -73,6 +82,19 @@ function NewOrder() {
     'createOrder'
   );
 
+  async function getOfferSchema(customIPFSSchema: string, customJSONSchema: string) {
+    if (customIPFSSchema) {
+      // TODO probably want to validate this is a valid ipfs cid.
+      return customIPFSSchema;
+    } else if (customJSONSchema) {
+      // TODO handle error if upload fails
+      const cid = await postJSONToIPFS(JSON.parse(customJSONSchema), false);
+      return `ipfs://${cid}`;
+    } else {
+      return `ipfs://${DEFAULT_OFFER_SCHEMA}`;
+    }
+  }
+
   async function createOrder() {
     if (!signer || !signer.data) return;
     setIsLoading(true);
@@ -84,9 +106,9 @@ function NewOrder() {
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
-
+    const offerSchema = await getOfferSchema(state.customIPFSSchema, state.customJSONSchema)
     const cid = await postJSONToIPFS({
-      offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
+      offerSchema: offerSchema,
       title: state.title,
       description: state.description,
       primaryImage: state.primaryImage,
@@ -344,7 +366,17 @@ function NewOrder() {
             </label>
           </div>
         </div>
-        <div className="mt-12">
+        <InputCustomSchema JSONSchema={state.customJSONSchema} IPFSSchema={state.customIPFSSchema}
+          setIPFSSchema={
+            (schema) =>
+              setState((s) => ({ ...s, customIPFSSchema: schema }))
+          }
+          setJSONSchema={
+            (schema) =>
+              setState((s) => ({ ...s, customJSONSchema: schema }))
+          }
+        />
+        <div className="mt-8">
           <button
             className={'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'.concat(
               isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
@@ -355,10 +387,12 @@ function NewOrder() {
             {/* <ArrowRightIcon className="w-4 h-4 ml-4" /> */}
           </button>
         </div>
+
       </div>
     </ConnectWalletLayout>
   );
 }
+
 
 export default function Page() {
   return (
