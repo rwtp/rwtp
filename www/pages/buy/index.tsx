@@ -31,7 +31,6 @@ function toUIString(amount: string, decimals: number) {
 }
 
 function OrderView(props: { order: Order }) {
-  // console.log(props.order);
   //if has image
   let imageComponent = (
     <img
@@ -39,6 +38,22 @@ function OrderView(props: { order: Order }) {
       src={getPrimaryImageLink(props.order)}
     />
   );
+
+  // User facing buyers stake logic
+  var buyersCost = toUIString(
+    props.order.buyersCost,
+    props.order.token.decimals
+  );
+  var buyersCostNum = +buyersCost;
+  var price = toUIString(props.order.price, props.order.token.decimals);
+  var priceNum = +price;
+  var buyersCostName = 'Penalize Fee';
+  var buyersCostAmount = buyersCostNum - priceNum;
+
+  if (buyersCostNum <= priceNum) {
+    buyersCostName = 'Refund Amount';
+    buyersCostAmount = priceNum - buyersCostNum;
+  }
 
   return (
     <div className="border rounded bg-white hover:bg-gray-100">
@@ -54,10 +69,9 @@ function OrderView(props: { order: Order }) {
             {props.order.token.symbol}
           </b>
           <div className="flex text-sm flex-row">
-            <div className="text-gray-400 mr-2">Buyer's Cost: </div>
+            <div className="text-gray-400 mr-2">{buyersCostName}: </div>
             <div>
-              {toUIString(props.order.buyersCost, props.order.token.decimals)}{' '}
-              {props.order.token.symbol}
+              {buyersCostAmount} {props.order.token.symbol}
             </div>
           </div>
           <div className="flex text-sm flex-row">
@@ -84,7 +98,6 @@ function Results(props: { searchText: string }) {
     return null;
   }
 
-  console.log(orders.data);
   const orderData = orders.data
     .filter((s: any) => !!s.title) // filter ones without titles
     .map((order: any) => {
