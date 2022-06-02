@@ -1,7 +1,4 @@
-import {
-  CheckCircleIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/solid';
+import { CheckCircleIcon, ChevronRightIcon } from '@heroicons/react/solid';
 import { BigNumber, ethers } from 'ethers';
 import { fromBn } from 'evm-bn';
 import Link from 'next/link';
@@ -51,7 +48,10 @@ function Offer(props: {
 
   return (
     <FadeIn className="flex flex-col py-2">
-      <div hidden={state != "Open" && state != "Committed" && state != "Confirmed"} className="bg-white border">
+      <div
+        hidden={state != 'Open' && state != 'Committed' && state != 'Confirmed'}
+        className="bg-white border"
+      >
         <div className="flex px-4 pt-4">
           <div className="flex flex-col">
             <div className="text-gray-500 text-xs">Ordered on</div>
@@ -116,9 +116,9 @@ function Offer(props: {
                 Seller Committed{' '}
                 <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
               </div>
-              <div className='flex-grow'></div>
+              <div className="flex-grow"></div>
               <button
-                className='flex px-4 rounded text-sm py-1 bg-red-500 text-white hover:opacity-50 disabled:opacity-10'
+                className="flex px-4 rounded text-sm py-1 bg-red-500 text-white hover:opacity-50 disabled:opacity-10"
                 onClick={() => onWithdraw()}
                 disabled={isLoading}
               >
@@ -164,7 +164,7 @@ function toUIString(amount: string, decimals: number) {
 function OrderPage({ order }: { order: OrderData }) {
   const account = useAccount();
   const [txHash, setTxHash] = useState('');
-  const offers = useOrderOffersFrom(order.address, account.data?.address ?? "");
+  const offers = useOrderOffersFrom(order.address, account.data?.address ?? '');
   const methods = useOrderMethods(order.address);
 
   async function onConfirm(index: string) {
@@ -175,7 +175,7 @@ function OrderPage({ order }: { order: OrderData }) {
         gasLimit: 100000,
       },
     });
-    
+
     setTxHash(confirmTx.hash);
     await confirmTx.wait();
     setTxHash('');
@@ -206,6 +206,24 @@ function OrderPage({ order }: { order: OrderData }) {
     await withdrawTx.wait();
     setTxHash('');
     console.log('withdrawn');
+  }
+
+  var buyersCost = toUIString(
+    order.buyersCostSuggested,
+    order.tokensSuggested[0].decimals
+  );
+  var buyersCostNum = +buyersCost;
+  var price = toUIString(
+    order.priceSuggested,
+    order.tokensSuggested[0].decimals
+  );
+  var priceNum = +price;
+  var buyersCostName = 'Penalize Fee';
+  var buyersCostAmount = buyersCostNum - priceNum;
+
+  if (buyersCostNum <= priceNum) {
+    buyersCostName = 'Refund Amount';
+    buyersCostAmount = priceNum - buyersCostNum;
   }
 
   return (
@@ -244,14 +262,10 @@ function OrderPage({ order }: { order: OrderData }) {
               <div className="flex flex-row space-x-4">
                 <div className="flex flex-col w-1/2">
                   <div className="text-xs font-mono text-gray-400">
-                    Penalize Fee
+                    {buyersCostName}
                   </div>
                   <div>
-                    {toUIString(
-                      order.buyersCostSuggested,
-                      order.tokensSuggested[0].decimals
-                    )}{' '}
-                    {order.tokensSuggested[0].symbol}
+                    {buyersCostAmount} {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
                 <div className="flex flex-col w-1/2">
