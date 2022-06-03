@@ -69,6 +69,7 @@ export interface OfferData {
   taker: string;
   price: string;
   tokenAddress: string;
+  token: ERC20Data;
   buyersCost: string;
   sellersStake: string;
   timeout: string;

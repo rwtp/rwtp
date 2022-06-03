@@ -6,15 +6,15 @@ import {
   OrderData,
   useOrder,
 } from '../../../lib/useOrder';
-import { fromBn } from 'evm-bn';
 import { ArrowLeftIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
-import { CheckoutForm, formatPrice } from '../../../components/CheckoutForm';
+import { CheckoutForm } from '../../../components/CheckoutForm';
+import { formatTokenAmount } from '../../../lib/tokens';
 
 function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
 
-  const price = formatPrice(order);
+  const price = formatTokenAmount(order.priceSuggested, order.tokensSuggested[0]);
 
   let imageComponent = <Image width={256} height={256} src="/rwtp.png" />;
   if (order.primaryImage && order.primaryImage.length > 0) {

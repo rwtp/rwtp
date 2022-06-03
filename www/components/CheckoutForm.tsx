@@ -7,23 +7,16 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import nacl from 'tweetnacl';
 import { DEFAULT_OFFER_SCHEMA } from '../lib/constants';
 import { postToIPFS } from '../lib/ipfs';
-import { useTokenMethods } from '../lib/tokens';
+import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { useEncryptionKeypair } from '../lib/useEncryptionKey';
 import { OrderData, useOrderMethods } from '../lib/useOrder';
 import { WalletConnectedButton, KeyStoreConnectedButton } from './Buttons';
 
-export function formatPrice(order: OrderData) {
-   return fromBn(
-      BigNumber.from(order.priceSuggested ? order.priceSuggested : 0),
-      order.tokensSuggested[0].decimals
-   );
-}
-
 export function CheckoutForm(props: { order: OrderData, setTxHash: Dispatch<SetStateAction<string>> }) {
    const [offerData, setOfferData] = useState({});
 
-   const price = formatPrice(props.order);
+   const price = formatTokenAmount(props.order.priceSuggested, props.order.tokensSuggested[0]);
 
    return <>
       <div>
@@ -84,7 +77,7 @@ function SubmitOfferButton(props: {
       const cid = await uploadBuyerData();
       if (!cid) return;
 
-      setLoadingMessage(`Requesting ${formatPrice(props.order)} ${token.symbol}`);
+      setLoadingMessage(`Requesting ${formatTokenAmount(props.order.priceSuggested, props.order.tokensSuggested[0])} ${token.symbol}`);
       const approveTxHash = await approveTokens();
       if (!approveTxHash) return;
 
