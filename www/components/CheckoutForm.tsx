@@ -131,8 +131,9 @@ function SubmitOfferButton(props: {
 
    async function approveTokens(): Promise<string | undefined> {
       try {
+         const transferAmount = (cost > price ? price.add(cost.sub(price)): price).mul(quantity);
          const tx = await tokenMethods.approve.writeAsync({
-            args: [props.order.address, price.add(stake).mul(quantity)],
+            args: [props.order.address, transferAmount],
          });
 
          props.setTxHash(tx.hash);
