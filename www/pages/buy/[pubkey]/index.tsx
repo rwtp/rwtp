@@ -3,7 +3,7 @@ import { BigNumber, ethers } from 'ethers';
 import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Dispatch, SetStateAction, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { FadeIn } from '../../../components/FadeIn';
 import { ConnectWalletLayout, Footer } from '../../../components/Layout';
 import { getPrimaryImageLink } from '../../../lib/image';
@@ -17,7 +17,7 @@ import {
 import cn from 'classnames';
 import dayjs from 'dayjs';
 import { useAccount, useSigner } from 'wagmi';
-import { Order } from 'rwtp';
+import { useChainId } from '../../../lib/useChainId';
 
 function Offer(props: {
   offer: OfferData;
@@ -163,6 +163,7 @@ function toUIString(amount: string, decimals: number) {
 
 function OrderPage({ order }: { order: OrderData }) {
   const account = useAccount();
+  const chainId = useChainId();
   const [txHash, setTxHash] = useState('');
   const offers = useOrderOffersFrom(order.address, account.data?.address ?? '');
   const methods = useOrderMethods(order.address);
@@ -227,7 +228,7 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   return (
-    <ConnectWalletLayout requireConnected={false} txHash={txHash}>
+    <ConnectWalletLayout txHash={txHash}>
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
           <div className="pb-4 text-sm flex items-center text-gray-600">
@@ -284,7 +285,7 @@ function OrderPage({ order }: { order: OrderData }) {
               <p>{order.description}</p>
 
               <div className="flex mb-16">
-                <Link href={`/buy/${order.address}/checkout`}>
+                <Link href={`/buy/${order.address}/checkout?chain=${chainId}`}>
                   <a
                     className={cn({
                       'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50':
@@ -341,7 +342,11 @@ function PageWithPubkey(props: { pubkey: string }) {
   }
 
   // loading
-  if (!order.data) return <Loading />;
+  if (!order.data) {
+    return <ConnectWalletLayout txHash=''>
+      <Loading />
+    </ConnectWalletLayout>;
+  }
 
   return <OrderPage order={order.data} />;
 }
@@ -356,7 +361,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
+      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()}/>
     </Suspense>
   );
 }
