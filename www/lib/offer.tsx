@@ -2,7 +2,9 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { FingerPrintIcon } from '@heroicons/react/solid';
 import Form from '@rjsf/core';
 import { createRef } from 'react';
-
+import { useState } from 'react';
+import DefaultJsonSchema from '../offer_schemas/QmazbhKYabkic5Z3F6hPC6rkGJP5gimu3eP9ABqMUZHFsk.json';
+import { validate, ValidationError } from 'jsonschema';
 function FormFooter(props: { price: string; symbol: string }) {
   return (
     <div className="text-sm mt-4 text-gray-500">
@@ -87,11 +89,21 @@ export function OfferForm(props: {
   setOfferData: (data: any) => void;
   offerData: any;
   price: string;
-  // onSubmit: () => Promise<void>;
-  refHandler: (form: any) => void;
-  submitFormRef: any;
+  setValidChecker: (_: () => Boolean) => void;
   symbol: string;
 }) {
+  let submitFormRef = createRef<HTMLButtonElement>();
+  let formRef: Form<any> | null;
+  let [offerData, setOfferData] = useState<any>();
+
+  props.setValidChecker(() => {
+    submitFormRef.current !== null && submitFormRef.current.click();
+    return (
+      formRef !== null &&
+      formRef !== undefined &&
+      formRef.validate(offerData).errors.length === 0
+    );
+  });
   let schema = JSON.parse(props.schema);
   return (
     <div className="flex flex-1 flex-col w-full">
@@ -101,7 +113,9 @@ export function OfferForm(props: {
         schema={schema}
         widgets={customWidgets}
         fields={fields}
-        ref={props.refHandler}
+        ref={(form) => {
+          formRef = form;
+        }}
         ObjectFieldTemplate={ObjectFieldTemplate}
         FieldTemplate={CustomFieldTemplate}
         onChange={(e) => {
@@ -115,11 +129,12 @@ export function OfferForm(props: {
             }
           }
           props.setOfferData(data);
+          setOfferData(data);
         }}
       >
         {/* Using this implementation https://github.com/rjsf-team/react-jsonschema-form/issues/500#issuecomment-743116788 */}
         <button
-          ref={props.submitFormRef}
+          ref={submitFormRef}
           type="submit"
           style={{ display: 'none' }}
         ></button>
@@ -139,7 +154,18 @@ export function SimpleOfferForm(props: {
   price: string;
   symbol: string;
   onSubmit: () => Promise<void>;
+  setValidChecker: (_: () => Boolean) => void;
 }) {
+  let [errors, setErrors] = useState<ValidationError[]>([]);
+  props.setValidChecker(() => {
+    // Write code here to validate the form.
+    let _errors = validate(props.offerData, DefaultJsonSchema).errors;
+    if (_errors) {
+      setErrors(_errors);
+    }
+    // console.log(_errors);
+    return _errors.length === 0;
+  });
   return (
     <div className="relative w-full">
       <div className="font-serif mb-2 text-2xl">Checkout</div>
@@ -149,7 +175,10 @@ export function SimpleOfferForm(props: {
             <div className="text-sm font-bold py-1">First Name*</div>
             <input
               type={'text'}
-              className={'px-4 py-2 border rounded'}
+              className={`px-4 py-2 border rounded ${
+                errors.map((x) => x.argument).includes('firstName') &&
+                'border-red-500'
+              }`}
               name="First Name"
               placeholder="Heinz"
               onChange={(e) =>
@@ -164,7 +193,10 @@ export function SimpleOfferForm(props: {
             <div className="text-sm font-bold py-1">Last Name*</div>
             <input
               type={'text'}
-              className={'px-4 py-2 border rounded'}
+              className={`px-4 py-2 border rounded ${
+                errors.map((x) => x.argument).includes('lastName') &&
+                'border-red-500'
+              }`}
               name="Last Name"
               placeholder="Doofenshmirtz"
               onChange={(e) =>
@@ -181,7 +213,10 @@ export function SimpleOfferForm(props: {
             <div className="text-sm font-bold py-1">Email*</div>
             <input
               type={'text'}
-              className={'px-4 py-2 border rounded'}
+              className={`px-4 py-2 border rounded ${
+                errors.map((x) => x.argument).includes('email') &&
+                'border-red-500'
+              }`}
               name="email"
               placeholder="myemail@gmail.com"
               onChange={(e) =>
@@ -213,7 +248,10 @@ export function SimpleOfferForm(props: {
           <div className="text-sm font-bold py-1">Country*</div>
           <input
             type={'text'}
-            className={'px-4 py-2 border rounded'}
+            className={`px-4 py-2 border rounded ${
+              errors.map((x) => x.argument).includes('shippingCountry') &&
+              'border-red-500'
+            }`}
             name="country"
             placeholder="United States"
             onChange={(e) =>
@@ -228,7 +266,10 @@ export function SimpleOfferForm(props: {
           <div className="text-sm font-bold py-1">Address*</div>
           <input
             type={'text'}
-            className={'px-4 py-2 border rounded'}
+            className={`px-4 py-2 border rounded ${
+              errors.map((x) => x.argument).includes('shippingAddress1') &&
+              'border-red-500'
+            }`}
             name="address1"
             placeholder="888 Berry St"
             onChange={(e) =>
@@ -256,7 +297,10 @@ export function SimpleOfferForm(props: {
             <div className="text-sm font-bold py-1">City*</div>
             <input
               type={'text'}
-              className={'overflow-hidden px-4 py-2 border rounded'}
+              className={`px-4 py-2 border rounded ${
+                errors.map((x) => x.argument).includes('shippingCity') &&
+                'border-red-500'
+              }`}
               name="city"
               placeholder="Austin"
               onChange={(e) =>
@@ -283,7 +327,7 @@ export function SimpleOfferForm(props: {
             />
           </div>
           <div className="overflow-hidden flex flex-col whitespace-nowrap">
-            <div className="text-sm font-bold py-1 md:w-1/3">Zip Code*</div>
+            <div className="text-sm font-bold py-1 md:w-1/3">Zip Code</div>
             <input
               type={'text'}
               className={'overflow-hidden px-4 py-2 border rounded'}

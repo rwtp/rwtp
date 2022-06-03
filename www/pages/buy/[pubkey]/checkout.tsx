@@ -202,8 +202,7 @@ function BuyPage({ order }: { order: OrderData }) {
   }
   // END user facing buyers cost logic ---------------------------------
 
-  let [formChecker, setFormChecker] = useState<Form<any> | undefined>();
-  let submitFormRef = createRef<HTMLButtonElement>();
+  let validChecker: () => Boolean | undefined;
 
   return (
     <ConnectWalletLayout requireConnected={true} txHash={txHash}>
@@ -235,12 +234,11 @@ function BuyPage({ order }: { order: OrderData }) {
                 DEFAULT_OFFER_SCHEMA ? (
                 <OfferForm
                   schema={order.offerSchema}
-                  submitFormRef={submitFormRef}
                   setOfferData={setOfferData}
                   offerData={offerData}
                   price={fromBn(price, order.tokensSuggested[0].decimals)}
-                  refHandler={(form) => {
-                    setFormChecker(form);
+                  setValidChecker={(x) => {
+                    validChecker = x;
                   }}
                   symbol={order.tokensSuggested[0].symbol}
                 />
@@ -250,6 +248,9 @@ function BuyPage({ order }: { order: OrderData }) {
                   offerData={offerData}
                   price={fromBn(price, order.tokensSuggested[0].decimals)}
                   onSubmit={onBuy}
+                  setValidChecker={(x) => {
+                    validChecker = x;
+                  }}
                   symbol={order.tokensSuggested[0].symbol}
                 />
               )}
@@ -309,15 +310,8 @@ function BuyPage({ order }: { order: OrderData }) {
               <button
                 className="bg-black rounded text-white w-full text-base px-4 py-2 hover:opacity-50 disabled:opacity-10 mt-12"
                 onClick={() => {
-                  git;
                   // This will hightlight error fields in OfferForm.
-                  submitFormRef.current !== null &&
-                    submitFormRef.current.click();
-                  let valid =
-                    formChecker !== undefined &&
-                    formChecker.validate(offerData).errors.length === 0;
-
-                  if (valid) {
+                  if (validChecker && validChecker()) {
                     onBuy().catch(console.error);
                   } else {
                     console.log('bad!');
