@@ -1,6 +1,5 @@
-import { useContract, useContractRead, useContractWrite } from 'wagmi';
+import { useContractWrite } from 'wagmi';
 import { ERC20 } from './erc20';
-import { ethers } from 'ethers';
 
 export function useTokenMethods(address: string) {
   const approve = useContractWrite(

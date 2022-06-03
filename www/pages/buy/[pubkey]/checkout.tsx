@@ -5,93 +5,19 @@ import Image from 'next/image';
 import {
   OrderData,
   useOrder,
-  useOrderMethods,
-  useOrderSubmitOffer,
 } from '../../../lib/useOrder';
-import { useTokenMethods } from '../../../lib/tokens';
-import { postToIPFS } from '../../../lib/ipfs';
 import { fromBn } from 'evm-bn';
 import { ArrowLeftIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
-import * as nacl from 'tweetnacl';
-import { RequiresKeystore } from '../../../lib/keystore';
-import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
-import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
-import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
+import { CheckoutForm } from '../../../components/CheckoutForm';
 
 function BuyPage({ order }: { order: OrderData }) {
-  const tokenMethods = useTokenMethods(order.tokenAddressesSuggested[0]);
-  const orderMethods = useOrderMethods(order.address);
-  const router = useRouter();
-  const buyersEncryptionKeypair = useEncryptionKeypair();
-  const [offerData, setOfferData] = useState({});
   const [txHash, setTxHash] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const quantity = 1;
-  const price = order.priceSuggested
-    ? BigNumber.from(order.priceSuggested)
-    : BigNumber.from(0);
-  const stake = order.sellersStakeSuggested
-    ? BigNumber.from(order.sellersStakeSuggested)
-    : BigNumber.from(0);
-  const cost = order.buyersCostSuggested
-    ? BigNumber.from(order.buyersCostSuggested)
-    : BigNumber.from(0);
-  const timeout = order.buyersCostSuggested
-    ? BigNumber.from(order.buyersCostSuggested)
-    : BigNumber.from(60 * 60 * 24 * 7);
-
-  async function onBuy() {
-    if (!offerData) return;
-    if (!buyersEncryptionKeypair) return;
-    setIsLoading(true);
-    console.log('Submitting offer: ', offerData);
-    const secretData = Buffer.from(
-      JSON.stringify(offerData),
-      'utf-8'
-    );
-    const nonce = nacl.randomBytes(24);
-    const sellersPublicEncryptionKey = Uint8Array.from(
-      Buffer.from(order.encryptionPublicKey, 'hex')
-    );
-
-    const encrypted = nacl.box(
-      secretData,
-      nonce,
-      sellersPublicEncryptionKey,
-      buyersEncryptionKeypair?.secretKey
-    );
-
-    const data = {
-      publicKey: Buffer.from(buyersEncryptionKeypair.publicKey).toString('hex'),
-      nonce: Buffer.from(nonce).toString('hex'),
-      message: Buffer.from(encrypted).toString('hex'),
-    };
-    const cid = await postToIPFS(data);
-
-    const approveTx = await tokenMethods.approve.writeAsync({
-      args: [order.address, price.add(stake).mul(quantity)],
-    });
-    
-    setTxHash(approveTx.hash);
-    await approveTx.wait();
-    setTxHash('');
-
-    const tx = await orderMethods.submitOffer.writeAsync({
-      args: [BigNumber.from(0), order.tokenAddressesSuggested[0], price, cost, stake, timeout, 'ipfs://' + cid],
-      overrides: {
-        gasLimit: 1000000,
-      },
-    });
-    
-    setTxHash(tx.hash);
-    await tx.wait();
-    setTxHash('');
-    setIsLoading(false);
-    
-    router.push(`/buy/${order.address}`);
-  }
+  const price = fromBn(
+    BigNumber.from(order.priceSuggested ? order.priceSuggested : 0),
+    order.tokensSuggested[0].decimals
+  );
 
   let imageComponent = <Image width={256} height={256} src="/rwtp.png" />;
   if (order.primaryImage && order.primaryImage.length > 0) {
@@ -104,7 +30,7 @@ function BuyPage({ order }: { order: OrderData }) {
   }
 
   return (
-    <ConnectWalletLayout requireConnected={true} txHash={txHash}>
+    <ConnectWalletLayout txHash={txHash}>
       <div className="h-full w-full flex flex-col border-t">
         <div className="h-full flex w-full">
           <div className="flex w-full border-l border-r mx-auto">
@@ -124,7 +50,7 @@ function BuyPage({ order }: { order: OrderData }) {
                   {order.title}
                 </h1>
                 <p className="pb-2 text-xl mt-2">
-                  {fromBn(price, order.tokensSuggested[0].decimals)}{' '}
+                  {price}{' '}
                   {order.tokensSuggested[0].symbol}
                 </p>
 
@@ -136,24 +62,7 @@ function BuyPage({ order }: { order: OrderData }) {
               </div>
             </div>
             <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-              <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}> 
-                {
-                  order.offerSchemaUri && order.offerSchemaUri.replace("ipfs://", '') != DEFAULT_OFFER_SCHEMA ?
-                  <OfferForm
-                  schema={order.offerSchema}
-                  setOfferData={setOfferData}
-                  offerData={offerData}
-                  price={fromBn(price, order.tokensSuggested[0].decimals)}
-                  onSubmit={onBuy}
-                  symbol={order.tokensSuggested[0].symbol} /> :
-                  <SimpleOfferForm
-                  setOfferData={setOfferData}
-                  offerData={offerData}
-                  price={fromBn(price, order.tokensSuggested[0].decimals)}
-                  onSubmit={onBuy}
-                  symbol={order.tokensSuggested[0].symbol} />
-                }
-              </div>
+              <CheckoutForm order={order} setTxHash={setTxHash}/>
             </div>
           </div>
         </div>
@@ -168,9 +77,13 @@ function Loading() {
 }
 
 function PageWithPubkey(props: { pubkey: string }) {
-  const order = useOrder(props.pubkey);
+  const order = useOrder(props.pubkey); // TODO: If this finds an order on the wrong chain that causes an error it breaks the UI
 
-  if (!order.data) return <Loading />;
+  if (!order.data) {
+    return <ConnectWalletLayout txHash=''>
+      <Loading />
+    </ConnectWalletLayout>;
+  }
 
   return <BuyPage order={order.data} />;
 }
@@ -185,9 +98,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <RequiresKeystore>
-        <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
-      </RequiresKeystore>
+      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
     </Suspense>
   );
 }
