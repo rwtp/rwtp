@@ -9,15 +9,12 @@ import {
 import { fromBn } from 'evm-bn';
 import { ArrowLeftIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
-import { CheckoutForm } from '../../../components/CheckoutForm';
+import { CheckoutForm, formatPrice } from '../../../components/CheckoutForm';
 
 function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
 
-  const price = fromBn(
-    BigNumber.from(order.priceSuggested ? order.priceSuggested : 0),
-    order.tokensSuggested[0].decimals
-  );
+  const price = formatPrice(order);
 
   let imageComponent = <Image width={256} height={256} src="/rwtp.png" />;
   if (order.primaryImage && order.primaryImage.length > 0) {

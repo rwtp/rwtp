@@ -13,13 +13,17 @@ import { useEncryptionKeypair } from '../lib/useEncryptionKey';
 import { OrderData, useOrderMethods } from '../lib/useOrder';
 import { WalletConnectedButton, KeyStoreConnectedButton } from './Buttons';
 
-export function CheckoutForm(props: {order: OrderData, setTxHash: Dispatch<SetStateAction<string>>}) {
+export function formatPrice(order: OrderData) {
+   return fromBn(
+      BigNumber.from(order.priceSuggested ? order.priceSuggested : 0),
+      order.tokensSuggested[0].decimals
+   );
+}
+
+export function CheckoutForm(props: { order: OrderData, setTxHash: Dispatch<SetStateAction<string>> }) {
    const [offerData, setOfferData] = useState({});
 
-   const price = fromBn(
-      BigNumber.from(props.order.priceSuggested ? props.order.priceSuggested : 0),
-      props.order.tokensSuggested[0].decimals
-    );
+   const price = formatPrice(props.order);
 
    return <>
       <div>
@@ -80,7 +84,7 @@ function SubmitOfferButton(props: {
       const cid = await uploadBuyerData();
       if (!cid) return;
 
-      setLoadingMessage(`Requesting ${price} ${token.symbol}`);
+      setLoadingMessage(`Requesting ${formatPrice(props.order)} ${token.symbol}`);
       const approveTxHash = await approveTokens();
       if (!approveTxHash) return;
 
@@ -120,6 +124,7 @@ function SubmitOfferButton(props: {
          return await postToIPFS(data);
       } catch (error) {
          setErrorMessage("Error Uploading");
+         console.log(error);
          return undefined;
       }
    }
@@ -136,6 +141,7 @@ function SubmitOfferButton(props: {
          return tx.hash;
       } catch (error) {
          setErrorMessage("Error Approving");
+         console.log(error);
          return undefined;
       }
    }
@@ -155,6 +161,7 @@ function SubmitOfferButton(props: {
          return tx.hash;
       } catch (error) {
          setErrorMessage("Error Submitting");
+         console.log(error);
          return undefined;
       }
    }
