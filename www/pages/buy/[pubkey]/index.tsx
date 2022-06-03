@@ -219,7 +219,7 @@ function OrderPage({ order }: { order: OrderData }) {
     order.tokensSuggested[0].decimals
   );
   var priceNum = +price;
-  var buyersCostName = 'Penalize Fee';
+  var buyersCostName = "Buyer's Stake";
   var buyersCostAmount = buyersCostNum - priceNum;
 
   if (buyersCostNum <= priceNum) {

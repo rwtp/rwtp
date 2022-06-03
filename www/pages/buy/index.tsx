@@ -48,7 +48,7 @@ function OrderView(props: { order: Order }) {
   var buyersCostNum = +buyersCost;
   var price = toUIString(props.order.price, props.order.token.decimals);
   var priceNum = +price;
-  var buyersCostName = 'Penalize Fee';
+  var buyersCostName = "Buyer's Stake";
   var buyersCostAmount = buyersCostNum - priceNum;
 
   if (buyersCostNum <= priceNum) {
