@@ -209,18 +209,18 @@ function OrderPage({ order }: { order: OrderData }) {
     console.log('withdrawn');
   }
 
-  var buyersCost = toUIString(
+  const buyersCost = toUIString(
     order.buyersCostSuggested,
     order.tokensSuggested[0].decimals
   );
-  var buyersCostNum = +buyersCost;
-  var price = toUIString(
+  const buyersCostNum = +buyersCost;
+  const price = toUIString(
     order.priceSuggested,
     order.tokensSuggested[0].decimals
   );
-  var priceNum = +price;
-  var buyersCostName = 'Penalize Fee';
-  var buyersCostAmount = buyersCostNum - priceNum;
+  const priceNum = +price;
+  let buyersCostName = 'Penalize Fee';
+  let buyersCostAmount = buyersCostNum - priceNum;
 
   if (buyersCostNum <= priceNum) {
     buyersCostName = 'Refund Amount';
