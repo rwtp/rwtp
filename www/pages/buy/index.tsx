@@ -41,20 +41,18 @@ function OrderView(props: { order: Order }) {
   );
 
   // User facing buyers stake logic
-  var buyersCost = toUIString(
+  const buyersCost = toUIString(
     props.order.buyersCost,
     props.order.token.decimals
   );
-  var buyersCostNum = +buyersCost;
-  var price = toUIString(props.order.price, props.order.token.decimals);
-  var priceNum = +price;
-  var buyersCostName = 'Penalize Fee';
-  var buyersCostAmount = buyersCostNum - priceNum;
+  const buyersCostNum = +buyersCost;
+  const price = toUIString(props.order.price, props.order.token.decimals);
+  const priceNum = +price;
 
-  if (buyersCostNum <= priceNum) {
-    buyersCostName = 'Refund Amount';
-    buyersCostAmount = priceNum - buyersCostNum;
-  }
+  const [buyersCostName, buyersCostAmount] =
+    buyersCostNum <= priceNum
+      ? ['Refund Amount', priceNum - buyersCostNum]
+      : ['Penalize Fee', buyersCostNum - priceNum];
 
   return (
     <div className="border rounded bg-white hover:bg-gray-100">

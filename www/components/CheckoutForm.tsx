@@ -282,7 +282,7 @@ function OfferForm(props: {
                // This is a workaround.
                let formData = JSON.parse(JSON.stringify(e.formData));
                let data = props.offerData;
-               for (var key in formData) {
+               for (const key in formData) {
                   if (formData.hasOwnProperty(key)) {
                      data[key] = formData[key];
                   }
