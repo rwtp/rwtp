@@ -3,7 +3,7 @@ import { FingerPrintIcon } from '@heroicons/react/solid';
 import Form from '@rjsf/core';
 import { createRef } from 'react';
 import { useState } from 'react';
-import DefaultJsonSchema from '../offer_schemas/QmazbhKYabkic5Z3F6hPC6rkGJP5gimu3eP9ABqMUZHFsk.json';
+import DefaultJsonSchema from '../offer_schemas/QmaLinmex9ucfwPWpgSfDPiD1wy7Xy61MzSFLpakgGr7nC.json';
 import { validate, ValidationError } from 'jsonschema';
 
 const fields = {

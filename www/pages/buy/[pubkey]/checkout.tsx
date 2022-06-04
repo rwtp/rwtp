@@ -10,8 +10,7 @@ import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
 import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
 import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
-//import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
-import { toUIString } from '../../../lib/ui-logic';
+import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { getPrimaryImageLink } from '../../../lib/image';
 import Form from '@rjsf/core';
 import {
@@ -50,18 +49,11 @@ function BuyPage({ order }: { order: OrderData }) {
   const price = formatPrice(order);
 
   // user facing buyers cost logic ---------------------------------
-  var hasRefund = false;
-  var buyersCostName = 'Penalize Fee';
-  var buyersCostAmount = toUIString(
-    (+order.buyersCostSuggested - +order.priceSuggested).toString(),
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+    order.priceSuggested,
+    order.buyersCostSuggested,
     order.tokensSuggested[0].decimals
   );
-
-  if (+buyersCostAmount <= 0) {
-    buyersCostName = 'Refund Amount';
-    buyersCostAmount = (0 - +buyersCostAmount).toString();
-    hasRefund = true;
-  }
 
   function getTotalPrice(hasRefund: boolean) {
     if (hasRefund) {

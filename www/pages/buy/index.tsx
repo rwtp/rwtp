@@ -8,6 +8,7 @@ import { BigNumber } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
 import { fromBn } from 'evm-bn';
 import { useChainId } from '../../lib/useChainId';
+import { toUIString, getUserFriendlyBuyerCost } from '../../lib/ui-logic';
 
 interface Order {
   address: string;
@@ -25,10 +26,6 @@ interface Order {
   primaryImage: string;
 }
 
-function toUIString(amount: string, decimals: number) {
-  return fromBn(BigNumber.from(amount), decimals);
-}
-
 function OrderView(props: { order: Order }) {
   const chainId = useChainId();
 
@@ -41,15 +38,11 @@ function OrderView(props: { order: Order }) {
   );
 
   // user facing buyers cost logic
-  var buyersCostName = 'Penalize Fee';
-  var buyersCostAmount = toUIString(
-    (+props.order.buyersCost - +props.order.price).toString(),
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+    props.order.price,
+    props.order.buyersCost,
     props.order.token.decimals
   );
-  if (+buyersCostAmount <= 0) {
-    buyersCostName = 'Refund Amount';
-    buyersCostAmount = (0 - +buyersCostAmount).toString();
-  }
 
   return (
     <div className="border overflow-hidden rounded bg-white hover:bg-gray-100">

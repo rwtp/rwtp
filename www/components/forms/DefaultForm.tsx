@@ -13,7 +13,7 @@ import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import { OrderData, useOrderMethods } from '../../lib/useOrder';
 import { WalletConnectedButton, KeyStoreConnectedButton } from '../Buttons';
 import { createRef } from 'react';
-import DefaultJsonSchema from '../../offer_schemas/QmazbhKYabkic5Z3F6hPC6rkGJP5gimu3eP9ABqMUZHFsk.json';
+import DefaultJsonSchema from '../../offer_schemas/QmaLinmex9ucfwPWpgSfDPiD1wy7Xy61MzSFLpakgGr7nC.json';
 import { validate, ValidationError } from 'jsonschema';
 
 // This is an hand rolled form that is a 1:1 matching with `ipfs://QmX6CZ7Wf8B79EX5x1PJSityvhtvvFKhkDBCDZK2cd6adF`
@@ -27,11 +27,13 @@ export function SimpleOfferForm(props: {
   let [errors, setErrors] = useState<ValidationError[]>([]);
   props.setValidChecker(() => {
     // Write code here to validate the form.
+    console.log(DefaultJsonSchema);
     let _errors = validate(props.offerData, DefaultJsonSchema).errors;
     if (_errors) {
+      console.error(errors);
       setErrors(_errors);
     }
-    // console.log(_errors);
+    console.log();
     return _errors.length === 0;
   });
   return (
@@ -99,7 +101,10 @@ export function SimpleOfferForm(props: {
             <div className="text-sm font-bold py-1">Phone</div>
             <input
               type={'text'}
-              className={'px-4 py-2 border rounded'}
+              className={`px-4 py-2 border rounded ${
+                errors.map((x) => x.argument).includes('phone') &&
+                'border-red-500'
+              }`}
               name="phone"
               placeholder="888-888-8888"
               onChange={(e) =>
@@ -149,7 +154,10 @@ export function SimpleOfferForm(props: {
           />
           <input
             type={'text'}
-            className={'px-4 py-2 border rounded mt-2'}
+            className={`px-4 py-2 mt-2 border rounded ${
+              errors.map((x) => x.argument).includes('shippingAddress2') &&
+              'border-red-500'
+            }`}
             name="address2"
             placeholder="APT 1510"
             onChange={(e) =>
@@ -183,7 +191,10 @@ export function SimpleOfferForm(props: {
             <div className="text-sm font-bold py-1 md:w-1/3">State</div>
             <input
               type={'text'}
-              className={'overflow-hidden px-4 py-2 border rounded'}
+              className={`px-4 py-2 border rounded ${
+                errors.map((x) => x.argument).includes('shippingState') &&
+                'border-red-500'
+              }`}
               name="state"
               placeholder="TX"
               onChange={(e) =>
@@ -198,7 +209,10 @@ export function SimpleOfferForm(props: {
             <div className="text-sm font-bold py-1 md:w-1/3">Zip Code</div>
             <input
               type={'text'}
-              className={'overflow-hidden px-4 py-2 border rounded'}
+              className={`px-4 py-2 border rounded ${
+                errors.map((x) => x.argument).includes('shippingZipCode') &&
+                'border-red-500'
+              }`}
               name="zipCode"
               placeholder="12345"
               onChange={(e) =>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { is_valid_custom_schema } from '../lib/schemaValidator';
-import defaultSchema from '../offer_schemas/QmazbhKYabkic5Z3F6hPC6rkGJP5gimu3eP9ABqMUZHFsk.json';
+import defaultSchema from '../offer_schemas/QmaLinmex9ucfwPWpgSfDPiD1wy7Xy61MzSFLpakgGr7nC.json';
 import { DEFAULT_OFFER_SCHEMA } from '../lib/constants';
 import {
   ArrowRightIcon,

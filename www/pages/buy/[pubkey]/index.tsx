@@ -18,7 +18,7 @@ import dayjs from 'dayjs';
 import { useAccount, useSigner } from 'wagmi';
 import { Order } from 'rwtp';
 import { fromBn } from 'evm-bn';
-import { toUIString } from '../../../lib/ui-logic';
+import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 //import { minus } from 'big-integer';
 import { useChainId } from '../../../lib/useChainId';
 
@@ -209,16 +209,11 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   // user facing buyers cost logic
-  var buyersCostName = 'Penalize Fee';
-  var buyersCostAmount = toUIString(
-    (+order.buyersCostSuggested - +order.priceSuggested).toString(),
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+    order.priceSuggested,
+    order.buyersCostSuggested,
     order.tokensSuggested[0].decimals
   );
-
-  if (+buyersCostAmount <= 0) {
-    buyersCostName = 'Refund Amount';
-    buyersCostAmount = (0 - +buyersCostAmount).toString();
-  }
 
   return (
     <ConnectWalletLayout txHash={txHash}>

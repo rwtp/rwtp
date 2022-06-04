@@ -22,16 +22,10 @@
             "minLength": 6,
             "maxLength": 127
         },
-        "shippingAddress": {
-            "title": "Shipping Address",
-            "description": "Buyer's address to ship the item to.",
-            "type": "string"
-        },
         "phone": {
             "title": "Phone",
             "description": "Phone number of the buyer requesting to buy a Listing.",
-            "type": "tel",
-            "pattern": "[0-9]{3}-[0-9]{3}-[0-9]{4}"
+            "type": "string"
         },
         "shippingCountry": {
             "title": "Country",
