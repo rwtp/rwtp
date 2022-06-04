@@ -219,13 +219,11 @@ function OrderPage({ order }: { order: OrderData }) {
     order.tokensSuggested[0].decimals
   );
   const priceNum = +price;
-  let buyersCostName = 'Penalize Fee';
-  let buyersCostAmount = buyersCostNum - priceNum;
 
-  if (buyersCostNum <= priceNum) {
-    buyersCostName = 'Refund Amount';
-    buyersCostAmount = priceNum - buyersCostNum;
-  }
+  const [buyersCostName, buyersCostAmount] =
+    buyersCostNum <= priceNum
+      ? ['Refund Amount', priceNum - buyersCostNum]
+      : ['Penalize Fee', buyersCostNum - priceNum];
 
   return (
     <ConnectWalletLayout txHash={txHash}>

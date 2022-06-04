@@ -48,13 +48,11 @@ function OrderView(props: { order: Order }) {
   const buyersCostNum = +buyersCost;
   const price = toUIString(props.order.price, props.order.token.decimals);
   const priceNum = +price;
-  let buyersCostName = 'Penalize Fee';
-  let buyersCostAmount = buyersCostNum - priceNum;
 
-  if (buyersCostNum <= priceNum) {
-    buyersCostName = 'Refund Amount';
-    buyersCostAmount = priceNum - buyersCostNum;
-  }
+  const [buyersCostName, buyersCostAmount] =
+    buyersCostNum <= priceNum
+      ? ['Refund Amount', priceNum - buyersCostNum]
+      : ['Penalize Fee', buyersCostNum - priceNum];
 
   return (
     <div className="border rounded bg-white hover:bg-gray-100">
