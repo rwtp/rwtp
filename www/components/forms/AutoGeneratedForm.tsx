@@ -26,6 +26,63 @@ const fields = {
   // SchemaField: CustomSchemaField
 };
 
+const customWidgets = {
+  TextWidget: (props: any) => {
+    return (
+      <div className="w-full">
+        <input
+          type="text"
+          className="px-2 py-2 border rounded w-full"
+          value={props.value}
+          required={props.required}
+          placeholder={props.uiSchema['ui:placeholder']}
+          onChange={(event) => props.onChange(event.target.value)}
+        />
+      </div>
+    );
+  },
+};
+
+function ObjectFieldTemplate(props: { properties: any }) {
+  return (
+    <div>
+      {/* Let's omit the {props.title} {props.description}*/}
+      {props.properties.map((element: any) => (
+        <div key={element.name} className="property-wrapper w-full">
+          {element.content}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CustomFieldTemplate(props: any) {
+  const {
+    id,
+    classNames,
+    label,
+    help,
+    required,
+    description,
+    errors,
+    children,
+  } = props;
+  return (
+    <div className={classNames + ' w-full mt-4'}>
+      {id === 'root' || (
+        <label htmlFor={id} className="text-sm font-bold py-1">
+          {label}
+          {required ? '*' : null}
+        </label>
+      )}
+      {description}
+      {children}
+      {errors}
+      {help}
+    </div>
+  );
+}
+
 // Form that will auto generate a schema and format the fields to match our UI style mainly.
 export function OfferForm(props: {
   schema: string;

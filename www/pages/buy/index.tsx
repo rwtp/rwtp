@@ -46,7 +46,7 @@ function OrderView(props: { order: Order }) {
     (+props.order.buyersCost - +props.order.price).toString(),
     props.order.token.decimals
   );
-  if (+buyersCostAmount < 0) {
+  if (+buyersCostAmount <= 0) {
     buyersCostName = 'Refund Amount';
     buyersCostAmount = (0 - +buyersCostAmount).toString();
   }

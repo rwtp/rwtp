@@ -160,17 +160,16 @@ export function SubmitOfferButton(props: {
       {!loadingMessage && !errorMessage && (
         <>
           <button
-            className="mt-4 bg-black text-white px-4 py-2 w-full flex justify-between font-bold rounded"
+            className="px-4 py-3 w-full text-lg justify-center rounded bg-black text-white"
             onClick={onBuy}
           >
             <div>Submit Offer</div>
-            <div>{`${fromBn(price, token.decimals)} ` + token.symbol}</div>
           </button>
         </>
       )}
       {loadingMessage && !errorMessage && (
         <>
-          <button className="cursor-wait mt-4 border px-4 py-2 w-full flex justify-center font-bold rounded">
+          <button className="cursor-wait border px-4 py-3 w-full flex justify-center font-bold rounded">
             <div>{loadingMessage}</div>
             <RefreshIcon className="animate-spin h-4 w-4 ml-2 my-auto" />
           </button>

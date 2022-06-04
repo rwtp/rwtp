@@ -223,6 +223,8 @@ function BuyPage({ order }: { order: OrderData }) {
                     {getTotalPrice(hasRefund)} {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
+              </div>
+              <div className="mt-8 hover:opacity-50">
                 <WalletConnectedButton>
                   <KeyStoreConnectedButton>
                     <SubmitOfferButton
