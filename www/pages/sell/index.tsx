@@ -1,7 +1,6 @@
 import {
   BanIcon,
   CheckCircleIcon,
-  CheckIcon,
   ChevronRightIcon,
   PlusIcon,
 } from '@heroicons/react/solid';
@@ -12,14 +11,13 @@ import { Suspense, useEffect, useState } from 'react';
 import { useAccount, useSigner } from 'wagmi';
 import { Order } from 'rwtp';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
-import { useSubgraph } from '../../lib/useSubgraph';
 import { FadeIn } from '../../components/FadeIn';
 import cn from 'classnames';
 import dayjs from 'dayjs';
 import { OfferData, useAllOrderOffers } from '../../lib/useOrder';
 import nacl from 'tweetnacl';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
-import { RequiresKeystore, useKeystore } from '../../lib/keystore';
+import { KeyStoreConnectedButton, WalletConnectedButton } from '../../components/Buttons';
 
 function Spinner(props: { className?: string }) {
   return (
@@ -272,34 +270,35 @@ function Offers() {
 
 export default function Page() {
   return (
-    <RequiresKeystore>
-      <ConnectWalletLayout requireConnected={false} txHash="">
-        <div className="h-full flex flex-col">
-          <Suspense fallback={<div></div>}>
-            <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
-              <div className="pb-8">
-                <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
-                <p className="pb-4">Learn more about Sell Orders.</p>
-                <div className="flex">
-                  <Link href="/sell/new">
-                    <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
-                      New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
-                    </a>
-                  </Link>
-                </div>
+    <ConnectWalletLayout>
+      <div className="h-full flex flex-col">
+        <Suspense fallback={<div></div>}>
+          <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
+            <div className="pb-8">
+              <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
+              <p className="pb-4">Learn more about Sell Orders.</p>
+              <div className="flex">
+                <Link href="/sell/new">
+                  <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
+                    New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
+                  </a>
+                </Link>
               </div>
             </div>
-            <div className="flex-1 bg-gray-50 border-t">
-              <div className="max-w-6xl mx-auto p-4">
-                <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
-
-                <Offers />
-              </div>
+          </div>
+          <div className="flex-1 bg-gray-50 border-t">
+            <div className="max-w-6xl mx-auto p-4">
+              <WalletConnectedButton>
+                <KeyStoreConnectedButton>
+                    <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
+                    <Offers />
+                </KeyStoreConnectedButton>
+              </WalletConnectedButton>
             </div>
-          </Suspense>
-          <Footer />
-        </div>
-      </ConnectWalletLayout>
-    </RequiresKeystore>
+          </div>
+        </Suspense>
+        <Footer />
+      </div>
+    </ConnectWalletLayout>
   );
 }

@@ -1,6 +1,4 @@
 import {
-  ChevronDoubleRightIcon,
-  ChevronRightIcon,
   FingerPrintIcon,
   RefreshIcon,
   SwitchHorizontalIcon,
@@ -11,7 +9,9 @@ import Link from 'next/link';
 import { FadeIn } from './FadeIn';
 import cn from 'classnames';
 import { useRouter } from 'next/router';
-import { useWaitForTransaction } from 'wagmi';
+import { useNetwork, useWaitForTransaction } from 'wagmi';
+import { useChainId } from '../lib/useChainId';
+import { DEFAULT_CHAIN_ID } from '../lib/constants';
 
 export function InformationPageHeader() {
   return (
@@ -20,11 +20,11 @@ export function InformationPageHeader() {
         <Image src="/transitionLogo.png" width={24} height={24} />
       </a>
       <div className="gap-2 flex items-center">
-        <a className="text-sm flex py-1 px-1 rounded" href="/buy">
-          Buy
-        </a>
         <a className="text-sm flex py-1 px-1 rounded" href="/sell">
           Sell
+        </a>
+        <a className="text-sm flex py-1 px-1 rounded" href="/buy">
+          Buy
         </a>
         <a
           className="text-sm border flex py-1 px-2 rounded bg-white"
@@ -88,11 +88,13 @@ export function TabBar(props: { tab: 'buy' | 'sell' }) {
 }
 
 export function ConnectWalletLayout(props: {
-  requireConnected: boolean;
   children: React.ReactNode;
-  txHash: string;
+  txHash?: string;
 }) {
+  const {switchNetwork} = useNetwork();
+  const chainId = useChainId();
   const router = useRouter();
+  const requiredChainId = Number.parseInt(router.query.chain as string) ?? DEFAULT_CHAIN_ID;
   const waitForTransaction = useWaitForTransaction({
     hash: props.txHash,
   });
@@ -118,7 +120,7 @@ export function ConnectWalletLayout(props: {
                 openChainModal,
                 openAccountModal,
               }) => {
-                if (!mounted || !account || !chain) {
+                if (!mounted || !account || !chain || !switchNetwork) {
                   return (
                     <button
                       className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center"
@@ -130,13 +132,13 @@ export function ConnectWalletLayout(props: {
                   );
                 }
 
-                if (chain.unsupported) {
+                if (requiredChainId && chainId != requiredChainId) {
                   return (
                     <button
                       className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center"
-                      onClick={openChainModal}
+                      onClick={() => switchNetwork(requiredChainId)}
                     >
-                      Wrong Network{' '}
+                      Switch Network{' '}
                       <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
                     </button>
                   );
@@ -207,39 +209,7 @@ export function ConnectWalletLayout(props: {
         </div>
       </div>
       <div className="h-full bg-white">
-        <ConnectButton.Custom>
-          {({ account, mounted, chain, openConnectModal, openChainModal }) => {
-            if (
-              !props.requireConnected ||
-              (mounted && account && chain && !chain?.unsupported)
-            ) {
-              return <>{props.children}</>;
-            } else if (chain && chain.unsupported) {
-              return (
-                <div className="flex flex-col border justify-center h-full">
-                  <button
-                    className="w-min bg-white border border-black rounded px-2 py-1 flex items-center whitespace-nowrap mx-auto"
-                    onClick={openChainModal}
-                  >
-                    Wrong Network{' '}
-                    <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
-                  </button>
-                </div>
-              );
-            } else {
-              return (
-                <div className="flex flex-col border justify-center h-full">
-                  <button
-                    className="w-min bg-white border border-black rounded px-2 py-1 flex items-center whitespace-nowrap mx-auto"
-                    onClick={openConnectModal}
-                  >
-                    Connect Wallet <FingerPrintIcon className="h-4 w-4 ml-2" />
-                  </button>
-                </div>
-              );
-            }
-          }}
-        </ConnectButton.Custom>
+        <>{props.children}</>
       </div>
     </div>
   );

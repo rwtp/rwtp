@@ -1,9 +1,7 @@
-import { chainId, useContractWrite, useSigner } from 'wagmi';
+import { useContractWrite, useSigner } from 'wagmi';
 import { OrderBook } from 'rwtp';
-import { useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import {
-  ArrowRightIcon,
-  ChevronDownIcon,
   RefreshIcon,
   XIcon,
 } from '@heroicons/react/solid';
@@ -11,25 +9,32 @@ import { ethers } from 'ethers';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../components/Layout';
-import { RequiresKeystore } from '../../lib/keystore';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import SelectSearch from 'react-select-search';
 import { renderToken, getNetworkList } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
 import cn from 'classnames';
 import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
-import { useNetwork } from 'wagmi';
-import { valueFromAST } from 'graphql';
+import { InputCustomSchema } from '../../components/AddCustomSchema';
 
-async function postJSONToIPFS(data: any) {
+import { useNetwork } from 'wagmi';
+import { useChainId } from '../../lib/useChainId';
+import { KeyStoreConnectedButton, WalletConnectedButton } from '../../components/Buttons';
+
+async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
+  let body = data;
+  if (addDataTag) {
+    body = {
+      data: body
+    };
+  }
+
   const result = await fetch('/api/uploadJson', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      data: data,
-    }),
+    body: JSON.stringify(body),
   });
   const { cid } = await result.json();
   return cid;
@@ -44,10 +49,8 @@ async function postFileToIPFS(file: Buffer) {
   return cid;
 }
 
-function NewOrder() {
-  const { activeChain, chains, error, pendingChainId, switchNetwork } =
-    useNetwork();
-
+export default function Page() {
+  const { activeChain } = useNetwork();
   const [state, setState] = useState({
     title: '',
     description: '',
@@ -56,78 +59,17 @@ function NewOrder() {
     buyersCost: 0,
     price: 0,
     token: DEFAULT_TOKEN,
+    customIPFSSchema: '',
+    customJSONSchema: '',
   });
   const [imageUploading, setImageUploading] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
-  const signer = useSigner();
-  const router = useRouter();
-  const sellersEncryptionKeypair = useEncryptionKeypair();
-  const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState('');
-
-  const book = useContractWrite(
-    {
-      addressOrName: OrderBook.address,
-      contractInterface: OrderBook.abi,
-    },
-    'createOrder'
-  );
-
-  async function createOrder() {
-    if (!signer || !signer.data) return;
-    setIsLoading(true);
-
-    const erc20Address = state.token;
-    const erc20ABI = [
-      'function approve(address spender, uint256 amount)',
-      'function decimals() public view returns (uint8)',
-    ];
-    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
-    const decimals = await erc20.decimals();
-
-    const cid = await postJSONToIPFS({
-      offerSchema: `ipfs://${DEFAULT_OFFER_SCHEMA}`,
-      title: state.title,
-      description: state.description,
-      primaryImage: state.primaryImage,
-      encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
-      tokenAddressesSuggested: [erc20Address],
-      priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
-      sellersStakeSuggested: toBn(
-        state.sellersStake.toString(),
-        decimals
-      ).toHexString(),
-      buyersCostSuggested: toBn(
-        state.buyersCost.toString(),
-        decimals
-      ).toHexString(),
-      suggestedTimeout: toBn(
-        (60 * 60 * 24 * 7).toString(),
-        decimals
-      ).toHexString(),
-    });
-
-    const tx = await book.writeAsync({
-      args: [await signer.data.getAddress(), `ipfs://${cid}`, false],
-    });
-
-    setTxHash(tx.hash);
-    const result = (await tx.wait()) as any;
-    setTxHash('');
-    if (!result.events || result.events.length < 1) {
-      throw new Error(
-        "Unexpectedly could not find 'events' in the transaction hash of createOrder. Maybe an ethers bug? Maybe the CreateOrder event isn't picked up fast enough? This basically shouldn't happen."
-      );
-    }
-    const orderAddress = result.events[0].args[0];
-    setIsLoading(false);
-    router.push(`/buy/${orderAddress}`);
-  }
 
   let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
 
   return (
-    <ConnectWalletLayout requireConnected={true} txHash={txHash}>
+    <ConnectWalletLayout txHash={txHash}>
       <div className="px-4 py-4 max-w-3xl mx-auto">
         <div className="font-serif mb-2 mt-12 text-2xl">
           Create a new sell listing
@@ -218,9 +160,9 @@ function NewOrder() {
                   src={
                     showImagePreview
                       ? state.primaryImage.replace(
-                          'ipfs://',
-                          'https://infura-ipfs.io/ipfs/'
-                        )
+                        'ipfs://',
+                        'https://infura-ipfs.io/ipfs/'
+                      )
                       : ''
                   }
                   onLoadStart={() => setShowImagePreview(false)}
@@ -344,26 +286,129 @@ function NewOrder() {
             </label>
           </div>
         </div>
-        <div className="mt-12">
-          <button
-            className={'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'.concat(
-              isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
-            )}
-            onClick={() => createOrder().catch(console.error)}
-          >
-            Publish new sell order
-            {/* <ArrowRightIcon className="w-4 h-4 ml-4" /> */}
-          </button>
+        <InputCustomSchema JSONSchema={state.customJSONSchema} IPFSSchema={state.customIPFSSchema}
+          setIPFSSchema={
+            (schema) =>
+              setState((s) => ({ ...s, customIPFSSchema: schema }))
+          }
+          setJSONSchema={
+            (schema) =>
+              setState((s) => ({ ...s, customJSONSchema: schema }))
+          }
+        />
+        <div className="mt-8">
+          <WalletConnectedButton>
+            <KeyStoreConnectedButton>
+              <CreateOrderButton state={state} setTxHash={setTxHash}/>
+            </KeyStoreConnectedButton>
+          </WalletConnectedButton>
         </div>
+
       </div>
     </ConnectWalletLayout>
   );
 }
 
-export default function Page() {
-  return (
-    <RequiresKeystore>
-      <NewOrder />
-    </RequiresKeystore>
+function CreateOrderButton(props: {
+  state: {
+    title: string;
+    description: string;
+    primaryImage: string;
+    sellersStake: number;
+    buyersCost: number;
+    price: number;
+    token: string;
+    customIPFSSchema: string;
+    customJSONSchema: string;
+  },
+  setTxHash: Dispatch<SetStateAction<string>>,
+}) {
+  const state = props.state;
+  const setTxHash = props.setTxHash;
+  const signer = useSigner();
+  const router = useRouter();
+  const chainId = useChainId();
+  const sellersEncryptionKeypair = useEncryptionKeypair();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const book = useContractWrite(
+    {
+      addressOrName: OrderBook.address,
+      contractInterface: OrderBook.abi,
+    },
+    'createOrder'
   );
+
+  async function getOfferSchema(customIPFSSchema: string, customJSONSchema: string) {
+    if (customIPFSSchema) {
+      // TODO probably want to validate this is a valid ipfs cid.
+      return customIPFSSchema;
+    } else if (customJSONSchema) {
+      // TODO handle error if upload fails
+      const cid = await postJSONToIPFS(JSON.parse(customJSONSchema), false);
+      return `ipfs://${cid}`;
+    } else {
+      return `ipfs://${DEFAULT_OFFER_SCHEMA}`;
+    }
+  }
+
+  async function createOrder() {
+    if (!signer || !signer.data) return;
+    setIsLoading(true);
+
+    const erc20Address = state.token;
+    const erc20ABI = [
+      'function approve(address spender, uint256 amount)',
+      'function decimals() public view returns (uint8)',
+    ];
+    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
+    const decimals = await erc20.decimals();
+    const offerSchema = await getOfferSchema(state.customIPFSSchema, state.customJSONSchema)
+    const cid = await postJSONToIPFS({
+      offerSchema: offerSchema,
+      title: state.title,
+      description: state.description,
+      primaryImage: state.primaryImage,
+      encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
+      tokenAddressesSuggested: [erc20Address],
+      priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
+      sellersStakeSuggested: toBn(
+        state.sellersStake.toString(),
+        decimals
+      ).toHexString(),
+      buyersCostSuggested: toBn(
+        state.buyersCost.toString(),
+        decimals
+      ).toHexString(),
+      suggestedTimeout: toBn(
+        (60 * 60 * 24 * 7).toString(),
+        decimals
+      ).toHexString(),
+    });
+
+    const tx = await book.writeAsync({
+      args: [await signer.data.getAddress(), `ipfs://${cid}`, false],
+    });
+
+    setTxHash(tx.hash);
+    const result = (await tx.wait()) as any;
+    setTxHash('');
+    if (!result.events || result.events.length < 1) {
+      throw new Error(
+        "Unexpectedly could not find 'events' in the transaction hash of createOrder. Maybe an ethers bug? Maybe the CreateOrder event isn't picked up fast enough? This basically shouldn't happen."
+      );
+    }
+    const orderAddress = result.events[0].args[0];
+    setIsLoading(false);
+    router.push(`/buy/${orderAddress}?chain=${chainId}`);
+  }
+
+  return <button
+    className={'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'.concat(
+      isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
+    )}
+    onClick={() => createOrder().catch(console.error)}
+  >
+    Publish new sell order
+  </button>;
 }

@@ -1,14 +1,13 @@
-import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { FadeIn } from '../../components/FadeIn';
 import { SearchIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
-import Tag from '../../components/Tag';
 import { useOrders } from '../../lib/useOrder';
 import { Order } from 'rwtp';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
 import { fromBn } from 'evm-bn';
+import { useChainId } from '../../lib/useChainId';
 
 interface Order {
   address: string;
@@ -31,6 +30,8 @@ function toUIString(amount: string, decimals: number) {
 }
 
 function OrderView(props: { order: Order }) {
+  const chainId = useChainId();
+
   //if has image
   let imageComponent = (
     <img
@@ -52,7 +53,7 @@ function OrderView(props: { order: Order }) {
 
   return (
     <div className="border overflow-hidden rounded bg-white hover:bg-gray-100">
-      <a href={`/buy/${props.order.address}`}>
+      <a href={`/buy/${props.order.address}?chain=${chainId}`}>
         {imageComponent}
         <div className="p-2">
           <div className="font-serif truncate w-full mr-2">
@@ -129,7 +130,7 @@ function Results(props: { searchText: string }) {
 export default function Page() {
   const [searchText, setSearchText] = useState('');
   return (
-    <ConnectWalletLayout requireConnected={false} txHash="">
+    <ConnectWalletLayout>
       <div className="h-full flex flex-col">
         <div className="mt-6 flex-1 w-full">
           <div className="max-w-6xl mx-auto px-4">

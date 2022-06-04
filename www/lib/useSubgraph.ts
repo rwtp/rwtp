@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { request } from 'graphql-request';
-import { useNetwork } from 'wagmi';
+import { useChainId } from './useChainId';
 
 const RINKEBY = 'https://api.thegraph.com/subgraphs/name/rwtp/rinkeby';
 const OPTIMISM = 'https://api.thegraph.com/subgraphs/name/rwtp/optimism';
@@ -10,12 +10,12 @@ const fetcher = (url: string, query: any, variables: any) =>
   request(url, query, variables);
 
 export function useSubgraph<T>(args: string | [string, any]) {
-  const network = useNetwork();
-
+  const chainId = useChainId();
+  
   let chain = OPTIMISM;
-  if (network.activeChain?.id === 4) {
+  if (chainId === 4) {
     chain = RINKEBY;
-  } else if (network.activeChain?.id === 42) {
+  } else if (chainId === 42) {
     chain = KOVAN;
   }
 

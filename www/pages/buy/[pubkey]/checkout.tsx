@@ -2,14 +2,7 @@ import { useRouter } from 'next/router';
 import { BigNumber } from 'ethers';
 import { Suspense, useState, createRef } from 'react';
 import Image from 'next/image';
-import {
-  OrderData,
-  useOrder,
-  useOrderMethods,
-  useOrderSubmitOffer,
-} from '../../../lib/useOrder';
-import { useTokenMethods } from '../../../lib/tokens';
-import { postToIPFS } from '../../../lib/ipfs';
+import { OrderData, useOrder } from '../../../lib/useOrder';
 import { fromBn } from 'evm-bn';
 import { ArrowLeftIcon, ChevronRightIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
@@ -17,10 +10,14 @@ import * as nacl from 'tweetnacl';
 import { RequiresKeystore } from '../../../lib/keystore';
 import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
 import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
-import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
+//import { OfferForm, SimpleOfferForm } from '../../../lib/offer';
 import { toUIString } from '../../../lib/ui-logic';
 import { getPrimaryImageLink } from '../../../lib/image';
 import Form from '@rjsf/core';
+import {
+  WalletConnectedButton,
+  KeyStoreConnectedButton,
+} from '../../../components/Buttons';
 
 function FormFooter(props: { price: string; symbol: string }) {
   return (
@@ -32,20 +29,14 @@ function FormFooter(props: { price: string; symbol: string }) {
     </div>
   );
 }
+import { CheckoutForm, formatPrice } from '../../../components/CheckoutForm';
+import { SubmitOfferButton } from '../../../components/SubmitOfferButton';
 
 function BuyPage({ order }: { order: OrderData }) {
-  const tokenMethods = useTokenMethods(order.tokenAddressesSuggested[0]);
-  const orderMethods = useOrderMethods(order.address);
-  const router = useRouter();
-  const buyersEncryptionKeypair = useEncryptionKeypair();
-  const [offerData, setOfferData] = useState({});
   const [txHash, setTxHash] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const quantity = 1;
-  const price = order.priceSuggested
-    ? BigNumber.from(order.priceSuggested)
-    : BigNumber.from(0);
   const stake = order.sellersStakeSuggested
     ? BigNumber.from(order.sellersStakeSuggested)
     : BigNumber.from(0);
@@ -56,61 +47,7 @@ function BuyPage({ order }: { order: OrderData }) {
     ? BigNumber.from(order.buyersCostSuggested)
     : BigNumber.from(60 * 60 * 24 * 7);
 
-  async function onBuy() {
-    if (!offerData) return;
-    if (!buyersEncryptionKeypair) return;
-    setIsLoading(true);
-    console.log('Submitting offer: ', offerData);
-    const secretData = Buffer.from(JSON.stringify(offerData), 'utf-8');
-    const nonce = nacl.randomBytes(24);
-    const sellersPublicEncryptionKey = Uint8Array.from(
-      Buffer.from(order.encryptionPublicKey, 'hex')
-    );
-
-    const encrypted = nacl.box(
-      secretData,
-      nonce,
-      sellersPublicEncryptionKey,
-      buyersEncryptionKeypair?.secretKey
-    );
-
-    const data = {
-      publicKey: Buffer.from(buyersEncryptionKeypair.publicKey).toString('hex'),
-      nonce: Buffer.from(nonce).toString('hex'),
-      message: Buffer.from(encrypted).toString('hex'),
-    };
-    const cid = await postToIPFS(data);
-
-    const approveTx = await tokenMethods.approve.writeAsync({
-      args: [order.address, price.add(stake).mul(quantity)],
-    });
-
-    setTxHash(approveTx.hash);
-    await approveTx.wait();
-    setTxHash('');
-
-    const tx = await orderMethods.submitOffer.writeAsync({
-      args: [
-        BigNumber.from(0),
-        order.tokenAddressesSuggested[0],
-        price,
-        cost,
-        stake,
-        timeout,
-        'ipfs://' + cid,
-      ],
-      overrides: {
-        gasLimit: 1000000,
-      },
-    });
-
-    setTxHash(tx.hash);
-    await tx.wait();
-    setTxHash('');
-    setIsLoading(false);
-
-    router.push(`/buy/${order.address}`);
-  }
+  const price = formatPrice(order);
 
   // user facing buyers cost logic ---------------------------------
   var hasRefund = false;
@@ -202,11 +139,11 @@ function BuyPage({ order }: { order: OrderData }) {
   }
   // END user facing buyers cost logic ---------------------------------
 
-  let validChecker: () => Boolean | undefined;
+  let validChecker: () => Boolean;
+  const [offerData, setOfferData] = useState({});
 
   return (
-    <ConnectWalletLayout requireConnected={true} txHash={txHash}>
-      {/* HEADER */}
+    <ConnectWalletLayout txHash={txHash}>
       <div className="flex flex-col max-w-6xl mx-auto py-2 px-4">
         <div className="pb-2 text-sm flex items-center text-gray-400">
           <a className="underline" href="/buy">
@@ -229,31 +166,13 @@ function BuyPage({ order }: { order: OrderData }) {
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex flex-col bg-white md:w-3/5 d">
             <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
-              {order.offerSchemaUri &&
-              order.offerSchemaUri.replace('ipfs://', '') !=
-                DEFAULT_OFFER_SCHEMA ? (
-                <OfferForm
-                  schema={order.offerSchema}
-                  setOfferData={setOfferData}
-                  offerData={offerData}
-                  price={fromBn(price, order.tokensSuggested[0].decimals)}
-                  setValidChecker={(x) => {
-                    validChecker = x;
-                  }}
-                  symbol={order.tokensSuggested[0].symbol}
-                />
-              ) : (
-                <SimpleOfferForm
-                  setOfferData={setOfferData}
-                  offerData={offerData}
-                  price={fromBn(price, order.tokensSuggested[0].decimals)}
-                  onSubmit={onBuy}
-                  setValidChecker={(x) => {
-                    validChecker = x;
-                  }}
-                  symbol={order.tokensSuggested[0].symbol}
-                />
-              )}
+              <CheckoutForm
+                order={order}
+                setOfferData={setOfferData}
+                setValidChecker={(checker) => {
+                  validChecker = checker;
+                }}
+              />
             </div>
           </div>
           {/* PRODUCT INFO */}
@@ -304,23 +223,20 @@ function BuyPage({ order }: { order: OrderData }) {
                     {getTotalPrice(hasRefund)} {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
+                <WalletConnectedButton>
+                  <KeyStoreConnectedButton>
+                    <SubmitOfferButton
+                      offerData={offerData}
+                      order={order}
+                      setTxHash={setTxHash}
+                      validChecker={() =>
+                        validChecker !== undefined && validChecker()
+                      }
+                    />
+                  </KeyStoreConnectedButton>
+                </WalletConnectedButton>
               </div>
               {/* END RECEIPT */}
-
-              <button
-                className="bg-black rounded text-white w-full text-base px-4 py-2 hover:opacity-50 disabled:opacity-10 mt-12"
-                onClick={() => {
-                  // This will hightlight error fields in OfferForm.
-                  if (validChecker && validChecker()) {
-                    onBuy().catch(console.error);
-                  } else {
-                    console.log('bad!');
-                  }
-                }}
-                disabled={isLoading}
-              >
-                Send Order
-              </button>
               <div className="mt-4 mb-8">
                 {renderPenalizeExplanation(hasRefund, buyersCostAmount)}
                 {renderRefund(
@@ -342,9 +258,15 @@ function Loading() {
 }
 
 function PageWithPubkey(props: { pubkey: string }) {
-  const order = useOrder(props.pubkey);
+  const order = useOrder(props.pubkey); // TODO: If this finds an order on the wrong chain that causes an error it breaks the UI
 
-  if (!order.data) return <Loading />;
+  if (!order.data) {
+    return (
+      <ConnectWalletLayout txHash="">
+        <Loading />
+      </ConnectWalletLayout>
+    );
+  }
 
   return <BuyPage order={order.data} />;
 }
@@ -359,9 +281,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <RequiresKeystore>
-        <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
-      </RequiresKeystore>
+      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
     </Suspense>
   );
 }
