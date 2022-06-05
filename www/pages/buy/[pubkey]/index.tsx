@@ -1,5 +1,5 @@
 import { CheckCircleIcon, ChevronRightIcon } from '@heroicons/react/solid';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense, useState } from 'react';
@@ -16,10 +16,8 @@ import {
 import cn from 'classnames';
 import dayjs from 'dayjs';
 import { useAccount, useSigner } from 'wagmi';
-import { Order } from 'rwtp';
 import { fromBn } from 'evm-bn';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
-//import { minus } from 'big-integer';
 import { useChainId } from '../../../lib/useChainId';
 
 function Offer(props: {
