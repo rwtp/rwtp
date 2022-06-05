@@ -9,7 +9,6 @@ const fields = {
   TitleField: (_title: any) => {
     return <div> </div>;
   },
-  // SchemaField: CustomSchemaField
 };
 
 const customWidgets = {

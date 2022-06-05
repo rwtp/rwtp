@@ -161,6 +161,7 @@ function BuyPage({ order }: { order: OrderData }) {
               <CheckoutForm
                 order={order}
                 setOfferData={setOfferData}
+                offerData={offerData}
                 setValidChecker={(checker) => {
                   validChecker = checker;
                 }}

@@ -24,13 +24,10 @@ export function formatPrice(order: OrderData) {
 export function CheckoutForm(props: {
   order: OrderData;
   setOfferData: Dispatch<SetStateAction<any>>;
+  offerData: any;
   setValidChecker: (_: () => Boolean) => void;
 }) {
-  const [offerData, setOfferData] = useState({});
-
   const price = formatPrice(props.order);
-  let validChecker: () => Boolean | undefined;
-
   return (
     <>
       <div>
@@ -39,16 +36,16 @@ export function CheckoutForm(props: {
           DEFAULT_OFFER_SCHEMA ? (
           <OfferForm
             schema={props.order.offerSchema}
-            setOfferData={setOfferData}
-            offerData={offerData}
+            setOfferData={props.setOfferData}
+            offerData={props.offerData}
             price={price}
             setValidChecker={props.setValidChecker}
             symbol={props.order.tokensSuggested[0].symbol}
           />
         ) : (
           <SimpleOfferForm
-            setOfferData={setOfferData}
-            offerData={offerData}
+            setOfferData={props.setOfferData}
+            offerData={props.offerData}
             price={price}
             setValidChecker={props.setValidChecker}
             symbol={props.order.tokensSuggested[0].symbol}

@@ -70,4 +70,3 @@ export function KeyStoreConnectedButton(props: { children: React.ReactNode }) {
   );
 }
 
-// TODO: Token required button wrapper
