@@ -19,6 +19,7 @@ import { useAccount, useSigner } from 'wagmi';
 import { fromBn } from 'evm-bn';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { useChainId } from '../../../lib/useChainId';
+import Image from 'next/image';
 
 function Offer(props: {
   offer: OfferData;
@@ -232,7 +233,7 @@ function OrderPage({ order }: { order: OrderData }) {
           </div>
           <div className="flex flex-col md:flex-row mb-8">
             <div className="w-full md:w-4/6 mr-8">
-              <img className="object-fill" src={getPrimaryImageLink(order)} />
+              <Image className="object-fill" src={getPrimaryImageLink(order)} alt="Primary image" />
             </div>
             <div className="w-full md:w-2/6 space-y-8">
               <div>

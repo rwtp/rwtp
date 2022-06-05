@@ -9,6 +9,7 @@ import { getPrimaryImageLink } from '../../lib/image';
 import { fromBn } from 'evm-bn';
 import { useChainId } from '../../lib/useChainId';
 import { toUIString, getUserFriendlyBuyerCost } from '../../lib/ui-logic';
+import Image from 'next/image';
 
 interface Order {
   address: string;
@@ -31,9 +32,10 @@ function OrderView(props: { order: Order }) {
 
   //if has image
   let imageComponent = (
-    <img
+    <Image
       className="w-full h-40 object-cover rounded-t"
       src={getPrimaryImageLink(props.order)}
+      alt="item"
     />
   );
 

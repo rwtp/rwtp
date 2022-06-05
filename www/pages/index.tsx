@@ -22,7 +22,7 @@ export default function Landing() {
               top: '25%',
             }}
           >
-            <Image src="/HighlightBackground.png" height={1500} width={1500} />
+            <Image src="/HighlightBackground.png" height={1500} width={1500} alt="bg"/>
           </div>
 
           <div className="px-4">
@@ -47,7 +47,7 @@ export default function Landing() {
                 >
                   Join the Discord{' '}
                   <div className="pl-2 items-center flex">
-                    <Image src="/discord.svg" width={20} height={20} />
+                    <Image src="/discord.svg" width={20} height={20} alt="discord" />
                   </div>
                 </a>
               </div>

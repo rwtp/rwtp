@@ -1,5 +1,6 @@
 import optimismList from '@eth-optimism/tokenlist';
 import polygonList from '../node_modules/polygon-token-list/src/tokens/allTokens.json';
+import Image from 'next/image';
 
 const acceptedCoins = [
   'USDC',
@@ -82,7 +83,7 @@ export function renderToken(
       <button {...props} className={className} type="button">
         <div className="flex flex-row">
           <div className="self-center">
-            <img
+            <Image
               alt=""
               style={imgStyle}
               width="16"

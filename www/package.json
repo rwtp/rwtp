@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint --max-warnings=3",
+    "prettier-check": "prettier --check '**/*{.ts,.tsx}'",
+    "prettier-write": "prettier --write '**/*{.ts,.tsx}'"
   },
   "dependencies": {
     "@eth-optimism/tokenlist": "git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#af613ec3c5e511dbd0dc7c9cdd3d6eda311905c6",

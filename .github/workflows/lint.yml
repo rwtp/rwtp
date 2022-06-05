@@ -15,14 +15,15 @@ jobs:
     - name: Install modules
       run: yarn
     - name: Run ESLint
-      run: eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0
+      run: yarn lint
   prettier:
     defaults:
       run:
         working-directory: www
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
+    - name: Install modules
+      run: yarn
     - name: check Prettify code
-      uses: creyD/prettier_action@v4.2
-      with:
-        prettier_options: --check **/*.{tsx,md}
+      run: yarn prettier-check

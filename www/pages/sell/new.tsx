@@ -21,6 +21,7 @@ import {
   WalletConnectedButton,
 } from '../../components/Buttons';
 import { postJSONToIPFS, postFileToIPFS } from '../../lib/ipfs';
+import Image from 'next/image';
 
 export default function Page() {
   const { activeChain } = useNetwork();
@@ -128,7 +129,7 @@ export default function Page() {
                   imageUploading || !state.primaryImage || !showImagePreview
                 }
               >
-                <img
+                <Image
                   className="h-full"
                   src={
                     showImagePreview
@@ -141,7 +142,8 @@ export default function Page() {
                   onLoadStart={() => setShowImagePreview(false)}
                   onLoad={() => setShowImagePreview(true)}
                   onError={() => setShowImagePreview(false)}
-                ></img>
+                  alt="Preview"
+                />
                 <button
                   className="absolute top-0 right-0"
                   onClick={() => {
