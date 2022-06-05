@@ -69,4 +69,3 @@ export function KeyStoreConnectedButton(props: { children: React.ReactNode }) {
     </>
   );
 }
-

@@ -2,7 +2,7 @@ export async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
   let body = data;
   if (addDataTag) {
     body = {
-      data: body
+      data: body,
     };
   }
 

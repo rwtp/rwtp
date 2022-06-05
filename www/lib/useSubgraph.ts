@@ -11,7 +11,7 @@ const fetcher = (url: string, query: any, variables: any) =>
 
 export function useSubgraph<T>(args: string | [string, any]) {
   const chainId = useChainId();
-  
+
   let chain = OPTIMISM;
   if (chainId === 4) {
     chain = RINKEBY;
