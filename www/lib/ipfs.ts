@@ -1,3 +1,11 @@
+export function ipfsFetchableUrl(url: string): string {
+  if (url.startsWith('ipfs://')) {
+    return 'https://infura-ipfs.io/ipfs/' + url.substring(7);
+  } else {
+    return url;
+  }
+}
+
 export async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
   let body = data;
   if (addDataTag) {

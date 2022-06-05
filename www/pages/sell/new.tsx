@@ -20,18 +20,27 @@ import {
   KeyStoreConnectedButton,
   WalletConnectedButton,
 } from '../../components/Buttons';
-import { postJSONToIPFS, postFileToIPFS } from '../../lib/ipfs';
 import {
   BuyersCostInfo,
   SellerSideSellersDepositInfo,
 } from '../../components/infoBlurbs';
+import {
+  ipfsFetchableUrl,
+  postJSONToIPFS,
+  postFileToIPFS,
+} from '../../lib/ipfs';
 
 export default function Page() {
   const { activeChain } = useNetwork();
   const [state, setState] = useState({
     title: '',
     description: '',
-    primaryImage: '',
+    // User-entered URL
+    primaryImageUrl: '',
+    // Fetched image data
+    primaryImageBlob: new Blob(),
+    // Fetched image data as a `data:` URL
+    primaryImageDataUrl: '',
     sellersStake: 0,
     buyersCost: 0,
     price: 0,
@@ -44,6 +53,35 @@ export default function Page() {
   const [txHash, setTxHash] = useState('');
 
   let [customTokenDisabled, setCustomTokenDisabled] = useState(true);
+
+  /// Updates the state's `primaryImageBlob` and `primaryImageDataUrl`
+  /// according to a newly received `Blob`. Returns false if the blob is too
+  /// large.
+  const setNewImage = (blob: Blob): boolean => {
+    setImageUploading(true);
+
+    // Error if file is over 3MB
+    if (blob.size > 3_000_000) {
+      return false;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target!.result! as string;
+
+      setState((s) => ({
+        ...s,
+        primaryImageBlob: blob,
+        primaryImageDataUrl: dataUrl,
+      }));
+      setImageUploading(false);
+      setShowImagePreview(true);
+    };
+
+    reader.readAsDataURL(blob);
+
+    return true;
+  };
 
   return (
     <ConnectWalletLayout txHash={txHash}>
@@ -84,16 +122,51 @@ export default function Page() {
                 className="px-4 py-2 border rounded my-auto flex-grow"
                 placeholder="ipfs://cid or https://image.jpg"
                 hidden={imageUploading}
-                value={state.primaryImage}
+                value={state.primaryImageUrl}
                 onChange={(e) => {
                   setShowImagePreview(false);
-                  setState((s) => ({ ...s, primaryImage: e.target.value }));
+                  setState((s) => ({
+                    ...s,
+                    primaryImageUrl: e.target.value,
+                    primaryImageBlob: new Blob(),
+                    primaryImageDataUrl: '',
+                  }));
                 }}
-                onBlur={() => setShowImagePreview(true)}
+                onBlur={() => {
+                  if (state.primaryImageUrl) {
+                    fetch(ipfsFetchableUrl(state.primaryImageUrl))
+                      .then((response) => {
+                        if (!response.ok) {
+                          throw Error(response.statusText);
+                        }
+                        return response.blob();
+                      })
+                      .then((blob) => {
+                        if (!setNewImage(blob)) {
+                          throw Error('Image must be less than 3 MB');
+                        }
+                      })
+                      .catch((e) => {
+                        alert('Error: ' + e);
+                        setState((s) => ({
+                          ...s,
+                          primaryImageUrl: '',
+                          primaryImageBlob: new Blob(),
+                          primaryImageDataUrl: '',
+                        }));
+                        setImageUploading(false);
+                        return;
+                      });
+                  }
+                }}
               />
               <p
                 className="my-auto px-5 text-center"
-                hidden={!!state.primaryImage || imageUploading}
+                hidden={
+                  !!state.primaryImageUrl ||
+                  !!state.primaryImageDataUrl ||
+                  imageUploading
+                }
               >
                 or
               </p>
@@ -101,65 +174,61 @@ export default function Page() {
                 className="max-2-1/4 py-2 my-auto"
                 type="file"
                 accept={'image/png, image/gif, image/jpeg'}
-                hidden={!!state.primaryImage || imageUploading}
+                hidden={
+                  !!state.primaryImageUrl ||
+                  !!state.primaryImageDataUrl ||
+                  imageUploading
+                }
                 onChange={async (e) => {
                   if (!e.target.files) return;
                   const file = e.target.files[0];
                   if (!file || !file.name) return;
                   setImageUploading(true);
 
-                  // Error if file is over 3MB
-                  if (file.size > 3_000_000) {
+                  if (!setNewImage(file)) {
                     alert('Error: Image must be less than 3 MB');
                     e.target.value = '';
                     setImageUploading(false);
                     return;
                   }
-
-                  const arrayBuffer = await file.arrayBuffer();
-                  const cid = await postFileToIPFS(Buffer.from(arrayBuffer));
-                  setImageUploading(false);
-                  setShowImagePreview(true);
-                  setState((s) => ({ ...s, primaryImage: `ipfs://${cid}` }));
                 }}
               />
               <div className="my-auto" hidden={!imageUploading}>
                 <p className="my-auto animate-pulse">Loading...</p>
               </div>
-              <div
-                className="relative h-20 ml-5"
-                hidden={
-                  imageUploading || !state.primaryImage || !showImagePreview
-                }
-              >
-                <img
-                  className="h-full"
-                  src={
-                    showImagePreview
-                      ? state.primaryImage.replace(
-                          'ipfs://',
-                          'https://infura-ipfs.io/ipfs/'
-                        )
-                      : ''
-                  }
-                  onLoadStart={() => setShowImagePreview(false)}
-                  onLoad={() => setShowImagePreview(true)}
-                  onError={() => setShowImagePreview(false)}
-                  alt="Preview"
-                />
-                <button
-                  className="absolute top-0 right-0"
-                  onClick={() => {
-                    setState((s) => ({ ...s, primaryImage: '' }));
-                  }}
-                >
-                  <XIcon className="w-5 h-5 text-white bg-black rounded-full p-1 m-1" />
-                </button>
-              </div>
+              {imageUploading ||
+              !(state.primaryImageUrl || state.primaryImageDataUrl) ||
+              !showImagePreview ? (
+                <></>
+              ) : (
+                <div className="relative h-20 ml-5">
+                  <img
+                    className="h-full"
+                    src={showImagePreview ? state.primaryImageDataUrl : ''}
+                    onLoadStart={() => setShowImagePreview(false)}
+                    onLoad={() => setShowImagePreview(true)}
+                    onError={() => setShowImagePreview(false)}
+                    alt="Preview"
+                  />
+                  <button
+                    className="absolute top-0 right-0"
+                    onClick={() => {
+                      setState((s) => ({
+                        ...s,
+                        primaryImageUrl: '',
+                        primaryImageDataUrl: '',
+                        primaryImageBlob: new Blob(),
+                      }));
+                    }}
+                  >
+                    <XIcon className="w-5 h-5 text-white bg-black rounded-full p-1 m-1" />
+                  </button>
+                </div>
+              )}
               <div
                 className="my-auto ml-5"
                 hidden={
-                  imageUploading || !state.primaryImage || showImagePreview
+                  imageUploading || !state.primaryImageUrl || showImagePreview
                 }
               >
                 <RefreshIcon className="animate-spin w-5 h-5 text-black" />
@@ -299,7 +368,7 @@ function CreateOrderButton(props: {
   state: {
     title: string;
     description: string;
-    primaryImage: string;
+    primaryImageBlob: Blob;
     sellersStake: number;
     buyersCost: number;
     price: number;
@@ -382,11 +451,16 @@ function CreateOrderButton(props: {
         state.customIPFSSchema,
         state.customJSONSchema
       );
+
+      const primaryImageArrayBuffer = await state.primaryImageBlob.arrayBuffer();
+      const primaryImageCid = await postFileToIPFS(
+        Buffer.from(primaryImageArrayBuffer)
+      );
       return await postJSONToIPFS({
         offerSchema: offerSchema,
         title: state.title,
         description: state.description,
-        primaryImage: state.primaryImage,
+        primaryImageUrl: 'ipfs://' + primaryImageCid,
         encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
         tokenAddressesSuggested: [erc20Address],
         priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
