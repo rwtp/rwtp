@@ -1,20 +1,6 @@
-import { RefreshIcon } from '@heroicons/react/solid';
-import Form from '@rjsf/core';
-import { BigNumber } from 'ethers';
-import { fromBn } from 'evm-bn';
-import { useRouter } from 'next/router';
-import { Dispatch, SetStateAction, useState } from 'react';
-import nacl from 'tweetnacl';
-import { DEFAULT_OFFER_SCHEMA } from '../../lib/constants';
-import { postToIPFS } from '../../lib/ipfs';
-import { useTokenMethods } from '../../lib/tokens';
-import { useChainId } from '../../lib/useChainId';
-import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
-import { OrderData, useOrderMethods } from '../../lib/useOrder';
-import { WalletConnectedButton, KeyStoreConnectedButton } from '../Buttons';
-import { createRef } from 'react';
 import DefaultJsonSchema from '../../offer_schemas/QmaLinmex9ucfwPWpgSfDPiD1wy7Xy61MzSFLpakgGr7nC.json';
 import { validate, ValidationError } from 'jsonschema';
+import { useState } from 'react';
 
 // This is an hand rolled form that is a 1:1 matching with `ipfs://QmX6CZ7Wf8B79EX5x1PJSityvhtvvFKhkDBCDZK2cd6adF`
 export function SimpleOfferForm(props: {
