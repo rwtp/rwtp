@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
 import nacl from 'tweetnacl';
 import { DEFAULT_OFFER_SCHEMA } from '../lib/constants';
-import { postToIPFS } from '../lib/ipfs';
+import { postJSONToIPFS } from '../lib/ipfs';
 import { useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { useEncryptionKeypair } from '../lib/useEncryptionKey';
