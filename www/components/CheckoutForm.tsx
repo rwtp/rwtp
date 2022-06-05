@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
 import nacl from 'tweetnacl';
 import { DEFAULT_OFFER_SCHEMA } from '../lib/constants';
-import { postToIPFS } from '../lib/ipfs';
+import { postJSONToIPFS } from '../lib/ipfs';
 import { useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { useEncryptionKeypair } from '../lib/useEncryptionKey';
@@ -121,7 +121,7 @@ function SubmitOfferButton(props: {
             nonce: Buffer.from(nonce).toString('hex'),
             message: Buffer.from(encrypted).toString('hex'),
          };
-         return await postToIPFS(data);
+         return await postJSONToIPFS(data);
       } catch (error) {
          setErrorMessage("Error Uploading");
          console.log(error);
