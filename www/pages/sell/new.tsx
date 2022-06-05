@@ -20,34 +20,7 @@ import { InputCustomSchema } from '../../components/AddCustomSchema';
 import { useNetwork } from 'wagmi';
 import { useChainId } from '../../lib/useChainId';
 import { KeyStoreConnectedButton, WalletConnectedButton } from '../../components/Buttons';
-
-async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
-  let body = data;
-  if (addDataTag) {
-    body = {
-      data: body
-    };
-  }
-
-  const result = await fetch('/api/uploadJson', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  const { cid } = await result.json();
-  return cid;
-}
-
-async function postFileToIPFS(file: Buffer) {
-  const result = await fetch('/api/uploadFile', {
-    method: 'POST',
-    body: file.toString('base64'),
-  });
-  const { cid } = await result.json();
-  return cid;
-}
+import { postJSONToIPFS, postFileToIPFS } from '../../lib/ipfs';
 
 export default function Page() {
   const { activeChain } = useNetwork();
