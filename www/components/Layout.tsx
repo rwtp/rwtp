@@ -91,10 +91,11 @@ export function ConnectWalletLayout(props: {
   children: React.ReactNode;
   txHash?: string;
 }) {
-  const {switchNetwork} = useNetwork();
+  const { switchNetwork } = useNetwork();
   const chainId = useChainId();
   const router = useRouter();
-  const requiredChainId = Number.parseInt(router.query.chain as string) ?? DEFAULT_CHAIN_ID;
+  const requiredChainId =
+    Number.parseInt(router.query.chain as string) ?? DEFAULT_CHAIN_ID;
   const waitForTransaction = useWaitForTransaction({
     hash: props.txHash,
   });

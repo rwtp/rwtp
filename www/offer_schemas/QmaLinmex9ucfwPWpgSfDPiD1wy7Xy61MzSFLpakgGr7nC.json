@@ -1,0 +1,62 @@
+{
+    "title": "Simple Ecommerce Schema",
+    "description": "Payload for buyer's metadata when the request to purchase an item.",
+    "type": "object",
+    "properties": {
+        "firstName": {
+            "title": "First Name",
+            "description": "First name of buyer",
+            "type": "string"
+        },
+        "lastName": {
+            "title": "Last Name",
+            "description": "Last name of buyer",
+            "type": "string"
+        },
+        "email": {
+            "title": "Email",
+            "description": "Email of the buyer requesting to buy a Listing.",
+            "type": "string",
+            "pattern": "^\\S+@\\S+\\.\\S+$",
+            "format": "email",
+            "minLength": 6,
+            "maxLength": 127
+        },
+        "phone": {
+            "title": "Phone",
+            "description": "Phone number of the buyer requesting to buy a Listing.",
+            "type": "string"
+        },
+        "shippingCountry": {
+            "title": "Country",
+            "description": "Country of shipping address",
+            "type": "string"
+        },
+        "shippingAddress1": {
+            "title": "Address1",
+            "description": "Primary shipping address",
+            "type": "string"
+        },
+        "shippingAddress2": {
+            "title": "Address2",
+            "description": "Secondary shipping address (apartment number, etc.)",
+            "type": "string"
+        },
+        "shippingCity": {
+            "title": "City",
+            "description": "City of shipping address",
+            "type": "string"
+        },
+        "shippingState": {
+            "title": "State",
+            "description": "State of shipping address",
+            "type": "string"
+        },
+        "shippingZipCode": {
+            "title": "Zip Code",
+            "description": "Zip code of shipping address",
+            "type": "string"
+        }
+    },
+    "required": [ "firstName", "lastName","email", "shippingCountry","shippingAddress1","shippingCity"]
+}

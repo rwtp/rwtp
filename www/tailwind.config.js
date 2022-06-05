@@ -13,7 +13,7 @@ module.exports = {
         blue: colors.indigo,
       },
       maxWidth: {
-        '33':'33%',
+        '1/3':'33%',
         '60':'60%',
         '40':'40%'
       }

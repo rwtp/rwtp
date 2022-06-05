@@ -1,6 +1,5 @@
 import { CheckCircleIcon, ChevronRightIcon } from '@heroicons/react/solid';
-import { BigNumber, ethers } from 'ethers';
-import { fromBn } from 'evm-bn';
+import { BigNumber } from 'ethers';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Suspense, useState } from 'react';
@@ -17,6 +16,8 @@ import {
 import cn from 'classnames';
 import dayjs from 'dayjs';
 import { useAccount, useSigner } from 'wagmi';
+import { fromBn } from 'evm-bn';
+import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { useChainId } from '../../../lib/useChainId';
 
 function Offer(props: {
@@ -157,10 +158,6 @@ function Offer(props: {
   );
 }
 
-function toUIString(amount: string, decimals: number) {
-  return fromBn(BigNumber.from(amount), decimals);
-}
-
 function OrderPage({ order }: { order: OrderData }) {
   const account = useAccount();
   const chainId = useChainId();
@@ -209,27 +206,18 @@ function OrderPage({ order }: { order: OrderData }) {
     console.log('withdrawn');
   }
 
-  const buyersCost = toUIString(
+  // user facing buyers cost logic
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+    order.priceSuggested,
     order.buyersCostSuggested,
     order.tokensSuggested[0].decimals
   );
-  const buyersCostNum = +buyersCost;
-  const price = toUIString(
-    order.priceSuggested,
-    order.tokensSuggested[0].decimals
-  );
-  const priceNum = +price;
-
-  const [buyersCostName, buyersCostAmount] =
-    buyersCostNum <= priceNum
-      ? ['Refund Amount', priceNum - buyersCostNum]
-      : ['Penalize Fee', buyersCostNum - priceNum];
 
   return (
     <ConnectWalletLayout txHash={txHash}>
       <div className="flex flex-col w-full h-full">
         <div className="px-4 py-2 max-w-6xl mx-auto w-full">
-          <div className="pb-4 text-sm flex items-center text-gray-600">
+          <div className="pb-2 text-sm flex items-center text-gray-400">
             <a className="underline" href="/buy">
               Browse Listings
             </a>
@@ -248,7 +236,9 @@ function OrderPage({ order }: { order: OrderData }) {
             </div>
             <div className="w-full md:w-2/6 space-y-8">
               <div>
-                <h1 className="font-serif text-3xl mb-2">{order.title}</h1>
+                <h1 className="font-serif text-3xl mb-2 mt-4 mg:mt-0">
+                  {order.title}
+                </h1>
                 <div className="text-3xl">
                   {toUIString(
                     order.priceSuggested,
@@ -341,9 +331,11 @@ function PageWithPubkey(props: { pubkey: string }) {
 
   // loading
   if (!order.data) {
-    return <ConnectWalletLayout txHash=''>
-      <Loading />
-    </ConnectWalletLayout>;
+    return (
+      <ConnectWalletLayout txHash="">
+        <Loading />
+      </ConnectWalletLayout>
+    );
   }
 
   return <OrderPage order={order.data} />;
@@ -359,7 +351,7 @@ export default function Page() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()}/>
+      <PageWithPubkey pubkey={pubkey.toLocaleLowerCase()} />
     </Suspense>
   );
 }

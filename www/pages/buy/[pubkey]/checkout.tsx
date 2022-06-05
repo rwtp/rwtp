@@ -1,65 +1,245 @@
 import { useRouter } from 'next/router';
 import { BigNumber } from 'ethers';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, createRef } from 'react';
 import Image from 'next/image';
-import {
-  OrderData,
-  useOrder,
-} from '../../../lib/useOrder';
+import { OrderData, useOrder } from '../../../lib/useOrder';
 import { fromBn } from 'evm-bn';
-import { ArrowLeftIcon } from '@heroicons/react/solid';
+import { ArrowLeftIcon, ChevronRightIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
+import * as nacl from 'tweetnacl';
+import { RequiresKeystore } from '../../../lib/keystore';
+import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
+import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
+import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
+import { getPrimaryImageLink } from '../../../lib/image';
+import Form from '@rjsf/core';
+import {
+  WalletConnectedButton,
+  KeyStoreConnectedButton,
+} from '../../../components/Buttons';
+
+function FormFooter(props: { price: string; symbol: string }) {
+  return (
+    <div className="text-sm mt-4 text-gray-500">
+      If this item doesn't ship to you, the seller be fined{' '}
+      <span className="font-bold">
+        {props.price} {props.symbol}.
+      </span>
+    </div>
+  );
+}
 import { CheckoutForm, formatPrice } from '../../../components/CheckoutForm';
+import { SubmitOfferButton } from '../../../components/SubmitOfferButton';
 
 function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const quantity = 1;
+  const stake = order.sellersStakeSuggested
+    ? BigNumber.from(order.sellersStakeSuggested)
+    : BigNumber.from(0);
+  const cost = order.buyersCostSuggested
+    ? BigNumber.from(order.buyersCostSuggested)
+    : BigNumber.from(0);
+  const timeout = order.buyersCostSuggested
+    ? BigNumber.from(order.buyersCostSuggested)
+    : BigNumber.from(60 * 60 * 24 * 7);
 
   const price = formatPrice(order);
 
-  let imageComponent = <Image width={256} height={256} src="/rwtp.png" />;
-  if (order.primaryImage && order.primaryImage.length > 0) {
-    if (order.primaryImage.startsWith("https://") || order.primaryImage.startsWith("http://")) {
-      imageComponent = <img className='w-52' src={order.primaryImage} />
-    } else if (order.primaryImage.startsWith("ipfs://")) {
-      const imageUri = order.primaryImage.replace("ipfs://", "https://ipfs.infura.io/ipfs/");
-      imageComponent = <img className='w-52' src={imageUri} />
+  // user facing buyers cost logic ---------------------------------
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+    order.priceSuggested,
+    order.buyersCostSuggested,
+    order.tokensSuggested[0].decimals
+  );
+
+  function getTotalPrice(hasRefund: boolean) {
+    if (hasRefund) {
+      return toUIString(
+        order.priceSuggested,
+        order.tokensSuggested[0].decimals
+      );
+    } else {
+      return toUIString(
+        order.buyersCostSuggested.toString(),
+        order.tokensSuggested[0].decimals
+      );
     }
   }
 
+  function renderPenalizeFee(
+    hasRefund: boolean,
+    buyersCostName: string,
+    buyersCostAmount: string
+  ) {
+    if (!hasRefund) {
+      return (
+        <div className="flex flex-row gap-4">
+          <div className="text-base w-full">{buyersCostName}</div>
+          <div className="text-base whitespace-nowrap">
+            {buyersCostAmount} {order.tokensSuggested[0].symbol}
+          </div>
+        </div>
+      );
+    } else {
+      return null;
+    }
+  }
+
+  function renderPenalizeExplanation(
+    hasRefund: boolean,
+    buyersCostAmount: string
+  ) {
+    if (!hasRefund) {
+      return (
+        <p className="text-xs">
+          The additional penalize fee is held in case the order fails and you
+          decide to penalize the seller. If the order is successful,{' '}
+          <b>
+            you will get {buyersCostAmount} {order.tokensSuggested[0].symbol}{' '}
+            back
+          </b>
+          .
+        </p>
+      );
+    } else {
+      return null;
+    }
+  }
+
+  function renderRefund(
+    hasRefund: boolean,
+    buyersCostAmount: string,
+    token: string
+  ) {
+    if (hasRefund) {
+      return (
+        <p className="text-xs">
+          {' '}
+          This purchase is eligible for a refund amount of{' '}
+          <b>
+            {buyersCostAmount} {token}
+          </b>{' '}
+          if the deal fails.
+        </p>
+      );
+    } else {
+      return null;
+    }
+  }
+  // END user facing buyers cost logic ---------------------------------
+
+  let validChecker: () => Boolean;
+  const [offerData, setOfferData] = useState({});
+
   return (
     <ConnectWalletLayout txHash={txHash}>
-      <div className="h-full w-full flex flex-col border-t">
-        <div className="h-full flex w-full">
-          <div className="flex w-full border-l border-r mx-auto">
-            <div className="flex-1 justify-center flex flex-col bg-gray-50 items-center">
-              <div>
-                <div className="flex">
-                  <a
-                    href="/buy"
-                    className="flex gap-2 justify-between items-center py-1 hover:opacity-50 transition-all text-sm text-gray-700"
-                  >
-                    <ArrowLeftIcon className="h-4 w-4" />
-                    <div>Back</div>
-                  </a>
-                </div>
+      <div className="flex flex-col max-w-6xl mx-auto py-2 px-4">
+        <div className="pb-2 text-sm flex items-center text-gray-400">
+          <a className="underline" href="/buy">
+            Browse Listings
+          </a>
+          <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
+          <a className="underline" href={`/buy/${order.address}`}>
+            <div className="font-mono">{`${order.address.substring(
+              0,
+              6
+            )}...${order.address.substring(
+              order.address.length - 4,
+              order.address.length
+            )}`}</div>
+          </a>
+          <ChevronRightIcon className="h-4 w-4 mx-1 text-gray-400" />
+          <div>Checkout</div>
+        </div>
+        {/* END HEADER */}
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex flex-col bg-white md:w-3/5 d">
+            <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
+              <CheckoutForm
+                order={order}
+                setOfferData={setOfferData}
+                offerData={offerData}
+                setValidChecker={(checker) => {
+                  validChecker = checker;
+                }}
+              />
+            </div>
+          </div>
+          {/* PRODUCT INFO */}
+          <div className="flex-1 flex flex-col md:w-2/5">
+            <div className="bg-gray-50 px-8">
+              <div className="flex flex-row gap-4 mt-8">
+                <img
+                  className="h-24 w-24 object-cover"
+                  src={getPrimaryImageLink(order)}
+                />
 
-                <h1 className="pt-2 text-sm pt-12 text-gray-700">
-                  {order.title}
-                </h1>
-                <p className="pb-2 text-xl mt-2">
-                  {price}{' '}
-                  {order.tokensSuggested[0].symbol}
-                </p>
-
-                <div className="flex mb-2 pt-12 ">
-                  <div className="border rounded bg-white">
-                    {imageComponent}
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1">
+                    <h1 className="text-base font-serif">{order.title}</h1>
+                    <div className="flex flex-row gap-2">
+                      <div className="text-sm text-gray-400 whitespace-nowrap">
+                        Seller's Deposit:
+                      </div>
+                      <p className="text-sm whitespace-nowrap">
+                        {toUIString(
+                          order.priceSuggested,
+                          order.tokensSuggested[0].decimals
+                        )}{' '}
+                        {order.tokensSuggested[0].symbol}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="py-24 px-8 flex-1 flex justify-center flex-col bg-white p-4 ">
-              <CheckoutForm order={order} setTxHash={setTxHash}/>
+              {/* END PRODUCT INFO */}
+              <hr className="my-8"></hr>
+              {/* RECEIPT */}
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-row gap-4">
+                  <div className="text-base w-full">Item</div>
+                  <div className="text-base whitespace-nowrap">
+                    {toUIString(
+                      order.priceSuggested,
+                      order.tokensSuggested[0].decimals
+                    )}{' '}
+                    {order.tokensSuggested[0].symbol}
+                  </div>
+                </div>
+                {renderPenalizeFee(hasRefund, buyersCostName, buyersCostAmount)}
+                <div className="flex flex-row gap-4 font-bold">
+                  <div className="text-base w-full">Total Today</div>
+                  <div className="text-base whitespace-nowrap">
+                    {getTotalPrice(hasRefund)} {order.tokensSuggested[0].symbol}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 hover:opacity-50">
+                <WalletConnectedButton>
+                  <KeyStoreConnectedButton>
+                    <SubmitOfferButton
+                      offerData={offerData}
+                      order={order}
+                      setTxHash={setTxHash}
+                      validChecker={() =>
+                        validChecker !== undefined && validChecker()
+                      }
+                    />
+                  </KeyStoreConnectedButton>
+                </WalletConnectedButton>
+              </div>
+              {/* END RECEIPT */}
+              <div className="mt-4 mb-8">
+                {renderPenalizeExplanation(hasRefund, buyersCostAmount)}
+                {renderRefund(
+                  hasRefund,
+                  buyersCostAmount,
+                  order.tokensSuggested[0].symbol
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -67,7 +247,6 @@ function BuyPage({ order }: { order: OrderData }) {
     </ConnectWalletLayout>
   );
 }
-
 
 function Loading() {
   return <div className="bg-gray-50 animate-pulse h-screen w-screen"></div>;
@@ -77,9 +256,11 @@ function PageWithPubkey(props: { pubkey: string }) {
   const order = useOrder(props.pubkey); // TODO: If this finds an order on the wrong chain that causes an error it breaks the UI
 
   if (!order.data) {
-    return <ConnectWalletLayout txHash=''>
-      <Loading />
-    </ConnectWalletLayout>;
+    return (
+      <ConnectWalletLayout txHash="">
+        <Loading />
+      </ConnectWalletLayout>
+    );
   }
 
   return <BuyPage order={order.data} />;

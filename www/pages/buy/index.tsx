@@ -8,6 +8,7 @@ import { BigNumber } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
 import { fromBn } from 'evm-bn';
 import { useChainId } from '../../lib/useChainId';
+import { toUIString, getUserFriendlyBuyerCost } from '../../lib/ui-logic';
 
 interface Order {
   address: string;
@@ -25,10 +26,6 @@ interface Order {
   primaryImage: string;
 }
 
-function toUIString(amount: string, decimals: number) {
-  return fromBn(BigNumber.from(amount), decimals);
-}
-
 function OrderView(props: { order: Order }) {
   const chainId = useChainId();
 
@@ -40,22 +37,15 @@ function OrderView(props: { order: Order }) {
     />
   );
 
-  // User facing buyers stake logic
-  const buyersCost = toUIString(
+  // user facing buyers cost logic
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+    props.order.price,
     props.order.buyersCost,
     props.order.token.decimals
   );
-  const buyersCostNum = +buyersCost;
-  const price = toUIString(props.order.price, props.order.token.decimals);
-  const priceNum = +price;
-
-  const [buyersCostName, buyersCostAmount] =
-    buyersCostNum <= priceNum
-      ? ['Refund Amount', priceNum - buyersCostNum]
-      : ['Penalize Fee', buyersCostNum - priceNum];
 
   return (
-    <div className="border rounded bg-white hover:bg-gray-100">
+    <div className="border overflow-hidden rounded bg-white hover:bg-gray-100">
       <a href={`/buy/${props.order.address}?chain=${chainId}`}>
         {imageComponent}
         <div className="p-2">
@@ -67,17 +57,22 @@ function OrderView(props: { order: Order }) {
             {toUIString(props.order.price, props.order.token.decimals)}{' '}
             {props.order.token.symbol}
           </b>
-          <div className="flex text-sm flex-row">
-            <div className="text-gray-400 mr-2">{buyersCostName}: </div>
-            <div>
-              {buyersCostAmount} {props.order.token.symbol}
+          <div className="flex flex-col gap-1 md:gap-0">
+            <div className="flex text-xs md:text-sm flex-row">
+              <div className="text-gray-400 mr-2">{buyersCostName}: </div>
+              <div className="whitespace-nowrap">
+                {buyersCostAmount} {props.order.token.symbol}
+              </div>
             </div>
-          </div>
-          <div className="flex text-sm flex-row">
-            <div className="text-gray-400 mr-2">Seller's Stake: </div>
-            <div>
-              {toUIString(props.order.sellersStake, props.order.token.decimals)}{' '}
-              {props.order.token.symbol}
+            <div className="flex text-xs md:text-sm flex-row">
+              <div className="text-gray-400 mr-2">Seller's Stake: </div>
+              <div className="whitespace-nowrap">
+                {toUIString(
+                  props.order.sellersStake,
+                  props.order.token.decimals
+                )}{' '}
+                {props.order.token.symbol}
+              </div>
             </div>
           </div>
         </div>
