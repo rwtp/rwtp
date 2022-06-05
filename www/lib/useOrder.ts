@@ -271,7 +271,7 @@ export function useOrderSubmitOffer(address: string) {
 
 export function useOrderOffersFrom(order: string, taker: string) {
   const metadata = useSubgraph<{
-    offers: Array<OfferData>
+    offers: Array<OfferData>;
   }>([
     `
     query data($order: ID, $taker: ID){

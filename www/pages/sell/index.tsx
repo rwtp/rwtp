@@ -17,7 +17,10 @@ import dayjs from 'dayjs';
 import { OfferData, useAllOrderOffers } from '../../lib/useOrder';
 import nacl from 'tweetnacl';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
-import { KeyStoreConnectedButton, WalletConnectedButton } from '../../components/Buttons';
+import {
+  KeyStoreConnectedButton,
+  WalletConnectedButton,
+} from '../../components/Buttons';
 
 function Spinner(props: { className?: string }) {
   return (
@@ -80,7 +83,7 @@ function Offer(props: { offer: OfferData }) {
     const tx = await contract.commit(o.taker, o.index, {
       gasLimit: 1000000,
     });
-    tx.hash
+    tx.hash;
     await tx.wait();
     setIsLoading(false);
   }
@@ -91,7 +94,6 @@ function Offer(props: { offer: OfferData }) {
         Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
       </div>
       <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-      
     </>
   );
   if (o.state === 'Committed') {
@@ -162,39 +164,48 @@ function Offer(props: { offer: OfferData }) {
             Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
           </div>
           <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          {o.state == 'Open' && <>
-          <button
-            onClick={() => onApprove(o).catch(console.error)}
-            className="bg-black text-white rounded text-sm px-4 py-1 flex items-center hover:opacity-50"
-          >
-            Accept Offer {isLoading && <Spinner className="h-4 w-4 ml-2" />}
-          </button>
-          </>}
-          {o.state == 'Committed' && <>
-          <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
-              Offer Confirmed <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
-            </div>
-          </>}
-          {o.state == 'Confirmed' && <>
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-          </>}
+          {o.state == 'Open' && (
+            <>
+              <button
+                onClick={() => onApprove(o).catch(console.error)}
+                className="bg-black text-white rounded text-sm px-4 py-1 flex items-center hover:opacity-50"
+              >
+                Accept Offer {isLoading && <Spinner className="h-4 w-4 ml-2" />}
+              </button>
+            </>
+          )}
+          {o.state == 'Committed' && (
+            <>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+              <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
+                Offer Confirmed{' '}
+                <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+              </div>
+            </>
+          )}
+          {o.state == 'Confirmed' && (
+            <>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+              <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex px-4 pt-4">
           <div className="flex flex-col">
             <div className="text-gray-500 text-xs">Ordered on</div>
             <div className="text-lg font-serif">
-              {dayjs.unix(Number.parseInt(o.timestamp)).format("MMM D YYYY, h:mm a")}
+              {dayjs
+                .unix(Number.parseInt(o.timestamp))
+                .format('MMM D YYYY, h:mm a')}
             </div>
           </div>
         </div>
@@ -210,7 +221,9 @@ function Offer(props: { offer: OfferData }) {
                 BigNumber.from(props.offer.price),
                 o.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{o.order.tokensSuggested[0].symbol}</span>
+              <span className="text-sm">
+                {o.order.tokensSuggested[0].symbol}
+              </span>
             </div>
           </div>
           <div className="flex-1">
@@ -220,21 +233,29 @@ function Offer(props: { offer: OfferData }) {
                 BigNumber.from(props.offer.sellersStake),
                 o.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{o.order.tokensSuggested[0].symbol}</span>
+              <span className="text-sm">
+                {o.order.tokensSuggested[0].symbol}
+              </span>
             </div>
           </div>
         </div>
-        {decryptedMessage && <div className='p-4'>
-          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data</div>
-          <div className='font-mono text-base bg-gray-100 p-4'>
-            {decryptedMessage}
+        {decryptedMessage && (
+          <div className="p-4">
+            <div className="text-gray-500 text-xs text-wrap mb-4">
+              Offer Data
+            </div>
+            <div className="font-mono text-base bg-gray-100 p-4">
+              {decryptedMessage}
+            </div>
           </div>
-        </div>
-        }
-        {!decryptedMessage && <div className='p-4'>
-          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data Unavailable</div>
-        </div>
-        }
+        )}
+        {!decryptedMessage && (
+          <div className="p-4">
+            <div className="text-gray-500 text-xs text-wrap mb-4">
+              Offer Data Unavailable
+            </div>
+          </div>
+        )}
       </div>
     </FadeIn>
   );
@@ -290,8 +311,8 @@ export default function Page() {
             <div className="max-w-6xl mx-auto p-4">
               <WalletConnectedButton>
                 <KeyStoreConnectedButton>
-                    <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
-                    <Offers />
+                  <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
+                  <Offers />
                 </KeyStoreConnectedButton>
               </WalletConnectedButton>
             </div>

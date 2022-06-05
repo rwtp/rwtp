@@ -318,7 +318,16 @@ contract Order is Pausable {
             require(result, 'Transfer failed');
         }
 
-        emit OfferSubmitted(msg.sender, index, address(token), price, buyersCost, sellerStake, timeout, uri);
+        emit OfferSubmitted(
+            msg.sender,
+            index,
+            address(token),
+            price,
+            buyersCost,
+            sellerStake,
+            timeout,
+            uri
+        );
     }
 
     /// @dev allows a taker to withdraw a previous offer
@@ -346,8 +355,8 @@ contract Order is Pausable {
 
         offers[msg.sender][index] = Offer(
             State.Closed,
-                IERC20(address(0)),
-                0,
+            IERC20(address(0)),
+            0,
             0,
             0,
             0,
@@ -428,8 +437,8 @@ contract Order is Pausable {
         // Close the offer
         offers[taker][index] = Offer(
             State.Closed,
-                IERC20(address(0)),
-                0,
+            IERC20(address(0)),
+            0,
             0,
             0,
             0,
@@ -495,8 +504,8 @@ contract Order is Pausable {
         // Close the offer
         offers[taker][index] = Offer(
             State.Closed,
-                IERC20(address(0)),
-                0,
+            IERC20(address(0)),
+            0,
             0,
             0,
             0,
@@ -569,7 +578,10 @@ contract Order is Pausable {
 
             // Transfer the seller stake back to the seller
             if (offer.sellerStake > 0) {
-                bool result1 = offer.token.transfer(_seller(taker), offer.sellerStake);
+                bool result1 = offer.token.transfer(
+                    _seller(taker),
+                    offer.sellerStake
+                );
                 assert(result1);
             }
 

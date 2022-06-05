@@ -1,7 +1,6 @@
 import Form from '@rjsf/core';
 import { createRef, useState } from 'react';
 
-
 const fields = {
   DescriptionField: (_description: any) => {
     return <div> </div>;

@@ -1,10 +1,7 @@
 import { useContractWrite, useSigner } from 'wagmi';
 import { OrderBook } from 'rwtp';
 import { Dispatch, SetStateAction, useState } from 'react';
-import {
-  RefreshIcon,
-  XIcon,
-} from '@heroicons/react/solid';
+import { RefreshIcon, XIcon } from '@heroicons/react/solid';
 import { ethers } from 'ethers';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
@@ -19,8 +16,12 @@ import { InputCustomSchema } from '../../components/AddCustomSchema';
 
 import { useNetwork } from 'wagmi';
 import { useChainId } from '../../lib/useChainId';
-import { KeyStoreConnectedButton, WalletConnectedButton } from '../../components/Buttons';
+import {
+  KeyStoreConnectedButton,
+  WalletConnectedButton,
+} from '../../components/Buttons';
 import { postJSONToIPFS, postFileToIPFS } from '../../lib/ipfs';
+import Image from 'next/image';
 
 export default function Page() {
   const { activeChain } = useNetwork();
@@ -128,20 +129,21 @@ export default function Page() {
                   imageUploading || !state.primaryImage || !showImagePreview
                 }
               >
-                <img
+                <Image
                   className="h-full"
                   src={
                     showImagePreview
                       ? state.primaryImage.replace(
-                        'ipfs://',
-                        'https://infura-ipfs.io/ipfs/'
-                      )
+                          'ipfs://',
+                          'https://infura-ipfs.io/ipfs/'
+                        )
                       : ''
                   }
                   onLoadStart={() => setShowImagePreview(false)}
                   onLoad={() => setShowImagePreview(true)}
                   onError={() => setShowImagePreview(false)}
-                ></img>
+                  alt="Preview"
+                />
                 <button
                   className="absolute top-0 right-0"
                   onClick={() => {
@@ -259,24 +261,23 @@ export default function Page() {
             </label>
           </div>
         </div>
-        <InputCustomSchema JSONSchema={state.customJSONSchema} IPFSSchema={state.customIPFSSchema}
-          setIPFSSchema={
-            (schema) =>
-              setState((s) => ({ ...s, customIPFSSchema: schema }))
+        <InputCustomSchema
+          JSONSchema={state.customJSONSchema}
+          IPFSSchema={state.customIPFSSchema}
+          setIPFSSchema={(schema) =>
+            setState((s) => ({ ...s, customIPFSSchema: schema }))
           }
-          setJSONSchema={
-            (schema) =>
-              setState((s) => ({ ...s, customJSONSchema: schema }))
+          setJSONSchema={(schema) =>
+            setState((s) => ({ ...s, customJSONSchema: schema }))
           }
         />
         <div className="mt-8">
           <WalletConnectedButton>
             <KeyStoreConnectedButton>
-              <CreateOrderButton state={state} setTxHash={setTxHash}/>
+              <CreateOrderButton state={state} setTxHash={setTxHash} />
             </KeyStoreConnectedButton>
           </WalletConnectedButton>
         </div>
-
       </div>
     </ConnectWalletLayout>
   );
@@ -293,8 +294,8 @@ function CreateOrderButton(props: {
     token: string;
     customIPFSSchema: string;
     customJSONSchema: string;
-  },
-  setTxHash: Dispatch<SetStateAction<string>>,
+  };
+  setTxHash: Dispatch<SetStateAction<string>>;
 }) {
   const state = props.state;
   const setTxHash = props.setTxHash;
@@ -312,7 +313,10 @@ function CreateOrderButton(props: {
     'createOrder'
   );
 
-  async function getOfferSchema(customIPFSSchema: string, customJSONSchema: string) {
+  async function getOfferSchema(
+    customIPFSSchema: string,
+    customJSONSchema: string
+  ) {
     if (customIPFSSchema) {
       // TODO probably want to validate this is a valid ipfs cid.
       return customIPFSSchema;
@@ -336,7 +340,10 @@ function CreateOrderButton(props: {
     ];
     const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
     const decimals = await erc20.decimals();
-    const offerSchema = await getOfferSchema(state.customIPFSSchema, state.customJSONSchema)
+    const offerSchema = await getOfferSchema(
+      state.customIPFSSchema,
+      state.customJSONSchema
+    );
     const cid = await postJSONToIPFS({
       offerSchema: offerSchema,
       title: state.title,
@@ -376,12 +383,14 @@ function CreateOrderButton(props: {
     router.push(`/buy/${orderAddress}?chain=${chainId}`);
   }
 
-  return <button
-    className={'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'.concat(
-      isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
-    )}
-    onClick={() => createOrder().catch(console.error)}
-  >
-    Publish new sell order
-  </button>;
+  return (
+    <button
+      className={'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'.concat(
+        isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
+      )}
+      onClick={() => createOrder().catch(console.error)}
+    >
+      Publish new sell order
+    </button>
+  );
 }

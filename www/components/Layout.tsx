@@ -17,7 +17,12 @@ export function InformationPageHeader() {
   return (
     <div className="flex justify-between px-4 z-50 relative">
       <a className="flex items-center " href="/">
-        <Image src="/transitionLogo.png" width={24} height={24} />
+        <Image
+          src="/transitionLogo.png"
+          width={24}
+          height={24}
+          alt="Transitioning"
+        />
       </a>
       <div className="gap-2 flex items-center">
         <a className="text-sm flex py-1 px-1 rounded" href="/sell">
@@ -37,19 +42,19 @@ export function InformationPageHeader() {
           href="https://discord.gg/ekBqgYG2GW"
           className="flex items-center px-1"
         >
-          <Image src={'/discord.svg'} width={16} height={16} />
+          <Image src={'/discord.svg'} width={16} height={16} alt="discord" />
         </a>
         <a
           href="https://github.com/rwtp/rwtp"
           className="flex items-center px-1"
         >
-          <Image src={'/github.svg'} width={16} height={16} />
+          <Image src={'/github.svg'} width={16} height={16} alt="github" />
         </a>
         <a
           href="https://twitter.com/realworldtrade"
           className="flex items-center px-1"
         >
-          <Image src={'/twitter.svg'} width={16} height={16} />
+          <Image src={'/twitter.svg'} width={16} height={16} alt="twitter" />
         </a>
       </div>
     </div>
@@ -105,7 +110,12 @@ export function ConnectWalletLayout(props: {
         <div className="flex items-center">
           <Link href="/">
             <a className="flex items-center justify-center">
-              <Image width={24} height={24} src="/transitionLogo.png" />
+              <Image
+                width={24}
+                height={24}
+                src="/transitionLogo.png"
+                alt="Transitioning"
+              />
             </a>
           </Link>
         </div>

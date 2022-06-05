@@ -172,9 +172,10 @@ function BuyPage({ order }: { order: OrderData }) {
           <div className="flex-1 flex flex-col md:w-2/5">
             <div className="bg-gray-50 px-8">
               <div className="flex flex-row gap-4 mt-8">
-                <img
+                <Image
                   className="h-24 w-24 object-cover"
                   src={getPrimaryImageLink(order)}
+                  alt="Image not found"
                 />
 
                 <div className="flex flex-col gap-2">

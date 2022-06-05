@@ -163,14 +163,16 @@ export function RequiresKeystore(props: { children: ReactNode }) {
   }
 
   if (!account.data?.address) {
-    return <ConnectWalletLayout>
-      <div></div>
-    </ConnectWalletLayout>
+    return (
+      <ConnectWalletLayout>
+        <div></div>
+      </ConnectWalletLayout>
+    );
   }
 
   return (
     <ConnectWalletLayout>
-      <KeystoreModal router={router} login={login.login}/>
+      <KeystoreModal router={router} login={login.login} />
     </ConnectWalletLayout>
   );
 }
