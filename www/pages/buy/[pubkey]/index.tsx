@@ -233,7 +233,7 @@ function OrderPage({ order }: { order: OrderData }) {
           </div>
           <div className="flex flex-col md:flex-row mb-8">
             <div className="w-full md:w-4/6 mr-8">
-              <Image
+              <img
                 className="object-fill"
                 src={getPrimaryImageLink(order)}
                 alt="Primary image"

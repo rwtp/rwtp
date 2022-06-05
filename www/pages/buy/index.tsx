@@ -32,7 +32,7 @@ function OrderView(props: { order: Order }) {
 
   //if has image
   let imageComponent = (
-    <Image
+    <img
       className="w-full h-40 object-cover rounded-t"
       src={getPrimaryImageLink(props.order)}
       alt="item"
