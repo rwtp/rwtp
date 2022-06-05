@@ -120,7 +120,7 @@ export function SubmitOfferButton(props: {
 
   async function submitOffer(cid: string): Promise<string | undefined> {
     try {
-      const tx = await orderMethods.submitOffer.writeAsync({
+      const submitData = {
         args: [
           BigNumber.from(0),
           token.address,
@@ -133,7 +133,9 @@ export function SubmitOfferButton(props: {
         overrides: {
           gasLimit: 1000000,
         },
-      });
+      };
+      console.log("Submitting offer constract data: ", submitData);
+      const tx = await orderMethods.submitOffer.writeAsync(submitData);
 
       props.setTxHash(tx.hash);
       await tx.wait();
@@ -143,7 +145,7 @@ export function SubmitOfferButton(props: {
       setLoadingMessage('');
       console.log(error);
       // TOODO add better error state
-      alert('Error uploading to ipfs');
+      alert('Error submitting offer, see console for more information.');
       return undefined;
     }
   }
