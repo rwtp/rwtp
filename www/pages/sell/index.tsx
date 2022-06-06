@@ -52,23 +52,20 @@ function Offer(props: {
         console.log(error);
       }
     }
-  }, [
-    sellersEncryptionKeypair,
-    offer.message,
-    offer.messageNonce,
-    offer.messagePublicKey,
-  ]);
+  });
 
   async function onCommit() {
     if (!signer || !signer.data || loadingMessage) return;
 
-    setLoadingMessage(
-      `Requesting ${formatTokenAmount(offer.sellersStake, offer.token)} ${
-        offer.token.symbol
-      }`
-    );
-    const approveTxHash = await approveTokens();
-    if (!approveTxHash) return;
+    if (BigNumber.from(offer.sellersStake).gt(0)) {
+      setLoadingMessage(
+        `Requesting ${formatTokenAmount(offer.sellersStake, offer.token)} ${
+          offer.token.symbol
+        }`
+      );
+      const approveTxHash = await approveTokens();
+      if (!approveTxHash) return;
+    }
 
     setLoadingMessage(`Committing`);
     const submitTxHash = await commit();
