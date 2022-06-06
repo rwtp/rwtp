@@ -2,23 +2,40 @@ import { FingerPrintIcon, RefreshIcon } from '@heroicons/react/solid';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { useNetwork } from 'wagmi';
 import { useKeystoreLogin } from '../lib/keystore';
+import { useChainId } from '../lib/useChainId';
 import { KeystoreModal } from './KeystoreModal';
 
 // Wallet connected button wrapper
 export function WalletConnectedButton(props: { children: React.ReactNode }) {
+  const chainId = useChainId();
+  const { switchNetwork } = useNetwork();
+  
   return (
     <>
       <ConnectButton.Custom>
         {/* eslint-disable-next-line unused-imports/no-unused-vars */}
         {({ account, mounted, chain, openConnectModal }) => {
-          if (!mounted || !account) {
+          if (!mounted || !account || !chain || !switchNetwork) {
             return (
               <button
                 className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full"
                 onClick={openConnectModal}
               >
                 Connect Wallet <FingerPrintIcon className="h-4 w-4 ml-2" />
+              </button>
+            );
+          }
+
+          if (chain.id != chainId) {
+            return (
+              <button
+                className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full"
+                onClick={() => switchNetwork(chainId)}
+              >
+                Switch Network{' '}
+                <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
               </button>
             );
           }

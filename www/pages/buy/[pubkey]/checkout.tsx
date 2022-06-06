@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
-import { Suspense, useState } from 'react';
+import { BigNumber } from 'ethers';
+import { Suspense, useState, createRef } from 'react';
 import { OrderData, useOrder } from '../../../lib/useOrder';
 import { ChevronRightIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
@@ -9,13 +10,22 @@ import {
   WalletConnectedButton,
   KeyStoreConnectedButton,
 } from '../../../components/Buttons';
-
 import { CheckoutForm } from '../../../components/CheckoutForm';
 import { SubmitOfferButton } from '../../../components/SubmitOfferButton';
 
+function FormFooter(props: { price: string; symbol: string }) {
+  return (
+    <div className="text-sm mt-4 text-gray-500">
+      If this item doesn't ship to you, the seller will be fined{' '}
+      <span className="font-bold">
+        {props.price} {props.symbol}.
+      </span>
+    </div>
+  );
+}
+
 function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
-  const [isLoading, _setIsLoading] = useState(false);
 
   // user facing buyers cost logic ---------------------------------
   let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
@@ -38,7 +48,7 @@ function BuyPage({ order }: { order: OrderData }) {
     }
   }
 
-  function renderPenalizeFee(
+  function renderBuyersStake(
     hasRefund: boolean,
     buyersCostName: string,
     buyersCostAmount: string
@@ -57,14 +67,14 @@ function BuyPage({ order }: { order: OrderData }) {
     }
   }
 
-  function renderPenalizeExplanation(
+  function renderBuyersStakeExplanation(
     hasRefund: boolean,
     buyersCostAmount: string
   ) {
     if (!hasRefund) {
       return (
         <p className="text-xs">
-          The additional penalize fee is held in case the order fails and you
+          You submit an amount that is held in case the order fails and you
           decide to penalize the seller. If the order is successful,{' '}
           <b>
             you will get {buyersCostAmount} {order.tokensSuggested[0].symbol}{' '}
@@ -126,7 +136,7 @@ function BuyPage({ order }: { order: OrderData }) {
         {/* END HEADER */}
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex flex-col bg-white md:w-3/5 d">
-            <div className={isLoading ? 'opacity-50 pointer-events-none' : ''}>
+            <div>
               <CheckoutForm
                 order={order}
                 setOfferData={setOfferData}
@@ -179,7 +189,7 @@ function BuyPage({ order }: { order: OrderData }) {
                     {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
-                {renderPenalizeFee(hasRefund, buyersCostName, buyersCostAmount)}
+                {renderBuyersStake(hasRefund, buyersCostName, buyersCostAmount)}
                 <div className="flex flex-row gap-4 font-bold">
                   <div className="text-base w-full">Total Today</div>
                   <div className="text-base whitespace-nowrap">
@@ -187,7 +197,7 @@ function BuyPage({ order }: { order: OrderData }) {
                   </div>
                 </div>
               </div>
-              <div className="mt-8 hover:opacity-50">
+              <div className="mt-8">
                 <WalletConnectedButton>
                   <KeyStoreConnectedButton>
                     <SubmitOfferButton
@@ -203,7 +213,7 @@ function BuyPage({ order }: { order: OrderData }) {
               </div>
               {/* END RECEIPT */}
               <div className="mt-4 mb-8">
-                {renderPenalizeExplanation(hasRefund, buyersCostAmount)}
+                {renderBuyersStakeExplanation(hasRefund, buyersCostAmount)}
                 {renderRefund(
                   hasRefund,
                   buyersCostAmount,

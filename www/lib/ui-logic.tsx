@@ -10,7 +10,7 @@ export function getUserFriendlyBuyerCost(
   buyersCost: string,
   decimals: number
 ): [string, string, boolean] {
-  let buyersCostName: string = 'Penalize Fee';
+  let buyersCostName: string = "Buyer's Stake";
   let hasRefund: boolean = false;
   let buyersCostAmount: string = toUIString(
     (+buyersCost - +price).toString(),
