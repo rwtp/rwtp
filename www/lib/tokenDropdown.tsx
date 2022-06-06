@@ -83,7 +83,7 @@ export function renderToken(
       <button {...props} className={className} type="button">
         <div className="flex flex-row">
           <div className="self-center">
-            <Image
+            <img
               alt=""
               style={imgStyle}
               width="16"
