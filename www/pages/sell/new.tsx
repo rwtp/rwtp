@@ -315,7 +315,8 @@ function CreateOrderButton(props: {
   const router = useRouter();
   const chainId = useChainId();
   const sellersEncryptionKeypair = useEncryptionKeypair();
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const book = useContractWrite(
     {
@@ -343,41 +344,12 @@ function CreateOrderButton(props: {
 
   async function createOrder() {
     if (!signer || !signer.data) return;
-    setIsLoading(true);
 
-    const erc20Address = state.token;
-    const erc20ABI = [
-      'function approve(address spender, uint256 amount)',
-      'function decimals() public view returns (uint8)',
-    ];
-    const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
-    const decimals = await erc20.decimals();
-    const offerSchema = await getOfferSchema(
-      state.customIPFSSchema,
-      state.customJSONSchema
-    );
-    const cid = await postJSONToIPFS({
-      offerSchema: offerSchema,
-      title: state.title,
-      description: state.description,
-      primaryImage: state.primaryImage,
-      encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
-      tokenAddressesSuggested: [erc20Address],
-      priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
-      sellersStakeSuggested: toBn(
-        state.sellersStake.toString(),
-        decimals
-      ).toHexString(),
-      buyersCostSuggested: toBn(
-        state.buyersCost.toString(),
-        decimals
-      ).toHexString(),
-      suggestedTimeout: toBn(
-        (60 * 60 * 24 * 7).toString(),
-        decimals
-      ).toHexString(),
-    });
+    setLoadingMessage('Uploading Order Data');
+    const cid = await uploadOrderData();
+    if (!cid) return;
 
+    setLoadingMessage('Creating Order');
     const tx = await book.writeAsync({
       args: [await signer.data.getAddress(), `ipfs://${cid}`, false],
     });
@@ -386,23 +358,86 @@ function CreateOrderButton(props: {
     const result = (await tx.wait()) as any;
     setTxHash('');
     if (!result.events || result.events.length < 1) {
-      throw new Error(
-        "Unexpectedly could not find 'events' in the transaction hash of createOrder. Maybe an ethers bug? Maybe the CreateOrder event isn't picked up fast enough? This basically shouldn't happen."
-      );
+      setLoadingMessage('');
+      setErrorMessage('Error Creating Order');
+      console.log(result.error);
+      return;
     }
     const orderAddress = result.events[0].args[0];
-    setIsLoading(false);
+    setLoadingMessage('');
     router.push(`/buy/${orderAddress}?chain=${chainId}`);
   }
 
+  async function uploadOrderData(): Promise<string | undefined> {
+    if (!signer || !signer.data) return undefined;
+    try {
+      const erc20Address = state.token;
+      const erc20ABI = [
+        'function approve(address spender, uint256 amount)',
+        'function decimals() public view returns (uint8)',
+      ];
+      const erc20 = new ethers.Contract(erc20Address, erc20ABI, signer.data);
+      const decimals = await erc20.decimals();
+      const offerSchema = await getOfferSchema(
+        state.customIPFSSchema,
+        state.customJSONSchema
+      );
+      return await postJSONToIPFS({
+        offerSchema: offerSchema,
+        title: state.title,
+        description: state.description,
+        primaryImage: state.primaryImage,
+        encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
+        tokenAddressesSuggested: [erc20Address],
+        priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
+        sellersStakeSuggested: toBn(
+          state.sellersStake.toString(),
+          decimals
+        ).toHexString(),
+        buyersCostSuggested: toBn(
+          state.buyersCost.toString(),
+          decimals
+        ).toHexString(),
+        suggestedTimeout: toBn(
+          (60 * 60 * 24 * 7).toString(),
+          decimals
+        ).toHexString(),
+      });
+    } catch (error) {
+      setLoadingMessage('');
+      setErrorMessage('Error Uploading Data');
+      console.log(error);
+      return undefined;
+    }
+  }
+
   return (
-    <button
-      className={'w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'.concat(
-        isLoading ? 'opacity-50 animate-pulse pointer-events-none' : ''
+    <>
+      {!loadingMessage && !errorMessage && (
+        <>
+          <button
+            className='w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'
+            onClick={() => createOrder().catch(console.error)}
+          >
+            Publish Sell Order
+          </button>
+        </>
       )}
-      onClick={() => createOrder().catch(console.error)}
-    >
-      Publish new sell order
-    </button>
+      {loadingMessage && !errorMessage && (
+        <>
+          <button className="cursor-wait border px-4 py-3 w-full flex justify-center font-bold rounded">
+            <div>{loadingMessage}</div>
+            <RefreshIcon className="animate-spin h-4 w-4 ml-2 my-auto" />
+          </button>
+        </>
+      )}
+      {errorMessage && (
+        <>
+          <button className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
+            <div>{errorMessage}</div>
+          </button>
+        </>
+      )}
+    </>
   );
 }
