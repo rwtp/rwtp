@@ -25,7 +25,7 @@ export default function DocsPage() {
 
   useEffect(() => {
     router.push('/docs/whitepaper');
-  }, []);
+  }, [router]);
 
   return (
     <div className="flex flex-col h-full">

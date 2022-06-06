@@ -26,9 +26,8 @@ export function useEncryptionKeypair() {
       const keypair = nacl.box.keyPair.fromSecretKey(secretKey);
       setEncryptionKeypair(keypair);
     }
-
     load().catch(console.error);
-  }, []);
+  }, [keystore]);
 
   if (encryptionKeypair) {
     return {

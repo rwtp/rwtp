@@ -52,15 +52,15 @@ function Offer(props: { offer: OfferData }) {
   const signer = useSigner();
   const [isLoading, setIsLoading] = useState(false);
   const [decryptedMessage, setDecryptedMessage] = useState('');
-  const o = props.offer;
+  const offer = props.offer;
 
   useEffect(() => {
     if (sellersEncryptionKeypair) {
       try {
         const decrypted = nacl.box.open(
-          Buffer.from(o.message, 'hex'),
-          Buffer.from(o.messageNonce, 'hex'),
-          Buffer.from(o.messagePublicKey, 'hex'),
+          Buffer.from(offer.message, 'hex'),
+          Buffer.from(offer.messageNonce, 'hex'),
+          Buffer.from(offer.messagePublicKey, 'hex'),
           sellersEncryptionKeypair.secretKey
         );
         setDecryptedMessage(Buffer.from(decrypted!).toString());
@@ -68,7 +68,7 @@ function Offer(props: { offer: OfferData }) {
         console.log(error);
       }
     }
-  });
+  }, [sellersEncryptionKeypair, offer]);
 
   async function onApprove(o: OfferData) {
     if (!signer || !signer.data || isLoading) return;
@@ -96,7 +96,7 @@ function Offer(props: { offer: OfferData }) {
       <ChevronRightIcon className="h-4 w-4 text-gray-400" />
     </>
   );
-  if (o.state === 'Committed') {
+  if (offer.state === 'Committed') {
     status = (
       <>
         <div className="text-xs flex py-2 border-gray-600 text-gray-600">
@@ -107,7 +107,7 @@ function Offer(props: { offer: OfferData }) {
         <div
           className={cn({
             'text-xs flex  py-2 border-gray-600 text-gray-600': true,
-            'opacity-50': o.state !== 'Committed',
+            'opacity-50': offer.state !== 'Committed',
           })}
         >
           Accepted <CheckCircleIcon className="h-4 w-4 ml-2" />
@@ -128,7 +128,7 @@ function Offer(props: { offer: OfferData }) {
       </>
     );
   }
-  if (o.state === 'Canceled') {
+  if (offer.state === 'Canceled') {
     status = (
       <>
         <div className="text-xs flex py-2 border-gray-600 text-gray-600">
@@ -164,17 +164,17 @@ function Offer(props: { offer: OfferData }) {
             Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
           </div>
           <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          {o.state == 'Open' && (
+          {offer.state == 'Open' && (
             <>
               <button
-                onClick={() => onApprove(o).catch(console.error)}
+                onClick={() => onApprove(offer).catch(console.error)}
                 className="bg-black text-white rounded text-sm px-4 py-1 flex items-center hover:opacity-50"
               >
                 Accept Offer {isLoading && <Spinner className="h-4 w-4 ml-2" />}
               </button>
             </>
           )}
-          {o.state == 'Committed' && (
+          {offer.state == 'Committed' && (
             <>
               <div className="text-xs flex py-2 border-gray-600 text-gray-600">
                 Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
@@ -186,7 +186,7 @@ function Offer(props: { offer: OfferData }) {
               </div>
             </>
           )}
-          {o.state == 'Confirmed' && (
+          {offer.state == 'Confirmed' && (
             <>
               <div className="text-xs flex py-2 border-gray-600 text-gray-600">
                 Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
@@ -204,7 +204,7 @@ function Offer(props: { offer: OfferData }) {
             <div className="text-gray-500 text-xs">Ordered on</div>
             <div className="text-lg font-serif">
               {dayjs
-                .unix(Number.parseInt(o.timestamp))
+                .unix(Number.parseInt(offer.timestamp))
                 .format('MMM D YYYY, h:mm a')}
             </div>
           </div>
@@ -219,10 +219,10 @@ function Offer(props: { offer: OfferData }) {
             <div className="text-lg font-mono">
               {fromBn(
                 BigNumber.from(props.offer.price),
-                o.order.tokensSuggested[0].decimals
+                offer.order.tokensSuggested[0].decimals
               )}{' '}
               <span className="text-sm">
-                {o.order.tokensSuggested[0].symbol}
+                {offer.order.tokensSuggested[0].symbol}
               </span>
             </div>
           </div>
@@ -231,10 +231,10 @@ function Offer(props: { offer: OfferData }) {
             <div className="text-lg font-mono">
               {fromBn(
                 BigNumber.from(props.offer.sellersStake),
-                o.order.tokensSuggested[0].decimals
+                offer.order.tokensSuggested[0].decimals
               )}{' '}
               <span className="text-sm">
-                {o.order.tokensSuggested[0].symbol}
+                {offer.order.tokensSuggested[0].symbol}
               </span>
             </div>
           </div>
