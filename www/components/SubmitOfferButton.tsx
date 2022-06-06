@@ -1,8 +1,9 @@
 import { RefreshIcon } from '@heroicons/react/solid';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
 import nacl from 'tweetnacl';
+import { useAccount, useSigner } from 'wagmi';
 import { postJSONToIPFS } from '../lib/ipfs';
 import { useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
@@ -42,9 +43,27 @@ export function SubmitOfferButton(props: {
   );
   const token = props.order.tokensSuggested[0];
 
+  let tokenBalance = BigNumber.from(0);
+  const signer = useSigner();
+  if (signer && signer.data) {
+    let tokenContract = useTokenMethods(token.address);
+    let account = useAccount();
+    let balance = tokenContract.balance(account.data?.address).data;
+    if (balance) {
+      tokenBalance = BigNumber.from(balance);
+    }
+  }
+
   async function onBuy() {
     if (props.validChecker && !props.validChecker()) {
       console.log('Invalid schema');
+      return;
+    }
+    if (tokenBalance.lt(price)) {
+      const msg = `You don't have enough ${token.symbol} to buy this order.`;
+      console.log(msg);
+      // TODO: show a better error message here
+      alert(msg);
       return;
     }
     setLoadingMessage('Uploading');

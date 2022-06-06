@@ -1,4 +1,4 @@
-import { useContractWrite } from 'wagmi';
+import { useContractWrite, useContractRead } from 'wagmi';
 import { ERC20 } from './erc20';
 
 export function useTokenMethods(address: string) {
@@ -10,7 +10,29 @@ export function useTokenMethods(address: string) {
     'approve'
   );
 
+  const decimals = useContractRead(
+    {
+      addressOrName: address,
+      contractInterface: ERC20.abi,
+    },
+    'decimals'
+  );
+
+  const balance = (args: any) =>
+    useContractRead(
+      {
+        addressOrName: address,
+        contractInterface: ERC20.abi,
+      },
+      'balanceOf',
+      {
+        args: args,
+      }
+    );
+
   return {
     approve,
+    decimals,
+    balance,
   };
 }
