@@ -1,6 +1,6 @@
 export function ipfsFetchableUrl(url: string): string {
   if (url.startsWith('ipfs://')) {
-    return 'https://infura-ipfs.io/ipfs/' + url.substring(7);
+    return 'https://infura-ipfs.io/ipfs/' + url.replace('ipfs://', '');
   } else {
     return url;
   }
