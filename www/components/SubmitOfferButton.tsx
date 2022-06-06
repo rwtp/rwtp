@@ -91,7 +91,6 @@ export function SubmitOfferButton(props: {
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');
-      // TOODO add better error state
       alert('Failure to upload BuyerData');
       console.log(error);
       return undefined;
@@ -112,6 +111,7 @@ export function SubmitOfferButton(props: {
       props.setTxHash('');
       return tx.hash;
     } catch (error) {
+      setLoadingMessage('');
       setErrorMessage('Error Approving');
       console.log(error);
       return undefined;
@@ -143,9 +143,8 @@ export function SubmitOfferButton(props: {
       return tx.hash;
     } catch (error) {
       setLoadingMessage('');
+      setErrorMessage('Error Submitting Offer');
       console.log(error);
-      // TOODO add better error state
-      alert('Error submitting offer, see console for more information.');
       return undefined;
     }
   }
