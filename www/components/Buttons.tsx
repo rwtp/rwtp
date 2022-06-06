@@ -85,7 +85,7 @@ export function KeyStoreConnectedButton(props: { children: React.ReactNode }) {
 export function HasTokenBalanceButton(props: { children: React.ReactNode, tokenAmount: BigNumber, token: ERC20Data }) {
   const account = useAccount();
   const tokenContract = useTokenMethods(props.token.address);
-  const {data, isLoading, isError, isSuccess} = tokenContract.balance(account.data?.address ?? "");
+  const {data, isLoading, isError, isSuccess} = tokenContract.useBalance(account.data?.address ?? "");
 
   if (isLoading) {
     return (

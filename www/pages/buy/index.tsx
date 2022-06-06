@@ -3,7 +3,6 @@ import { FadeIn } from '../../components/FadeIn';
 import { SearchIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import { OrderData, useOrders } from '../../lib/useOrder';
-import { Order } from 'rwtp';
 import { getPrimaryImageLink } from '../../lib/image';
 import { useChainId } from '../../lib/useChainId';
 import { toUIString, getUserFriendlyBuyerCost } from '../../lib/ui-logic';

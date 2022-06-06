@@ -21,7 +21,7 @@ export function useTokenMethods(address: string) {
     'decimals'
   );
 
-  const balance = (args: any) =>
+  const useBalance = (args: any) =>
     useContractRead(
       {
         addressOrName: address,
@@ -36,7 +36,7 @@ export function useTokenMethods(address: string) {
   return {
     approve,
     decimals,
-    balance,
+    useBalance,
   };
 }
 

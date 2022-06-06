@@ -1,9 +1,8 @@
 import { RefreshIcon } from '@heroicons/react/solid';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
 import nacl from 'tweetnacl';
-import { useAccount, useSigner } from 'wagmi';
 import { postJSONToIPFS } from '../lib/ipfs';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
@@ -25,7 +24,6 @@ export function SubmitOfferButton(props: {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const quantity = 1;
   const price = BigNumber.from(
     props.order.priceSuggested ? props.order.priceSuggested : 0
   );
