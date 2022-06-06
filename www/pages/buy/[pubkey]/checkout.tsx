@@ -39,7 +39,7 @@ function BuyPage({ order }: { order: OrderData }) {
     }
   }
 
-  function renderBuyersStake(
+  function renderBuyersDeposit(
     hasRefund: boolean,
     buyersCostName: string,
     buyersCostAmount: string
@@ -58,7 +58,7 @@ function BuyPage({ order }: { order: OrderData }) {
     }
   }
 
-  function renderBuyersStakeExplanation(
+  function renderBuyersDepositExplanation(
     hasRefund: boolean,
     buyersCostAmount: string
   ) {
@@ -180,7 +180,7 @@ function BuyPage({ order }: { order: OrderData }) {
                     {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
-                {renderBuyersStake(hasRefund, buyersCostName, buyersCostAmount)}
+                {renderBuyersDeposit(hasRefund, buyersCostName, buyersCostAmount)}
                 <div className="flex flex-row gap-4 font-bold">
                   <div className="text-base w-full">Total Today</div>
                   <div className="text-base whitespace-nowrap">
@@ -209,7 +209,7 @@ function BuyPage({ order }: { order: OrderData }) {
               </div>
               {/* END RECEIPT */}
               <div className="mt-4 mb-8">
-                {renderBuyersStakeExplanation(hasRefund, buyersCostAmount)}
+                {renderBuyersDepositExplanation(hasRefund, buyersCostAmount)}
                 {renderRefund(
                   hasRefund,
                   buyersCostAmount,

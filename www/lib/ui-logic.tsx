@@ -17,10 +17,10 @@ export function getUserFriendlyBuyerCost(
   );
 
   if (cost.gt(price)) {
-    const buyersStake = cost.sub(price);
+    const buyersDeposit = cost.sub(price);
     return [
-      "Buyer's Stake",
-      toUIString(buyersStake, order.tokensSuggested[0].decimals),
+      "Buyer's Deposit",
+      toUIString(buyersDeposit, order.tokensSuggested[0].decimals),
       false,
     ];
   } else {

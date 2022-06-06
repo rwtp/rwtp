@@ -21,7 +21,7 @@ import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { useChainId } from '../../../lib/useChainId';
 import {
   BuyerSideSellersDepositInfo,
-  PenalizeFeeInfo,
+  BuyersDepositInfo,
 } from '../../../components/infoBlurbs';
 
 function Offer(props: {
@@ -259,7 +259,7 @@ function OrderPage({ order }: { order: OrderData }) {
                     <div className="text-xs font-mono text-gray-400">
                       {buyersCostName}
                     </div>
-                    {PenalizeFeeInfo(hasRefund)}
+                    {BuyersDepositInfo(hasRefund)}
                   </div>
                   <div>
                     {buyersCostAmount} {order.tokensSuggested[0].symbol}
