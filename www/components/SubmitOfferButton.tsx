@@ -4,11 +4,10 @@ import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
 import nacl from 'tweetnacl';
 import { postJSONToIPFS } from '../lib/ipfs';
-import { useTokenMethods } from '../lib/tokens';
+import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { useEncryptionKeypair } from '../lib/useEncryptionKey';
 import { OrderData, useOrderMethods } from '../lib/useOrder';
-import { formatPrice } from './CheckoutForm';
 
 export function SubmitOfferButton(props: {
   offerData: any;
@@ -52,7 +51,7 @@ export function SubmitOfferButton(props: {
     const cid = await uploadBuyerData();
     if (!cid) return;
 
-    setLoadingMessage(`Requesting ${formatPrice(props.order)} ${token.symbol}`);
+    setLoadingMessage(`Requesting ${formatTokenAmount(props.order.priceSuggested, props.order.tokensSuggested[0])} ${token.symbol}`);
     const approveTxHash = await approveTokens();
     if (!approveTxHash) return;
 
