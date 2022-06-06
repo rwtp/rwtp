@@ -14,6 +14,7 @@ export function useEncryptionKeypair() {
 
   // TODO we should use a better hook here.
   // see - https://stackoverflow.com/questions/55840294/how-to-fix-missing-dependency-warning-when-using-useeffect-react-hook
+  // linear #REAL-411
   useEffect(() => {
     async function load() {
       const result = await keystore.get(ENCRYPTION_KEY);
