@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --max-warnings=10",
+    "lint": "next lint --max-warnings=0",
     "prettier-check": "prettier --check '**/*{.ts,.tsx}'",
     "prettier-write": "prettier --write '**/*{.ts,.tsx}'"
   },
