@@ -211,11 +211,7 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   // user facing buyers cost logic
-  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
-    order.priceSuggested,
-    order.buyersCostSuggested,
-    order.tokensSuggested[0].decimals
-  );
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(order);
 
   return (
     <ConnectWalletLayout txHash={txHash}>
@@ -249,7 +245,7 @@ function OrderPage({ order }: { order: OrderData }) {
                 </h1>
                 <div className="text-3xl">
                   {toUIString(
-                    order.priceSuggested,
+                    BigNumber.from(order.priceSuggested),
                     order.tokensSuggested[0].decimals
                   )}{' '}
                   {order.tokensSuggested[0].symbol}
@@ -277,7 +273,7 @@ function OrderPage({ order }: { order: OrderData }) {
                   </div>
                   <div>
                     {toUIString(
-                      order.sellersStakeSuggested,
+                      BigNumber.from(order.sellersStakeSuggested),
                       order.tokensSuggested[0].decimals
                     )}{' '}
                     {order.tokensSuggested[0].symbol}

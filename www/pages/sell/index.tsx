@@ -247,63 +247,64 @@ export default function Page() {
   const account = useAccount();
   const orders = useAllOrderOffers(account.data?.address || '');
 
+  let offersBody;
   if (orders.error) {
-    return <pre>{JSON.stringify(orders.error, null, 2)}</pre>;
+    offersBody = <pre>{JSON.stringify(orders.error, null, 2)}</pre>;
+  } else if (!orders.data) {
+    offersBody = <Loading />;
+  } else if (orders.data.length === 0) {
+    offersBody = <div className="text-gray-500">There are no open offers.</div>;
+  } else {
+    // Parse offers from orders
+    let offers: Array<OfferData> = new Array<OfferData>();
+    for (const order of orders.data) {
+      offers = offers.concat(order.offers);
+    }
+    offersBody = offers.map((offer: OfferData) => {
+      return (
+        <Offer
+          key={`${offer.index}${offer.taker}${offer.acceptedAt}`}
+          offer={offer}
+          setTxHash={setTxHash}
+        />
+      );
+    });
   }
-
-  if (!orders.data) {
-    return null;
-  }
-
-  if (orders.data.length === 0) {
-    return <div className="text-gray-500">There are no open offers.</div>;
-  }
-
-  // Parse offers from orders
-  let offers: Array<OfferData> = new Array<OfferData>();
-  for (const order of orders.data) {
-    offers = offers.concat(order.offers);
-  }
-  const allOffers = offers.map((offer: OfferData) => {
-    return (
-      <Offer
-        key={`${offer.index}${offer.taker}${offer.acceptedAt}`}
-        offer={offer}
-        setTxHash={setTxHash}
-      />
-    );
-  });
 
   return (
     <ConnectWalletLayout txHash={txHash}>
       <div className="h-full flex flex-col">
-        <Suspense fallback={<div></div>}>
-          <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
-            <div className="pb-8">
-              <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
-              <p className="pb-4">Learn more about Sell Orders.</p>
-              <div className="flex">
-                <Link href="/sell/new">
-                  <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
-                    New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
-                  </a>
-                </Link>
-              </div>
+        <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
+          <div className="pb-8">
+            <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
+            <p className="pb-4">Learn more about Sell Orders.</p>
+            <div className="flex">
+              <Link href="/sell/new">
+                <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
+                  New Sell Order <PlusIcon className="h-4 w-4 ml-2" />
+                </a>
+              </Link>
             </div>
           </div>
-          <div className="flex-1 bg-gray-50 border-t">
-            <div className="max-w-6xl mx-auto p-4">
-              <WalletConnectedButton>
-                <KeyStoreConnectedButton>
-                  <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
-                  <FadeIn className="">{allOffers}</FadeIn>
-                </KeyStoreConnectedButton>
-              </WalletConnectedButton>
-            </div>
+        </div>
+        <div className="flex-1 bg-gray-50 border-t">
+          <div className="max-w-6xl mx-auto p-4">
+            <WalletConnectedButton>
+              <KeyStoreConnectedButton>
+                <h1 className="font-serif text-xl pb-2">Incoming Offers</h1>
+                <Suspense fallback={<div></div>}>
+                  <FadeIn className="">{offersBody}</FadeIn>
+                </Suspense>
+              </KeyStoreConnectedButton>
+            </WalletConnectedButton>
           </div>
-        </Suspense>
+        </div>
         <Footer />
       </div>
     </ConnectWalletLayout>
   );
+}
+
+function Loading() {
+  return <div className="bg-gray-50 animate-pulse h-screen w-screen"></div>;
 }

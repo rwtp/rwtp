@@ -2,29 +2,14 @@ import { Suspense, useState } from 'react';
 import { FadeIn } from '../../components/FadeIn';
 import { SearchIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
-import { useOrders } from '../../lib/useOrder';
+import { OrderData, useOrders } from '../../lib/useOrder';
 import { Order } from 'rwtp';
 import { getPrimaryImageLink } from '../../lib/image';
 import { useChainId } from '../../lib/useChainId';
 import { toUIString, getUserFriendlyBuyerCost } from '../../lib/ui-logic';
+import { BigNumber } from 'ethers';
 
-interface Order {
-  address: string;
-  title: string;
-  description: string;
-  sellersStake: string;
-  buyersCost: string;
-  price: string;
-  token: {
-    address: string;
-    symbol: string;
-    decimals: number;
-  };
-  encryptionPublicKey: string;
-  primaryImage: string;
-}
-
-function OrderView(props: { order: Order }) {
+function OrderView(props: { order: OrderData }) {
   const chainId = useChainId();
 
   //if has image
@@ -37,11 +22,7 @@ function OrderView(props: { order: Order }) {
   );
 
   // user facing buyers cost logic
-  let [buyersCostName, buyersCostAmount, _] = getUserFriendlyBuyerCost(
-    props.order.price,
-    props.order.buyersCost,
-    props.order.token.decimals
-  );
+  let [buyersCostName, buyersCostAmount, _] = getUserFriendlyBuyerCost(props.order);
 
   return (
     <div className="border overflow-hidden rounded bg-white hover:bg-gray-100">
@@ -53,24 +34,27 @@ function OrderView(props: { order: Order }) {
           </div>
           {/* TODO: Get token and network from token address */}
           <b>
-            {toUIString(props.order.price, props.order.token.decimals)}{' '}
-            {props.order.token.symbol}
+            {toUIString(
+              BigNumber.from(props.order.priceSuggested), 
+              props.order.tokensSuggested[0].decimals
+            )}{' '}
+            {props.order.tokensSuggested[0].symbol}
           </b>
           <div className="flex flex-col gap-1 md:gap-0">
             <div className="flex text-xs md:text-sm flex-row">
               <div className="text-gray-400 mr-2">{buyersCostName}: </div>
               <div className="whitespace-nowrap">
-                {buyersCostAmount} {props.order.token.symbol}
+                {buyersCostAmount} {props.order.tokensSuggested[0].symbol}
               </div>
             </div>
             <div className="flex text-xs md:text-sm flex-row">
               <div className="text-gray-400 mr-2">Seller's Deposit: </div>
               <div className="whitespace-nowrap">
                 {toUIString(
-                  props.order.sellersStake,
-                  props.order.token.decimals
+                  BigNumber.from(props.order.sellersStakeSuggested),
+                  props.order.tokensSuggested[0].decimals
                 )}{' '}
-                {props.order.token.symbol}
+                {props.order.tokensSuggested[0].symbol}
               </div>
             </div>
           </div>
@@ -97,17 +81,7 @@ function Results(props: { searchText: string }) {
       return (
         <OrderView
           key={order.address}
-          order={{
-            address: order.address,
-            title: order.title,
-            description: order.description,
-            sellersStake: order.sellersStakeSuggested,
-            buyersCost: order.buyersCostSuggested,
-            price: order.priceSuggested,
-            token: order.tokensSuggested[0],
-            encryptionPublicKey: '',
-            primaryImage: order.primaryImage,
-          }}
+          order={order}
         />
       );
     });

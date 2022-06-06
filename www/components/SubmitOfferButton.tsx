@@ -8,7 +8,7 @@ import { postJSONToIPFS } from '../lib/ipfs';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { useEncryptionKeypair } from '../lib/useEncryptionKey';
-import { OrderData, useOrderMethods } from '../lib/useOrder';
+import { buyerTransferAmount, OrderData, useOrderMethods } from '../lib/useOrder';
 
 export function SubmitOfferButton(props: {
   offerData: any;
@@ -41,30 +41,14 @@ export function SubmitOfferButton(props: {
       : 60 * 60 * 24 * 7
   );
   const token = props.order.tokensSuggested[0];
-
-  let tokenBalance = BigNumber.from(0);
-  const signer = useSigner();
-  if (signer && signer.data) {
-    let tokenContract = useTokenMethods(token.address);
-    let account = useAccount();
-    let balance = tokenContract.balance(account.data?.address).data;
-    if (balance) {
-      tokenBalance = BigNumber.from(balance);
-    }
-  }
+  const transferAmount = buyerTransferAmount(props.order);
 
   async function onBuy() {
     if (props.validChecker && !props.validChecker()) {
       console.log('Invalid schema');
       return;
     }
-    if (tokenBalance.lt(price)) {
-      const msg = `You don't have enough ${token.symbol} to buy this order.`;
-      console.log(msg);
-      // TODO: show a better error message here
-      alert(msg);
-      return;
-    }
+
     setLoadingMessage('Uploading');
     console.log('Submitting offer: ', props.offerData);
     const cid = await uploadBuyerData();
@@ -72,7 +56,7 @@ export function SubmitOfferButton(props: {
 
     setLoadingMessage(
       `Requesting ${formatTokenAmount(
-        props.order.priceSuggested,
+        transferAmount.toString(),
         props.order.tokensSuggested[0]
       )} ${token.symbol}`
     );
@@ -114,7 +98,7 @@ export function SubmitOfferButton(props: {
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');
-      alert('Failure to upload BuyerData');
+      setErrorMessage('Error uploading BuyerData');
       console.log(error);
       return undefined;
     }
@@ -122,9 +106,6 @@ export function SubmitOfferButton(props: {
 
   async function approveTokens(): Promise<string | undefined> {
     try {
-      const transferAmount = (
-        cost > price ? price.add(cost.sub(price)) : price
-      ).mul(quantity);
       const tx = await tokenMethods.approve.writeAsync({
         args: [props.order.address, transferAmount],
       });
@@ -192,6 +173,13 @@ export function SubmitOfferButton(props: {
           </button>
         </>
       )}
+      {errorMessage && <>
+         <button
+            className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded"
+         >
+            <div>{errorMessage}</div>
+         </button>
+      </>}
     </>
   );
 }
