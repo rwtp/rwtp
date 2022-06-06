@@ -52,7 +52,12 @@ function Offer(props: {
         console.log(error);
       }
     }
-  });
+  }, [
+    sellersEncryptionKeypair,
+    offer.message,
+    offer.messageNonce,
+    offer.messagePublicKey,
+  ]);
 
   async function onCommit() {
     if (!signer || !signer.data || loadingMessage) return;
