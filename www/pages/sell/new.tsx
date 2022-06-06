@@ -38,7 +38,7 @@ export default function Page() {
     // User-entered URL
     primaryImageUrl: '',
     // Fetched image data
-    primaryImageBlob: new Blob(),
+    primaryImageBlob: undefined as undefined | Blob,
     // Fetched image data as a `data:` URL
     primaryImageDataUrl: '',
     sellersStake: 0,
@@ -368,7 +368,7 @@ function CreateOrderButton(props: {
   state: {
     title: string;
     description: string;
-    primaryImageBlob: Blob;
+    primaryImageBlob: undefined | Blob;
     sellersStake: number;
     buyersCost: number;
     price: number;
@@ -452,16 +452,20 @@ function CreateOrderButton(props: {
         state.customJSONSchema
       );
 
-      const primaryImageArrayBuffer =
-        await state.primaryImageBlob.arrayBuffer();
-      const primaryImageCid = await postFileToIPFS(
-        Buffer.from(primaryImageArrayBuffer)
-      );
+      let primaryImageUrl = undefined;
+      if (state.primaryImageBlob) {
+        const primaryImageArrayBuffer =
+          await state.primaryImageBlob.arrayBuffer();
+        const primaryImageCid = await postFileToIPFS(
+          Buffer.from(primaryImageArrayBuffer)
+        );
+        primaryImageUrl = 'ipfs://' + primaryImageCid;
+      }
       return await postJSONToIPFS({
         offerSchema: offerSchema,
         title: state.title,
         description: state.description,
-        primaryImageUrl: 'ipfs://' + primaryImageCid,
+        primaryImageUrl,
         encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
         tokenAddressesSuggested: [erc20Address],
         priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
