@@ -19,7 +19,6 @@ import { useAccount, useSigner } from 'wagmi';
 import { fromBn } from 'evm-bn';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { useChainId } from '../../../lib/useChainId';
-import Image from 'next/image';
 import {
   BuyerSideSellersDepositInfo,
   PenalizeFeeInfo,
@@ -212,7 +211,7 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   // user facing buyers cost logic
-  let [buyersCostName, buyersCostAmount, _] = getUserFriendlyBuyerCost(
+  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
     order.priceSuggested,
     order.buyersCostSuggested,
     order.tokensSuggested[0].decimals

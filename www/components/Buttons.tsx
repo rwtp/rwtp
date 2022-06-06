@@ -1,4 +1,4 @@
-import { FingerPrintIcon, RefreshIcon } from '@heroicons/react/solid';
+import { FingerPrintIcon, RefreshIcon, SwitchHorizontalIcon } from '@heroicons/react/solid';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/router';
 import React from 'react';
