@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { InformationPageHeader } from '../../components/Layout';
 
-// TODO - this is temporarily unused
+// REAL-414: this is temporarily unused
 function _DocLink(props: { title: string; description: string; slug: string }) {
   return (
     <Link href={`/docs/${props.slug}`}>

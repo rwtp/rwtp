@@ -331,10 +331,10 @@ function CreateOrderButton(props: {
     customJSONSchema: string
   ) {
     if (customIPFSSchema) {
-      // TODO probably want to validate this is a valid ipfs cid.
+      // REAL-415: probably want to validate this is a valid ipfs cid.
       return customIPFSSchema;
     } else if (customJSONSchema) {
-      // TODO handle error if upload fails
+      // REAL-416: handle error if upload fails
       const cid = await postJSONToIPFS(JSON.parse(customJSONSchema), false);
       return `ipfs://${cid}`;
     } else {

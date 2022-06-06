@@ -33,7 +33,7 @@ function OrderView(props: { order: OrderData }) {
           <div className="font-serif truncate w-full mr-2">
             {props.order.title}
           </div>
-          {/* TODO: Get token and network from token address */}
+          {/* REAL-413: Get token and network from token address */}
           <b>
             {toUIString(
               BigNumber.from(props.order.priceSuggested),

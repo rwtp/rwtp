@@ -12,9 +12,8 @@ export function useEncryptionKeypair() {
   const [encryptionKeypair, setEncryptionKeypair] =
     useState<nacl.BoxKeyPair | null>(null);
 
-  // TODO we should use a better hook here.
+  // linear #REAL-411 - we should use a better hook here.
   // see - https://stackoverflow.com/questions/55840294/how-to-fix-missing-dependency-warning-when-using-useeffect-react-hook
-  // linear #REAL-411
   useEffect(() => {
     async function load() {
       const result = await keystore.get(ENCRYPTION_KEY);
