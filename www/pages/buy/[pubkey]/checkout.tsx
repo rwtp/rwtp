@@ -1,6 +1,10 @@
 import { useRouter } from 'next/router';
 import { Suspense, useState } from 'react';
-import { OrderData, useOrder } from '../../../lib/useOrder';
+import {
+  buyerTransferAmount,
+  OrderData,
+  useOrder,
+} from '../../../lib/useOrder';
 import { ChevronRightIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
@@ -8,29 +12,28 @@ import { getPrimaryImageLink } from '../../../lib/image';
 import {
   WalletConnectedButton,
   KeyStoreConnectedButton,
+  HasTokenBalanceButton,
 } from '../../../components/Buttons';
 import { CheckoutForm } from '../../../components/CheckoutForm';
 import { SubmitOfferButton } from '../../../components/SubmitOfferButton';
+import { BigNumber } from 'ethers';
 
 function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
 
   // user facing buyers cost logic ---------------------------------
-  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
-    order.priceSuggested,
-    order.buyersCostSuggested,
-    order.tokensSuggested[0].decimals
-  );
+  let [buyersCostName, buyersCostAmount, hasRefund] =
+    getUserFriendlyBuyerCost(order);
 
   function getTotalPrice(hasRefund: boolean) {
     if (hasRefund) {
       return toUIString(
-        order.priceSuggested,
+        BigNumber.from(order.priceSuggested),
         order.tokensSuggested[0].decimals
       );
     } else {
       return toUIString(
-        order.buyersCostSuggested.toString(),
+        BigNumber.from(order.buyersCostSuggested.toString()),
         order.tokensSuggested[0].decimals
       );
     }
@@ -154,7 +157,7 @@ function BuyPage({ order }: { order: OrderData }) {
                       </div>
                       <p className="text-sm whitespace-nowrap">
                         {toUIString(
-                          order.priceSuggested,
+                          BigNumber.from(order.priceSuggested),
                           order.tokensSuggested[0].decimals
                         )}{' '}
                         {order.tokensSuggested[0].symbol}
@@ -171,7 +174,7 @@ function BuyPage({ order }: { order: OrderData }) {
                   <div className="text-base w-full">Item</div>
                   <div className="text-base whitespace-nowrap">
                     {toUIString(
-                      order.priceSuggested,
+                      BigNumber.from(order.priceSuggested),
                       order.tokensSuggested[0].decimals
                     )}{' '}
                     {order.tokensSuggested[0].symbol}
@@ -188,14 +191,19 @@ function BuyPage({ order }: { order: OrderData }) {
               <div className="mt-8">
                 <WalletConnectedButton>
                   <KeyStoreConnectedButton>
-                    <SubmitOfferButton
-                      offerData={offerData}
-                      order={order}
-                      setTxHash={setTxHash}
-                      validChecker={() =>
-                        validChecker !== undefined && validChecker()
-                      }
-                    />
+                    <HasTokenBalanceButton
+                      tokenAmount={buyerTransferAmount(order)}
+                      token={order.tokensSuggested[0]}
+                    >
+                      <SubmitOfferButton
+                        offerData={offerData}
+                        order={order}
+                        setTxHash={setTxHash}
+                        validChecker={() =>
+                          validChecker !== undefined && validChecker()
+                        }
+                      />
+                    </HasTokenBalanceButton>
                   </KeyStoreConnectedButton>
                 </WalletConnectedButton>
               </div>

@@ -1,27 +1,34 @@
 import { fromBn } from 'evm-bn';
 import { BigNumber } from 'ethers';
+import { OrderData } from './useOrder';
 
-export function toUIString(amount: string, decimals: number) {
-  return fromBn(BigNumber.from(amount), decimals);
+export function toUIString(amount: BigNumber, decimals: number) {
+  return fromBn(amount, decimals);
 }
 
 export function getUserFriendlyBuyerCost(
-  price: string,
-  buyersCost: string,
-  decimals: number
+  order: OrderData
 ): [string, string, boolean] {
-  let buyersCostName: string = "Buyer's Stake";
-  let hasRefund: boolean = false;
-  let buyersCostAmount: string = toUIString(
-    (+buyersCost - +price).toString(),
-    decimals
+  const price = BigNumber.from(
+    order.priceSuggested ? order.priceSuggested : '0'
+  );
+  const cost = BigNumber.from(
+    order.buyersCostSuggested ? order.buyersCostSuggested : '0'
   );
 
-  if (+buyersCostAmount <= 0) {
-    buyersCostName = 'Refund Amount';
-    buyersCostAmount = (0 - +buyersCostAmount).toString();
-    hasRefund = true;
+  if (cost.gt(price)) {
+    const buyersStake = cost.sub(price);
+    return [
+      "Buyer's Stake",
+      toUIString(buyersStake, order.tokensSuggested[0].decimals),
+      false,
+    ];
+  } else {
+    const buyersRefund = price.sub(cost);
+    return [
+      "Buyer's Refund",
+      toUIString(buyersRefund, order.tokensSuggested[0].decimals),
+      true,
+    ];
   }
-
-  return [buyersCostName, buyersCostAmount, hasRefund];
 }
