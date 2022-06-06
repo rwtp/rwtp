@@ -37,7 +37,7 @@ function BuyPage({ order }: { order: OrderData }) {
     }
   }
 
-  function renderPenalizeFee(
+  function renderBuyersStake(
     hasRefund: boolean,
     buyersCostName: string,
     buyersCostAmount: string
@@ -56,14 +56,14 @@ function BuyPage({ order }: { order: OrderData }) {
     }
   }
 
-  function renderPenalizeExplanation(
+  function renderBuyersStakeExplanation(
     hasRefund: boolean,
     buyersCostAmount: string
   ) {
     if (!hasRefund) {
       return (
         <p className="text-xs">
-          The additional penalize fee is held in case the order fails and you
+          You submit an amount that is held in case the order fails and you
           decide to penalize the seller. If the order is successful,{' '}
           <b>
             you will get {buyersCostAmount} {order.tokensSuggested[0].symbol}{' '}
@@ -178,7 +178,7 @@ function BuyPage({ order }: { order: OrderData }) {
                     {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
-                {renderPenalizeFee(hasRefund, buyersCostName, buyersCostAmount)}
+                {renderBuyersStake(hasRefund, buyersCostName, buyersCostAmount)}
                 <div className="flex flex-row gap-4 font-bold">
                   <div className="text-base w-full">Total Today</div>
                   <div className="text-base whitespace-nowrap">
@@ -186,7 +186,7 @@ function BuyPage({ order }: { order: OrderData }) {
                   </div>
                 </div>
               </div>
-              <div className="mt-8 hover:opacity-50">
+              <div className="mt-8">
                 <WalletConnectedButton>
                   <KeyStoreConnectedButton>
                     <SubmitOfferButton
@@ -202,7 +202,7 @@ function BuyPage({ order }: { order: OrderData }) {
               </div>
               {/* END RECEIPT */}
               <div className="mt-4 mb-8">
-                {renderPenalizeExplanation(hasRefund, buyersCostAmount)}
+                {renderBuyersStakeExplanation(hasRefund, buyersCostAmount)}
                 {renderRefund(
                   hasRefund,
                   buyersCostAmount,
