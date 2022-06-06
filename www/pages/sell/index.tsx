@@ -20,6 +20,7 @@ import {
 import nacl from 'tweetnacl';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import {
+  HasTokenBalanceButton,
   KeyStoreConnectedButton,
   WalletConnectedButton,
 } from '../../components/Buttons';
@@ -62,15 +63,13 @@ function Offer(props: {
   async function onCommit() {
     if (!signer || !signer.data || loadingMessage) return;
 
-    if (BigNumber.from(offer.sellersStake).gt(0)) {
-      setLoadingMessage(
-        `Requesting ${formatTokenAmount(offer.sellersStake, offer.token)} ${
-          offer.token.symbol
-        }`
-      );
-      const approveTxHash = await approveTokens();
-      if (!approveTxHash) return;
-    }
+    setLoadingMessage(
+      `Requesting ${formatTokenAmount(offer.sellersStake, offer.token)} ${
+        offer.token.symbol
+      }`
+    );
+    const approveTxHash = await approveTokens();
+    if (!approveTxHash) return;
 
     setLoadingMessage(`Committing`);
     const submitTxHash = await commit();
@@ -124,20 +123,22 @@ function Offer(props: {
           {offer.state == 'Open' && (
             <>
               {!loadingMessage && !errorMessage && (
-                <>
-                  <button
-                    className="bg-black text-sm text-white px-4 py-1 flex justify-between font-bold rounded"
-                    onClick={() => onCommit().catch(console.error)}
-                  >
-                    <div className="mr-1">Commit</div>
-                    <div hidden={offer.sellersStake == '0'}>
-                      {`${formatTokenAmount(
-                        offer.sellersStake,
-                        offer.token
-                      )} ` + offer.token.symbol}
-                    </div>
-                  </button>
-                </>
+                <div className='w-fit'>
+                  <HasTokenBalanceButton tokenAmount={BigNumber.from(offer.sellersStake || 0)} token={offer.token} >
+                    <button
+                      className="bg-black text-sm text-white px-4 py-1 flex justify-between font-bold rounded"
+                      onClick={() => onCommit().catch(console.error)}
+                    >
+                      <div className="mr-1">Commit</div>
+                      <div hidden={offer.sellersStake == '0'}>
+                        {`${formatTokenAmount(
+                          offer.sellersStake,
+                          offer.token
+                        )} ` + offer.token.symbol}
+                      </div>
+                    </button>
+                  </HasTokenBalanceButton>
+                </div>
               )}
               {loadingMessage && !errorMessage && (
                 <>
