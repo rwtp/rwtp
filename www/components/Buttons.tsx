@@ -26,7 +26,7 @@ export function WalletConnectedButton(props: { children: React.ReactNode }) {
           if (!mounted || !account || !chain || !switchNetwork) {
             return (
               <button
-                className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full"
+                className="bg-white border text-lg border-black rounded px-4 py-3 flex justify-center items-center w-full"
                 onClick={openConnectModal}
               >
                 Connect Wallet <FingerPrintIcon className="h-4 w-4 ml-2" />
@@ -37,7 +37,7 @@ export function WalletConnectedButton(props: { children: React.ReactNode }) {
           if (chain.id != chainId) {
             return (
               <button
-                className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full"
+                className="bg-white border text-lg border-black rounded px-4 py-3 flex justify-center items-center w-full"
                 onClick={() => switchNetwork(chainId)}
               >
                 Switch Network <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
@@ -60,7 +60,7 @@ export function KeyStoreConnectedButton(props: { children: React.ReactNode }) {
   if (login.isLoading || login.isLoggedIn == null) {
     return (
       <>
-        <button className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full">
+        <button className="bg-white border text-lg border-black rounded px-4 py-3 flex justify-center items-center w-full">
           Loading Keystore
           <RefreshIcon className="animate-spin h-4 w-4 ml-2" />
         </button>
@@ -74,7 +74,7 @@ export function KeyStoreConnectedButton(props: { children: React.ReactNode }) {
 
   return (
     <>
-      <button className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full">
+      <button className="bg-white border text-lg border-black rounded px-4 py-3 flex justify-center items-center w-full">
         Approve Keystore
       </button>
       <KeystoreModal router={router} login={login.login} />
@@ -96,7 +96,7 @@ export function HasTokenBalanceButton(props: {
   if (isLoading) {
     return (
       <>
-        <button className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full">
+        <button className="bg-white border text-lg border-black rounded px-4 py-3 flex justify-center items-center w-full">
           Checking {props.token.symbol} balance
           <RefreshIcon className="animate-spin h-4 w-4 ml-2" />
         </button>
@@ -107,7 +107,7 @@ export function HasTokenBalanceButton(props: {
   if (isError || !isSuccess) {
     return (
       <>
-        <button className="cursor-not-allowed bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
+        <button className="cursor-not-allowed text-lg bg-red-500 text-white px-4 py-3 w-full flex justify-center font-bold rounded">
           <div>Error Retrieving Token Balance</div>
         </button>
       </>
@@ -117,7 +117,7 @@ export function HasTokenBalanceButton(props: {
   if (BigNumber.from(data).lt(props.tokenAmount)) {
     return (
       <>
-        <button className="cursor-not-allowed bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
+        <button className="cursor-not-allowed text-lg bg-red-500 text-white px-4 py-3 w-full flex justify-center font-bold rounded">
           <div>Insufficient {props.token.symbol} Balance</div>
         </button>
       </>
