@@ -7,7 +7,11 @@ import { postJSONToIPFS } from '../lib/ipfs';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { useEncryptionKeypair } from '../lib/useEncryptionKey';
-import { buyerTransferAmount, OrderData, useOrderMethods } from '../lib/useOrder';
+import {
+  buyerTransferAmount,
+  OrderData,
+  useOrderMethods,
+} from '../lib/useOrder';
 
 export function SubmitOfferButton(props: {
   offerData: any;
@@ -171,13 +175,13 @@ export function SubmitOfferButton(props: {
           </button>
         </>
       )}
-      {errorMessage && <>
-         <button
-            className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded"
-         >
+      {errorMessage && (
+        <>
+          <button className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
             <div>{errorMessage}</div>
-         </button>
-      </>}
+          </button>
+        </>
+      )}
     </>
   );
 }

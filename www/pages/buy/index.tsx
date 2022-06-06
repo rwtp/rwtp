@@ -21,7 +21,9 @@ function OrderView(props: { order: OrderData }) {
   );
 
   // user facing buyers cost logic
-  let [buyersCostName, buyersCostAmount, _] = getUserFriendlyBuyerCost(props.order);
+  let [buyersCostName, buyersCostAmount, _] = getUserFriendlyBuyerCost(
+    props.order
+  );
 
   return (
     <div className="border overflow-hidden rounded bg-white hover:bg-gray-100">
@@ -34,7 +36,7 @@ function OrderView(props: { order: OrderData }) {
           {/* TODO: Get token and network from token address */}
           <b>
             {toUIString(
-              BigNumber.from(props.order.priceSuggested), 
+              BigNumber.from(props.order.priceSuggested),
               props.order.tokensSuggested[0].decimals
             )}{' '}
             {props.order.tokensSuggested[0].symbol}
@@ -77,12 +79,7 @@ function Results(props: { searchText: string }) {
   const orderData = orders.data
     .filter((s: any) => !!s.title) // filter ones without titles
     .map((order: any) => {
-      return (
-        <OrderView
-          key={order.address}
-          order={order}
-        />
-      );
+      return <OrderView key={order.address} order={order} />;
     });
 
   return (

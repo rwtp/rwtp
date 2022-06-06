@@ -82,10 +82,16 @@ export function KeyStoreConnectedButton(props: { children: React.ReactNode }) {
   );
 }
 
-export function HasTokenBalanceButton(props: { children: React.ReactNode, tokenAmount: BigNumber, token: ERC20Data }) {
+export function HasTokenBalanceButton(props: {
+  children: React.ReactNode;
+  tokenAmount: BigNumber;
+  token: ERC20Data;
+}) {
   const account = useAccount();
   const tokenContract = useTokenMethods(props.token.address);
-  const {data, isLoading, isError, isSuccess} = tokenContract.useBalance(account.data?.address ?? "");
+  const { data, isLoading, isError, isSuccess } = tokenContract.useBalance(
+    account.data?.address ?? ''
+  );
 
   if (isLoading) {
     return (
@@ -99,23 +105,23 @@ export function HasTokenBalanceButton(props: { children: React.ReactNode, tokenA
   }
 
   if (isError || !isSuccess) {
-    return <>
-      <button
-          className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded"
-        >
+    return (
+      <>
+        <button className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
           <div>Error Retrieving Token Balance</div>
-      </button>
-   </>
+        </button>
+      </>
+    );
   }
 
   if (BigNumber.from(data).lt(props.tokenAmount)) {
-    return <>
-      <button
-          className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded"
-        >
+    return (
+      <>
+        <button className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
           <div>Insufficient {props.token.symbol} Balance</div>
-      </button>
-   </>
+        </button>
+      </>
+    );
   }
 
   return <>{props.children}</>;

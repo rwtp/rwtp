@@ -211,7 +211,8 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   // user facing buyers cost logic
-  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(order);
+  let [buyersCostName, buyersCostAmount, hasRefund] =
+    getUserFriendlyBuyerCost(order);
 
   return (
     <ConnectWalletLayout txHash={txHash}>

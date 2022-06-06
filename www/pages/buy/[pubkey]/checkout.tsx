@@ -1,6 +1,10 @@
 import { useRouter } from 'next/router';
 import { Suspense, useState } from 'react';
-import { buyerTransferAmount, OrderData, useOrder } from '../../../lib/useOrder';
+import {
+  buyerTransferAmount,
+  OrderData,
+  useOrder,
+} from '../../../lib/useOrder';
 import { ChevronRightIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
@@ -18,7 +22,8 @@ function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
 
   // user facing buyers cost logic ---------------------------------
-  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(order);
+  let [buyersCostName, buyersCostAmount, hasRefund] =
+    getUserFriendlyBuyerCost(order);
 
   function getTotalPrice(hasRefund: boolean) {
     if (hasRefund) {
@@ -186,7 +191,10 @@ function BuyPage({ order }: { order: OrderData }) {
               <div className="mt-8">
                 <WalletConnectedButton>
                   <KeyStoreConnectedButton>
-                    <HasTokenBalanceButton tokenAmount={buyerTransferAmount(order)} token={order.tokensSuggested[0]}>
+                    <HasTokenBalanceButton
+                      tokenAmount={buyerTransferAmount(order)}
+                      token={order.tokensSuggested[0]}
+                    >
                       <SubmitOfferButton
                         offerData={offerData}
                         order={order}

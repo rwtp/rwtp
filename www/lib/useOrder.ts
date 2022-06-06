@@ -353,11 +353,9 @@ export function useAllOrderOffers(maker: string) {
 }
 
 export function buyerTransferAmount(order: OrderData): BigNumber {
-  const price = BigNumber.from(
-    order.priceSuggested ? order.priceSuggested : 0
-  );
+  const price = BigNumber.from(order.priceSuggested ? order.priceSuggested : 0);
   const cost = BigNumber.from(
     order.buyersCostSuggested ? order.buyersCostSuggested : 0
   );
-  return (cost.gt(price) ? price.add(cost.sub(price)) : price);
+  return cost.gt(price) ? price.add(cost.sub(price)) : price;
 }
