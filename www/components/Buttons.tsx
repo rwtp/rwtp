@@ -15,10 +15,11 @@ import { KeystoreModal } from './KeystoreModal';
 export function WalletConnectedButton(props: { children: React.ReactNode }) {
   const chainId = useChainId();
   const { switchNetwork } = useNetwork();
-  
+
   return (
     <>
       <ConnectButton.Custom>
+        {/* eslint-disable-next-line unused-imports/no-unused-vars */}
         {({ account, mounted, chain, openConnectModal }) => {
           if (!mounted || !account || !chain || !switchNetwork) {
             return (
@@ -37,8 +38,7 @@ export function WalletConnectedButton(props: { children: React.ReactNode }) {
                 className="bg-white border text-sm border-black rounded px-4 py-3 flex justify-center items-center w-full"
                 onClick={() => switchNetwork(chainId)}
               >
-                Switch Network{' '}
-                <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
+                Switch Network <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
               </button>
             );
           }

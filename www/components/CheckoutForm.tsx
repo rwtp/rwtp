@@ -11,7 +11,10 @@ export function CheckoutForm(props: {
   offerData: any;
   setValidChecker: (_: () => Boolean) => void;
 }) {
-  const price = formatTokenAmount(props.order.priceSuggested, props.order.tokensSuggested[0]);;
+  const price = formatTokenAmount(
+    props.order.priceSuggested,
+    props.order.tokensSuggested[0]
+  );
   return (
     <>
       <div>

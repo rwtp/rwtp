@@ -4,12 +4,9 @@ import { SearchIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import { useOrders } from '../../lib/useOrder';
 import { Order } from 'rwtp';
-import { BigNumber } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
-import { fromBn } from 'evm-bn';
 import { useChainId } from '../../lib/useChainId';
 import { toUIString, getUserFriendlyBuyerCost } from '../../lib/ui-logic';
-import Image from 'next/image';
 
 interface Order {
   address: string;
@@ -40,7 +37,7 @@ function OrderView(props: { order: Order }) {
   );
 
   // user facing buyers cost logic
-  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+  let [buyersCostName, buyersCostAmount, _] = getUserFriendlyBuyerCost(
     props.order.price,
     props.order.buyersCost,
     props.order.token.decimals

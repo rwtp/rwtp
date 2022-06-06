@@ -51,7 +51,12 @@ export function SubmitOfferButton(props: {
     const cid = await uploadBuyerData();
     if (!cid) return;
 
-    setLoadingMessage(`Requesting ${formatTokenAmount(props.order.priceSuggested, props.order.tokensSuggested[0])} ${token.symbol}`);
+    setLoadingMessage(
+      `Requesting ${formatTokenAmount(
+        props.order.priceSuggested,
+        props.order.tokensSuggested[0]
+      )} ${token.symbol}`
+    );
     const approveTxHash = await approveTokens();
     if (!approveTxHash) return;
 

@@ -21,7 +21,6 @@ import {
   WalletConnectedButton,
 } from '../../components/Buttons';
 import { postJSONToIPFS, postFileToIPFS } from '../../lib/ipfs';
-import Image from 'next/image';
 import {
   BuyersCostInfo,
   SellerSideSellersDepositInfo,

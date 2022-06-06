@@ -19,8 +19,5 @@ export function useTokenMethods(address: string) {
 }
 
 export function formatTokenAmount(amount: string, token: ERC20Data) {
-  return fromBn(
-      BigNumber.from(amount ? amount : 0),
-      token.decimals
-  );
+  return fromBn(BigNumber.from(amount ? amount : 0), token.decimals);
 }

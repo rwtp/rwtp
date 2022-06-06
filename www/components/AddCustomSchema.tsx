@@ -2,19 +2,13 @@ import { useState } from 'react';
 import { is_valid_custom_schema } from '../lib/schemaValidator';
 import defaultSchema from '../offer_schemas/QmaLinmex9ucfwPWpgSfDPiD1wy7Xy61MzSFLpakgGr7nC.json';
 import { DEFAULT_OFFER_SCHEMA } from '../lib/constants';
-import {
-  ArrowRightIcon,
-  ArrowsExpandIcon,
-  ArrowSmRightIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/solid';
+import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/solid';
 
 export function InputCustomSchema(props: {
   JSONSchema: string;
   IPFSSchema: string;
-  setJSONSchema: (schema: string) => void;
-  setIPFSSchema: (schema: string) => void;
+  setJSONSchema: (_: string) => void;
+  setIPFSSchema: (_: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [schemaType, setSchemaType] = useState('default');

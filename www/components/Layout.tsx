@@ -11,7 +11,6 @@ import cn from 'classnames';
 import { useRouter } from 'next/router';
 import { useNetwork, useWaitForTransaction } from 'wagmi';
 import { useChainId } from '../lib/useChainId';
-import { DEFAULT_CHAIN_ID } from '../lib/constants';
 
 export function InformationPageHeader() {
   return (

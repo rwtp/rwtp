@@ -4,7 +4,7 @@ import { InformationCircleIcon } from '@heroicons/react/outline';
 export function BuyersCostInfo() {
   return (
     <Popup
-      trigger={(open) => (
+      trigger={(_open) => (
         <button>
           <InformationCircleIcon className="h-4 w-4 hover:opacity-50" />
         </button>
@@ -34,7 +34,7 @@ export function BuyersCostInfo() {
 export function SellerSideSellersDepositInfo() {
   return (
     <Popup
-      trigger={(open) => (
+      trigger={(_open) => (
         <button>
           <InformationCircleIcon className="h-4 w-4 hover:opacity-50" />
         </button>
@@ -60,7 +60,7 @@ export function SellerSideSellersDepositInfo() {
 export function BuyerSideSellersDepositInfo() {
   return (
     <Popup
-      trigger={(open) => (
+      trigger={(_open) => (
         <button>
           <InformationCircleIcon className="h-3.5 w-3.5 text-gray-400 hover:opacity-50" />
         </button>
@@ -88,7 +88,7 @@ export function PenalizeFeeInfo(hasRefund: boolean) {
   } else {
     return (
       <Popup
-        trigger={(open) => (
+        trigger={(_open) => (
           <button>
             <InformationCircleIcon className="h-3.5 w-3.5 text-gray-400 hover:opacity-50" />
           </button>
