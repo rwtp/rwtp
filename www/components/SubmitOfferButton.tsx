@@ -100,7 +100,7 @@ export function SubmitOfferButton(props: {
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');
-      setErrorMessage('Error uploading BuyerData');
+      setErrorMessage('Error uploading Buyer Data');
       console.log(error);
       return undefined;
     }
@@ -177,7 +177,7 @@ export function SubmitOfferButton(props: {
       )}
       {errorMessage && (
         <>
-          <button className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
+          <button className="cursor-not-allowed mt-4 text-lg bg-red-500 text-white px-4 py-3 w-full flex justify-center font-bold rounded">
             <div>{errorMessage}</div>
           </button>
         </>
