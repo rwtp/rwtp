@@ -123,8 +123,11 @@ function Offer(props: {
           {offer.state == 'Open' && (
             <>
               {!loadingMessage && !errorMessage && (
-                <div className='w-fit'>
-                  <HasTokenBalanceButton tokenAmount={BigNumber.from(offer.sellersStake || 0)} token={offer.token} >
+                <div className="w-fit">
+                  <HasTokenBalanceButton
+                    tokenAmount={BigNumber.from(offer.sellersStake || 0)}
+                    token={offer.token}
+                  >
                     <button
                       className="bg-black text-sm text-white px-4 py-1 flex justify-between font-bold rounded"
                       onClick={() => onCommit().catch(console.error)}
