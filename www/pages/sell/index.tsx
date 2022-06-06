@@ -12,13 +12,23 @@ import { useAccount, useSigner } from 'wagmi';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import { FadeIn } from '../../components/FadeIn';
 import dayjs from 'dayjs';
-import { OfferData, useAllOrderOffers, useOrderMethods } from '../../lib/useOrder';
+import {
+  OfferData,
+  useAllOrderOffers,
+  useOrderMethods,
+} from '../../lib/useOrder';
 import nacl from 'tweetnacl';
 import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
-import { KeyStoreConnectedButton, WalletConnectedButton } from '../../components/Buttons';
+import {
+  KeyStoreConnectedButton,
+  WalletConnectedButton,
+} from '../../components/Buttons';
 import { formatTokenAmount, useTokenMethods } from '../../lib/tokens';
 
-function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<string>> }) {
+function Offer(props: {
+  offer: OfferData;
+  setTxHash: Dispatch<SetStateAction<string>>;
+}) {
   const sellersEncryptionKeypair = useEncryptionKeypair();
   const signer = useSigner();
   const [loadingMessage, setLoadingMessage] = useState('');
@@ -42,12 +52,21 @@ function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<str
         console.log(error);
       }
     }
-  }, [sellersEncryptionKeypair, offer.message, offer.messageNonce, offer.messagePublicKey]);
+  }, [
+    sellersEncryptionKeypair,
+    offer.message,
+    offer.messageNonce,
+    offer.messagePublicKey,
+  ]);
 
   async function onCommit() {
     if (!signer || !signer.data || loadingMessage) return;
 
-    setLoadingMessage(`Requesting ${formatTokenAmount(offer.sellersStake, offer.token)} ${offer.token.symbol}`);
+    setLoadingMessage(
+      `Requesting ${formatTokenAmount(offer.sellersStake, offer.token)} ${
+        offer.token.symbol
+      }`
+    );
     const approveTxHash = await approveTokens();
     if (!approveTxHash) return;
 
@@ -69,7 +88,7 @@ function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<str
       props.setTxHash('');
       return tx.hash;
     } catch (error) {
-      setErrorMessage("Error Approving");
+      setErrorMessage('Error Approving');
       console.log(error);
       return undefined;
     }
@@ -78,7 +97,7 @@ function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<str
   async function commit(): Promise<string | undefined> {
     try {
       const tx = await orderMethods.commit.writeAsync({
-        args: [offer.taker, offer.index]
+        args: [offer.taker, offer.index],
       });
 
       props.setTxHash(tx.hash);
@@ -86,7 +105,7 @@ function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<str
       props.setTxHash('');
       return tx.hash;
     } catch (error) {
-      setErrorMessage("Error Committing");
+      setErrorMessage('Error Committing');
       console.log(error);
       return undefined;
     }
@@ -100,57 +119,73 @@ function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<str
             Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
           </div>
           <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-          {offer.state == 'Open' && <>
-            {!loadingMessage && !errorMessage && <>
-              <button
-                className="bg-black text-sm text-white px-4 py-1 flex justify-between font-bold rounded"
-                onClick={() => onCommit().catch(console.error)}
-              >
-                <div className='mr-1'>Commit</div>
-                <div hidden={offer.sellersStake == "0"}>{`${formatTokenAmount(offer.sellersStake, offer.token)} ` + offer.token.symbol}</div>
-              </button>
-            </>}
-            {loadingMessage && !errorMessage && <>
-              <button
-                className="cursor-wait text-sm border px-4 py-1 flex justify-center font-bold rounded"
-              >
-                <div className='mr-1'>{loadingMessage}</div>
-                <RefreshIcon className="animate-spin h-4 w-4 ml-2 my-auto" />
-              </button>
-            </>}
-            {errorMessage && <>
-              <button
-                className="cursor-not-allowed text-sm bg-red-500 text-white px-4 py-1 flex justify-center font-bold rounded"
-              >
-                <div>{errorMessage}</div>
-              </button>
-            </>}
-          </>}
-          {offer.state == 'Committed' && <>
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
-              Offer Confirmed <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
-            </div>
-          </>}
-          {offer.state == 'Confirmed' && <>
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-            <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-            <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-              Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </div>
-          </>}
+          {offer.state == 'Open' && (
+            <>
+              {!loadingMessage && !errorMessage && (
+                <>
+                  <button
+                    className="bg-black text-sm text-white px-4 py-1 flex justify-between font-bold rounded"
+                    onClick={() => onCommit().catch(console.error)}
+                  >
+                    <div className="mr-1">Commit</div>
+                    <div hidden={offer.sellersStake == '0'}>
+                      {`${formatTokenAmount(
+                        offer.sellersStake,
+                        offer.token
+                      )} ` + offer.token.symbol}
+                    </div>
+                  </button>
+                </>
+              )}
+              {loadingMessage && !errorMessage && (
+                <>
+                  <button className="cursor-wait text-sm border px-4 py-1 flex justify-center font-bold rounded">
+                    <div className="mr-1">{loadingMessage}</div>
+                    <RefreshIcon className="animate-spin h-4 w-4 ml-2 my-auto" />
+                  </button>
+                </>
+              )}
+              {errorMessage && (
+                <>
+                  <button className="cursor-not-allowed text-sm bg-red-500 text-white px-4 py-1 flex justify-center font-bold rounded">
+                    <div>{errorMessage}</div>
+                  </button>
+                </>
+              )}
+            </>
+          )}
+          {offer.state == 'Committed' && (
+            <>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+              <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600 opacity-50">
+                Offer Confirmed{' '}
+                <div className="h-4 w-4 border ml-2 rounded-full border-gray-600"></div>
+              </div>
+            </>
+          )}
+          {offer.state == 'Confirmed' && (
+            <>
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Committed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+              <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+              <div className="text-xs flex py-2 border-gray-600 text-gray-600">
+                Offer Confirmed <CheckCircleIcon className="h-4 w-4 ml-2" />
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex px-4 pt-4">
           <div className="flex flex-col">
             <div className="text-gray-500 text-xs">Ordered on</div>
             <div className="text-lg font-serif">
-              {dayjs.unix(Number.parseInt(offer.timestamp)).format("MMM D YYYY, h:mm a")}
+              {dayjs
+                .unix(Number.parseInt(offer.timestamp))
+                .format('MMM D YYYY, h:mm a')}
             </div>
           </div>
         </div>
@@ -166,7 +201,9 @@ function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<str
                 BigNumber.from(props.offer.price),
                 offer.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{offer.order.tokensSuggested[0].symbol}</span>
+              <span className="text-sm">
+                {offer.order.tokensSuggested[0].symbol}
+              </span>
             </div>
           </div>
           <div className="flex-1">
@@ -176,21 +213,29 @@ function Offer(props: { offer: OfferData, setTxHash: Dispatch<SetStateAction<str
                 BigNumber.from(props.offer.sellersStake),
                 offer.order.tokensSuggested[0].decimals
               )}{' '}
-              <span className="text-sm">{offer.order.tokensSuggested[0].symbol}</span>
+              <span className="text-sm">
+                {offer.order.tokensSuggested[0].symbol}
+              </span>
             </div>
           </div>
         </div>
-        {decryptedMessage && <div className='p-4'>
-          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data</div>
-          <div className='font-mono text-base bg-gray-100 p-4'>
-            {decryptedMessage}
+        {decryptedMessage && (
+          <div className="p-4">
+            <div className="text-gray-500 text-xs text-wrap mb-4">
+              Offer Data
+            </div>
+            <div className="font-mono text-base bg-gray-100 p-4">
+              {decryptedMessage}
+            </div>
           </div>
-        </div>
-        }
-        {!decryptedMessage && <div className='p-4'>
-          <div className="text-gray-500 text-xs text-wrap mb-4">Offer Data Unavailable</div>
-        </div>
-        }
+        )}
+        {!decryptedMessage && (
+          <div className="p-4">
+            <div className="text-gray-500 text-xs text-wrap mb-4">
+              Offer Data Unavailable
+            </div>
+          </div>
+        )}
       </div>
     </FadeIn>
   );
@@ -220,7 +265,13 @@ export default function Page() {
     offers = offers.concat(order.offers);
   }
   const allOffers = offers.map((offer: OfferData) => {
-    return <Offer key={`${offer.index}${offer.taker}${offer.acceptedAt}`} offer={offer} setTxHash={setTxHash} />;
+    return (
+      <Offer
+        key={`${offer.index}${offer.taker}${offer.acceptedAt}`}
+        offer={offer}
+        setTxHash={setTxHash}
+      />
+    );
   });
 
   return (
