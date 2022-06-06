@@ -180,7 +180,11 @@ function BuyPage({ order }: { order: OrderData }) {
                     {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
-                {renderBuyersDeposit(hasRefund, buyersCostName, buyersCostAmount)}
+                {renderBuyersDeposit(
+                  hasRefund,
+                  buyersCostName,
+                  buyersCostAmount
+                )}
                 <div className="flex flex-row gap-4 font-bold">
                   <div className="text-base w-full">Total Today</div>
                   <div className="text-base whitespace-nowrap">

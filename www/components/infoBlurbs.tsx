@@ -98,10 +98,10 @@ export function BuyersDepositInfo(hasRefund: boolean) {
         <div className="drop-shadow -ml-12">
           <div className="px-4 py-2 bg-gray-50 w-60 text-sm">
             <span className="whitespace-pre-line">
-              <b>Buyer's Deposit</b> is the amount of money you lose if you decide
-              the deal has failed (if the seller does not deliver). This is held
-              upfront when you purchase the product, and will be returned to you
-              once the deal if successful.
+              <b>Buyer's Deposit</b> is the amount of money you lose if you
+              decide the deal has failed (if the seller does not deliver). This
+              is held upfront when you purchase the product, and will be
+              returned to you once the deal if successful.
             </span>
           </div>
           <div className="right-triangle-down ml-14"></div>
