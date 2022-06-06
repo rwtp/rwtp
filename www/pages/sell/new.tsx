@@ -452,7 +452,8 @@ function CreateOrderButton(props: {
         state.customJSONSchema
       );
 
-      const primaryImageArrayBuffer = await state.primaryImageBlob.arrayBuffer();
+      const primaryImageArrayBuffer =
+        await state.primaryImageBlob.arrayBuffer();
       const primaryImageCid = await postFileToIPFS(
         Buffer.from(primaryImageArrayBuffer)
       );
@@ -490,7 +491,7 @@ function CreateOrderButton(props: {
       {!loadingMessage && !errorMessage && (
         <>
           <button
-            className='w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all'
+            className="w-full px-4 py-3 text-lg text-center rounded bg-black text-white hover:opacity-50 transition-all"
             onClick={() => createOrder().catch(console.error)}
           >
             Publish Sell Order
