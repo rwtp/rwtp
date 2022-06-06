@@ -129,7 +129,7 @@ export default function Page() {
                   imageUploading || !state.primaryImage || !showImagePreview
                 }
               >
-                <Image
+                <img
                   className="h-full"
                   src={
                     showImagePreview
