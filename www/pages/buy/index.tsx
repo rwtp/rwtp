@@ -67,7 +67,7 @@ function OrderView(props: { order: Order }) {
               </div>
             </div>
             <div className="flex text-xs md:text-sm flex-row">
-              <div className="text-gray-400 mr-2">Seller's Stake: </div>
+              <div className="text-gray-400 mr-2">Seller's Deposit: </div>
               <div className="whitespace-nowrap">
                 {toUIString(
                   props.order.sellersStake,
