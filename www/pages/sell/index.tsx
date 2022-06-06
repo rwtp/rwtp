@@ -5,12 +5,11 @@ import {
   PlusIcon,
   RefreshIcon,
 } from '@heroicons/react/solid';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 import { fromBn } from 'evm-bn';
 import Link from 'next/link';
 import { Dispatch, SetStateAction, Suspense, useEffect, useState } from 'react';
 import { useAccount, useSigner } from 'wagmi';
-import { Order } from 'rwtp';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import { FadeIn } from '../../components/FadeIn';
 import cn from 'classnames';
