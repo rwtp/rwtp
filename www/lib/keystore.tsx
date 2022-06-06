@@ -1,11 +1,9 @@
 import { useAccount, useSigner } from 'wagmi';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import useSWR from 'swr';
 import { useLocalStorage } from './useLocalStorage';
 import { ConnectWalletLayout } from '../components/Layout';
-import { ArrowLeftIcon, CheckCircleIcon } from '@heroicons/react/solid';
 import { useRouter } from 'next/router';
-import { FadeIn } from '../components/FadeIn';
 import { KeystoreModal } from '../components/KeystoreModal';
 
 export function useKeystoreLogin() {
@@ -124,7 +122,7 @@ export function useKeystoreGet(key: string) {
   // Checks in the background if we're logged in.
   return useSWR(
     ['https://kv.rwtp.workers.dev/get' + key, login.token],
-    async (url: string, token: string, key: string) => {
+    async (url: string, token: string, _key: string) => {
       if (!token) return null;
 
       const res = await fetch(url, {

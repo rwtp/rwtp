@@ -1,5 +1,5 @@
 import { fromBn } from 'evm-bn';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 
 export function toUIString(amount: string, decimals: number) {
   return fromBn(BigNumber.from(amount), decimals);
@@ -10,7 +10,7 @@ export function getUserFriendlyBuyerCost(
   buyersCost: string,
   decimals: number
 ): [string, string, boolean] {
-  let buyersCostName: string = 'Penalize Fee';
+  let buyersCostName: string = "Buyer's Stake";
   let hasRefund: boolean = false;
   let buyersCostAmount: string = toUIString(
     (+buyersCost - +price).toString(),

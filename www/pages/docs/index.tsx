@@ -4,7 +4,8 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { InformationPageHeader } from '../../components/Layout';
 
-function DocLink(props: { title: string; description: string; slug: string }) {
+// TODO - this is temporarily unused
+function _DocLink(props: { title: string; description: string; slug: string }) {
   return (
     <Link href={`/docs/${props.slug}`}>
       <a className="bg-white border px-4 py-4 flex flex-col hover:opacity-60 mb-2">

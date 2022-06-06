@@ -1,5 +1,8 @@
 import { useContractWrite, useContractRead } from 'wagmi';
+import { BigNumber } from 'ethers';
+import { fromBn } from 'evm-bn';
 import { ERC20 } from './erc20';
+import { ERC20Data } from './useOrder';
 
 export function useTokenMethods(address: string) {
   const approve = useContractWrite(
@@ -35,4 +38,8 @@ export function useTokenMethods(address: string) {
     decimals,
     balance,
   };
+}
+
+export function formatTokenAmount(amount: string, token: ERC20Data) {
+  return fromBn(BigNumber.from(amount ? amount : 0), token.decimals);
 }

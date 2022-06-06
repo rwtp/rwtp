@@ -21,7 +21,10 @@ import {
   WalletConnectedButton,
 } from '../../components/Buttons';
 import { postJSONToIPFS, postFileToIPFS } from '../../lib/ipfs';
-import Image from 'next/image';
+import {
+  BuyersCostInfo,
+  SellerSideSellersDepositInfo,
+} from '../../components/infoBlurbs';
 
 export default function Page() {
   const { activeChain } = useNetwork();
@@ -177,6 +180,7 @@ export default function Page() {
                   }))
                 }
                 value={state.price}
+                min="0"
               />
             </label>
             <div className="flex flex-1 flex-row max-w-full">
@@ -229,7 +233,10 @@ export default function Page() {
           </div>
           <div className="flex flex-col md:flex-row gap-x-4 gap-y-8">
             <label className="flex flex-1 flex-col">
-              <strong className="mb-1 text-sm">Seller's Stake</strong>
+              <div className="flex flex-row mb-1 gap-1">
+                <strong className="text-sm">Seller's Deposit</strong>
+                <SellerSideSellersDepositInfo />
+              </div>
               <input
                 className="border px-4 py-2 rounded"
                 type="number"
@@ -241,11 +248,15 @@ export default function Page() {
                   }))
                 }
                 value={state.sellersStake}
+                min="0"
               />
             </label>
 
             <label className="flex flex-1 flex-col">
-              <strong className="text-sm mb-1">Buyer's Cost</strong>
+              <div className="flex flex-row mb-1 gap-1">
+                <strong className="text-sm">Buyer's Cost</strong>
+                <BuyersCostInfo />
+              </div>
               <input
                 className="border px-4 py-2 rounded"
                 type="number"
@@ -257,6 +268,7 @@ export default function Page() {
                   }))
                 }
                 value={state.buyersCost}
+                min="0"
               />
             </label>
           </div>

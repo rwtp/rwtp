@@ -1,6 +1,5 @@
 import optimismList from '@eth-optimism/tokenlist';
 import polygonList from '../node_modules/polygon-token-list/src/tokens/allTokens.json';
-import Image from 'next/image';
 
 const acceptedCoins = [
   'USDC',

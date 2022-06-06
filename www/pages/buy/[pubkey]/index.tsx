@@ -19,14 +19,17 @@ import { useAccount, useSigner } from 'wagmi';
 import { fromBn } from 'evm-bn';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { useChainId } from '../../../lib/useChainId';
-import Image from 'next/image';
+import {
+  BuyerSideSellersDepositInfo,
+  PenalizeFeeInfo,
+} from '../../../components/infoBlurbs';
 
 function Offer(props: {
   offer: OfferData;
   order: OrderData;
-  onConfirm: (index: string) => Promise<any>;
-  onCancel: (index: string) => Promise<any>;
-  onWithdraw: (index: string) => Promise<any>;
+  onConfirm: (_: string) => Promise<any>;
+  onCancel: (_: string) => Promise<any>;
+  onWithdraw: (_: string) => Promise<any>;
 }) {
   const state = props.offer.state;
   const signer = useSigner();
@@ -255,16 +258,22 @@ function OrderPage({ order }: { order: OrderData }) {
 
               <div className="flex flex-row space-x-4">
                 <div className="flex flex-col w-1/2">
-                  <div className="text-xs font-mono text-gray-400">
-                    {buyersCostName}
+                  <div className="flex flex-row gap-1">
+                    <div className="text-xs font-mono text-gray-400">
+                      {buyersCostName}
+                    </div>
+                    {PenalizeFeeInfo(hasRefund)}
                   </div>
                   <div>
                     {buyersCostAmount} {order.tokensSuggested[0].symbol}
                   </div>
                 </div>
                 <div className="flex flex-col w-1/2">
-                  <div className="text-xs font-mono text-gray-400">
-                    Seller's Stake
+                  <div className="flex flex-row gap-1">
+                    <div className="text-xs font-mono text-gray-400">
+                      Seller's Deposit
+                    </div>
+                    <BuyerSideSellersDepositInfo />
                   </div>
                   <div>
                     {toUIString(

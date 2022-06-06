@@ -11,7 +11,6 @@ import cn from 'classnames';
 import { useRouter } from 'next/router';
 import { useNetwork, useWaitForTransaction } from 'wagmi';
 import { useChainId } from '../lib/useChainId';
-import { DEFAULT_CHAIN_ID } from '../lib/constants';
 
 export function InformationPageHeader() {
   return (
@@ -99,8 +98,6 @@ export function ConnectWalletLayout(props: {
   const { switchNetwork } = useNetwork();
   const chainId = useChainId();
   const router = useRouter();
-  const requiredChainId =
-    Number.parseInt(router.query.chain as string) ?? DEFAULT_CHAIN_ID;
   const waitForTransaction = useWaitForTransaction({
     hash: props.txHash,
   });
@@ -143,11 +140,11 @@ export function ConnectWalletLayout(props: {
                   );
                 }
 
-                if (requiredChainId && chainId != requiredChainId) {
+                if (chain.id != chainId) {
                   return (
                     <button
                       className="bg-white border text-sm border-black rounded px-2 py-1 flex items-center"
-                      onClick={() => switchNetwork(requiredChainId)}
+                      onClick={() => switchNetwork(chainId)}
                     >
                       Switch Network{' '}
                       <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
