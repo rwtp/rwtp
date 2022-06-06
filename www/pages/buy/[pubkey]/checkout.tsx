@@ -13,6 +13,17 @@ import {
 import { CheckoutForm } from '../../../components/CheckoutForm';
 import { SubmitOfferButton } from '../../../components/SubmitOfferButton';
 
+function FormFooter(props: { price: string; symbol: string }) {
+  return (
+    <div className="text-sm mt-4 text-gray-500">
+      If this item doesn't ship to you, the seller will be fined{' '}
+      <span className="font-bold">
+        {props.price} {props.symbol}.
+      </span>
+    </div>
+  );
+}
+
 function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
 
