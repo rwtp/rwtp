@@ -134,7 +134,7 @@ export function SubmitOfferButton(props: {
           gasLimit: 1000000,
         },
       };
-      console.log('Submitting offer constract data: ', submitData);
+      console.log('Submitting offer contract data: ', submitData);
       const tx = await orderMethods.submitOffer.writeAsync(submitData);
 
       props.setTxHash(tx.hash);
