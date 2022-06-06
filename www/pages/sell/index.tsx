@@ -1,5 +1,4 @@
 import {
-  BanIcon,
   CheckCircleIcon,
   ChevronRightIcon,
   PlusIcon,
@@ -12,7 +11,6 @@ import { useAccount, useSigner } from 'wagmi';
 import { Order } from 'rwtp';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import { FadeIn } from '../../components/FadeIn';
-import cn from 'classnames';
 import dayjs from 'dayjs';
 import { OfferData, useAllOrderOffers } from '../../lib/useOrder';
 import nacl from 'tweetnacl';
@@ -86,74 +84,6 @@ function Offer(props: { offer: OfferData }) {
     tx.hash;
     await tx.wait();
     setIsLoading(false);
-  }
-
-  let status = (
-    <>
-      <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-        Offer Placed <CheckCircleIcon className="h-4 w-4 ml-2" />
-      </div>
-      <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-    </>
-  );
-  if (offer.state === 'Committed') {
-    status = (
-      <>
-        <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-          Submitted <CheckCircleIcon className="h-4 w-4 ml-2" />
-        </div>
-        <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-
-        <div
-          className={cn({
-            'text-xs flex  py-2 border-gray-600 text-gray-600': true,
-            'opacity-50': offer.state !== 'Committed',
-          })}
-        >
-          Accepted <CheckCircleIcon className="h-4 w-4 ml-2" />
-        </div>
-        <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-
-        {/* <button className="border rounded text-sm px-4 py-1">
-          Ask to cancel
-        </button> */}
-
-        <div
-          className={cn({
-            'text-xs flex  py-2 border-gray-600 text-gray-600 opacity-50': true,
-          })}
-        >
-          Awaiting Confirmation
-        </div>
-      </>
-    );
-  }
-  if (offer.state === 'Canceled') {
-    status = (
-      <>
-        <div className="text-xs flex py-2 border-gray-600 text-gray-600">
-          Submitted <CheckCircleIcon className="h-4 w-4 ml-2" />
-        </div>
-        <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-
-        <div
-          className={cn({
-            'text-xs flex  py-2 border-gray-600 text-gray-600': true,
-          })}
-        >
-          Accepted <CheckCircleIcon className="h-4 w-4 ml-2" />
-        </div>
-        <ChevronRightIcon className="h-4 w-4 text-gray-400" />
-
-        <div
-          className={cn({
-            'text-xs flex  py-2 border-gray-600 text-gray-600': true,
-          })}
-        >
-          Canceled <BanIcon className="h-4 w-4 ml-2" />
-        </div>
-      </>
-    );
   }
 
   return (

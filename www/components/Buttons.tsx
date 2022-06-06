@@ -1,8 +1,4 @@
-import {
-  FingerPrintIcon,
-  RefreshIcon,
-  SwitchHorizontalIcon,
-} from '@heroicons/react/solid';
+import { FingerPrintIcon, RefreshIcon } from '@heroicons/react/solid';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -14,6 +10,7 @@ export function WalletConnectedButton(props: { children: React.ReactNode }) {
   return (
     <>
       <ConnectButton.Custom>
+        {/* eslint-disable-next-line unused-imports/no-unused-vars */}
         {({ account, mounted, chain, openConnectModal }) => {
           if (!mounted || !account) {
             return (

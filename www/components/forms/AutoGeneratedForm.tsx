@@ -70,7 +70,7 @@ function CustomFieldTemplate(props: any) {
 // Form that will auto generate a schema and format the fields to match our UI style mainly.
 export function OfferForm(props: {
   schema: string;
-  setOfferData: (data: any) => void;
+  setOfferData: (_: any) => void;
   offerData: any;
   price: string;
   setValidChecker: (_: () => Boolean) => void;

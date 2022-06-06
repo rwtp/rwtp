@@ -19,14 +19,13 @@ import { useAccount, useSigner } from 'wagmi';
 import { fromBn } from 'evm-bn';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { useChainId } from '../../../lib/useChainId';
-import Image from 'next/image';
 
 function Offer(props: {
   offer: OfferData;
   order: OrderData;
-  onConfirm: (index: string) => Promise<any>;
-  onCancel: (index: string) => Promise<any>;
-  onWithdraw: (index: string) => Promise<any>;
+  onConfirm: (_: string) => Promise<any>;
+  onCancel: (_: string) => Promise<any>;
+  onWithdraw: (_: string) => Promise<any>;
 }) {
   const state = props.offer.state;
   const signer = useSigner();
@@ -208,7 +207,7 @@ function OrderPage({ order }: { order: OrderData }) {
   }
 
   // user facing buyers cost logic
-  let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(
+  let [buyersCostName, buyersCostAmount, _] = getUserFriendlyBuyerCost(
     order.priceSuggested,
     order.buyersCostSuggested,
     order.tokensSuggested[0].decimals

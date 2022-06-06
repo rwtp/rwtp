@@ -1,52 +1,21 @@
 import { useRouter } from 'next/router';
-import { BigNumber } from 'ethers';
-import { Suspense, useState, createRef } from 'react';
-import Image from 'next/image';
+import { Suspense, useState } from 'react';
 import { OrderData, useOrder } from '../../../lib/useOrder';
-import { fromBn } from 'evm-bn';
-import { ArrowLeftIcon, ChevronRightIcon } from '@heroicons/react/solid';
+import { ChevronRightIcon } from '@heroicons/react/solid';
 import { ConnectWalletLayout } from '../../../components/Layout';
-import * as nacl from 'tweetnacl';
-import { RequiresKeystore } from '../../../lib/keystore';
-import { useEncryptionKeypair } from '../../../lib/useEncryptionKey';
-import { DEFAULT_OFFER_SCHEMA } from '../../../lib/constants';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { getPrimaryImageLink } from '../../../lib/image';
-import Form from '@rjsf/core';
 import {
   WalletConnectedButton,
   KeyStoreConnectedButton,
 } from '../../../components/Buttons';
 
-function FormFooter(props: { price: string; symbol: string }) {
-  return (
-    <div className="text-sm mt-4 text-gray-500">
-      If this item doesn't ship to you, the seller be fined{' '}
-      <span className="font-bold">
-        {props.price} {props.symbol}.
-      </span>
-    </div>
-  );
-}
-import { CheckoutForm, formatPrice } from '../../../components/CheckoutForm';
+import { CheckoutForm } from '../../../components/CheckoutForm';
 import { SubmitOfferButton } from '../../../components/SubmitOfferButton';
 
 function BuyPage({ order }: { order: OrderData }) {
   const [txHash, setTxHash] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const quantity = 1;
-  const stake = order.sellersStakeSuggested
-    ? BigNumber.from(order.sellersStakeSuggested)
-    : BigNumber.from(0);
-  const cost = order.buyersCostSuggested
-    ? BigNumber.from(order.buyersCostSuggested)
-    : BigNumber.from(0);
-  const timeout = order.buyersCostSuggested
-    ? BigNumber.from(order.buyersCostSuggested)
-    : BigNumber.from(60 * 60 * 24 * 7);
-
-  const price = formatPrice(order);
+  const [isLoading, _setIsLoading] = useState(false);
 
   // user facing buyers cost logic ---------------------------------
   let [buyersCostName, buyersCostAmount, hasRefund] = getUserFriendlyBuyerCost(

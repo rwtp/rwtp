@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 // This is an hand rolled form that is a 1:1 matching with `ipfs://QmX6CZ7Wf8B79EX5x1PJSityvhtvvFKhkDBCDZK2cd6adF`
 export function SimpleOfferForm(props: {
-  setOfferData: (data: any) => void;
+  setOfferData: (_: any) => void;
   offerData: any;
   price: string;
   symbol: string;
