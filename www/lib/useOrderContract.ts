@@ -1,4 +1,3 @@
-import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { BigNumber } from 'ethers';
 import { Order } from 'rwtp';
 import { useContractWrite } from 'wagmi';
@@ -6,7 +5,7 @@ import { useContractWrite } from 'wagmi';
 export function useOrderConfirm(
   orderAddress: string,
   takerAddress: string,
-  index: BigNumber,
+  index: BigNumber
 ) {
   return useContractWrite(
     {

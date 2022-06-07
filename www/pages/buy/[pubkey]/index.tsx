@@ -15,7 +15,7 @@ import {
 } from '../../../lib/useOrder';
 import cn from 'classnames';
 import dayjs from 'dayjs';
-import { useAccount, useContract, useContractWrite, useSigner } from 'wagmi';
+import { useAccount, useSigner } from 'wagmi';
 import { fromBn } from 'evm-bn';
 import { toUIString, getUserFriendlyBuyerCost } from '../../../lib/ui-logic';
 import { useChainId } from '../../../lib/useChainId';
@@ -23,7 +23,6 @@ import {
   BuyerSideSellersDepositInfo,
   BuyersDepositInfo,
 } from '../../../components/infoBlurbs';
-import { Order } from 'rwtp';
 import { useOrderConfirm } from '../../../lib/useOrderContract';
 
 function Offer(props: {
@@ -38,7 +37,7 @@ function Offer(props: {
   const [isLoading, setIsLoading] = useState(false);
   const { writeAsync: confirm } = useOrderConfirm(
     props.order.address,
-    account.data?.address ?? "",
+    account.data?.address ?? '',
     BigNumber.from(props.offer.index)
   );
 
