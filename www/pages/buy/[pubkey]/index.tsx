@@ -23,23 +23,30 @@ import {
   BuyerSideSellersDepositInfo,
   BuyersDepositInfo,
 } from '../../../components/infoBlurbs';
+import { useOrderConfirm } from '../../../lib/useOrderContract';
 
 function Offer(props: {
   offer: OfferData;
   order: OrderData;
-  onConfirm: (_: string) => Promise<any>;
   onCancel: (_: string) => Promise<any>;
   onWithdraw: (_: string) => Promise<any>;
 }) {
   const state = props.offer.state;
   const signer = useSigner();
+  const account = useAccount();
   const [isLoading, setIsLoading] = useState(false);
+  const { writeAsync: confirm } = useOrderConfirm(
+    props.order.address,
+    account.data?.address ?? '',
+    BigNumber.from(props.offer.index)
+  );
 
   async function onConfirm() {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
-    await props.onConfirm(props.offer.index);
+    const tx = await confirm();
+    await tx.wait();
     setIsLoading(false);
   }
 
@@ -169,21 +176,6 @@ function OrderPage({ order }: { order: OrderData }) {
   const offers = useOrderOffersFrom(order.address, account.data?.address ?? '');
   const methods = useOrderMethods(order.address);
 
-  async function onConfirm(index: string) {
-    if (!account.data?.address) return;
-    const confirmTx = await methods.confirm.writeAsync({
-      args: [account.data?.address, index],
-      overrides: {
-        gasLimit: 100000,
-      },
-    });
-
-    setTxHash(confirmTx.hash);
-    await confirmTx.wait();
-    setTxHash('');
-    console.log('confirmed');
-  }
-
   async function onCancel(index: string) {
     const cancelTx = await methods.cancel.writeAsync({
       args: [index],
@@ -306,7 +298,6 @@ function OrderPage({ order }: { order: OrderData }) {
                 key={o.index + o.uri}
                 offer={o}
                 order={order}
-                onConfirm={onConfirm}
                 onCancel={onCancel}
                 onWithdraw={onWithdraw}
               />
