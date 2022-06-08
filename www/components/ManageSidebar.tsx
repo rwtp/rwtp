@@ -1,5 +1,4 @@
 export default function ManageSidebar(page: string) {
-  console.log(page);
   return (
     <div className="bg-gray-50 h-full">
       <div>

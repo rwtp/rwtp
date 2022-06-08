@@ -3,11 +3,18 @@ import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import ManageSidebar from '../../components/ManageSidebar';
 import { OfferData, useAllOffers } from '../../lib/useOrder';
 import { useAccount } from 'wagmi';
+import { DuplicateIcon } from '@heroicons/react/outline';
 import { FadeIn } from '../../components/FadeIn';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { toUIString } from '../../lib/ui-logic';
 import { BigNumber } from 'ethers';
+
+function copyToClipboard(toCopy: string) {
+  navigator.clipboard.writeText(toCopy).then(() => {
+    console.log('Copied order id to clipboard');
+  });
+}
 
 function OffersTableRow(props: { offer: OfferData }) {
   if (props.offer.history.length == 0) {
@@ -19,6 +26,15 @@ function OffersTableRow(props: { offer: OfferData }) {
   }
 
   let lastState = props.offer.history[props.offer.history.length - 1];
+
+  const uri = props.offer.uri;
+  if (!uri.startsWith('ipfs://')) {
+    console.error('URI does not start with `ipfs://`');
+  }
+  const orderId = uri.replace('ipfs://', '');
+
+  const uriPrefix = orderId.slice(0, 8) + '…';
+
   return (
     <tr className="border-b">
       <td className="px-4 py-1 whitespace-nowrap">
@@ -27,7 +43,15 @@ function OffersTableRow(props: { offer: OfferData }) {
           .format('MMM D YYYY, h:mm a')}
       </td>
       <td className="px-4 py-1 whitespace-nowrap">{props.offer.order.title}</td>
-      <td className="px-4 py-1 whitespace-nowrap">{props.offer.uri}</td>
+      <td className="px-4 py-1 whitespace-nowrap">
+        <button
+          className="flex flex-row"
+          onClick={(_e) => copyToClipboard(orderId)}
+        >
+          <pre>{uriPrefix}</pre>
+          <DuplicateIcon className="h-4 w-4 ml-2" />
+        </button>
+      </td>
       <td className="px-4 py-1 whitespace-nowrap">
         {props.offer.acceptedAt
           ? props.offer.acceptedAt + props.offer.timeout
@@ -116,7 +140,10 @@ export default function ManageOffersPage() {
           <div className="flex flex-row gap-4 h-full">
             {ManageSidebar(page)}
             <Suspense fallback={<div></div>}>
-              <OffersTable />
+              <div className="px-2 space-y-4">
+                <h1 className="font-serif text-3xl pb-1">All Offers</h1>
+                <OffersTable />
+              </div>
             </Suspense>
           </div>
         </div>
