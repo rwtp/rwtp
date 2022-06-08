@@ -1,11 +1,11 @@
 export default function ManageSidebar(page: string) {
   return (
-    <div className="bg-gray-50 h-full">
+    <div className="bg-gray-100 h-full">
       <div>
         <ul>
           <li
-            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
-              page == 'account' ? 'white' : 'gray-50'
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-8 bg-${
+              page == 'account' ? 'white' : 'gray-100'
             }`}
           >
             <a href="/account">
@@ -13,8 +13,8 @@ export default function ManageSidebar(page: string) {
             </a>
           </li>
           <li
-            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
-              page == 'purchases' ? 'white' : 'gray-50'
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-8 bg-${
+              page == 'purchases' ? 'white' : 'gray-100'
             }`}
           >
             <a href="/account/purchases">
@@ -22,8 +22,8 @@ export default function ManageSidebar(page: string) {
             </a>
           </li>
           <li
-            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
-              page == 'offers' ? 'white' : 'gray-50'
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-8 bg-${
+              page == 'offers' ? 'white' : 'gray-100'
             }`}
           >
             <a href="/account/offers">
@@ -31,8 +31,8 @@ export default function ManageSidebar(page: string) {
             </a>
           </li>
           <li
-            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
-              page == 'listings' ? 'white' : 'gray-50'
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-8 bg-${
+              page == 'listings' ? 'white' : 'gray-100'
             }`}
           >
             <a href="/account/listings">
