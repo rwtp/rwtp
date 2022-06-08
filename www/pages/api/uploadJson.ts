@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { CID, create } from 'ipfs-http-client';
+import { create } from 'ipfs-http-client';
 import { AbortController } from 'node-abort-controller';
 
 global.AbortController = AbortController;

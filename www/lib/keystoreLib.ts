@@ -13,7 +13,7 @@ interface LoginDetails {
 interface WalletMockImpl {
   signer: Signer;
   address: string | undefined;
-  setSig: (sig: string) => void;
+  setSig: (_sig: string) => void;
 }
 
 export function keystoreLogin(walletMock: WalletMockImpl) {
@@ -96,7 +96,9 @@ export function keystoreConstructor(loginDetails: LoginDetails) {
   }
 
   return {
-    login: loginDetails.login,
+    login: async function () {
+      await loginDetails.login;
+    },
     isLoggedIn: loginDetails.isLoggedIn,
     isLoading: loginDetails.isLoading,
     put,
@@ -118,9 +120,7 @@ export async function getEncryptionKeyPair(keystore: any) {
   return keypair;
 }
 
-export function useEncryptionKeypairExpanded(
-  encryptionKeypair: nacl.BoxKeyPair
-) {
+export function encryptionKeypairExpanded(encryptionKeypair: nacl.BoxKeyPair) {
   return {
     ...encryptionKeypair,
     publicKeyAsHex: Buffer.from(encryptionKeypair.publicKey).toString('hex'),
