@@ -1,5 +1,10 @@
 import { ethers } from 'ethers';
 import { OrderBook, Order } from 'rwtp';
+import {uploadJson } from '../../www/pages/api/uploadJson'
+import {DEFAULT_OFFER_SCHEMA } from '../../www/lib/constants';
+import { keystoreLogin, keystoreConstructor, getEncryptionKeyPair, useEncryptionKeypairExpanded}from '../../www/lib/keystoreLib';
+import { toBn } from 'evm-bn';
+
 let GAS = 13300000;
 let WRAPPED_ETH_ADDRESS = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
 let ORDER_BOOK_ADDRESS = "0xbd2e1dbe56053ee310249ce5969208ad7aa72dd0";
@@ -21,7 +26,8 @@ function purchasingToken(purchaseTokenAddress: string, wallet: ethers.Wallet): e
   return purchasingToken.attach(purchaseTokenAddress);
 }
 
-const MAKER_PRIVATE_KEY="0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d";
+const MAKER_PRIVATE_KEY="0x3f7d04fe4ac257bb6d57d6d2cf35ad914d76479fa5072d9544ab357b603a23e9";
+const TAKER_PRIVATE_KEY="0x4043b30db6de101b6da7b0da195b7745910fb3a2fca51b861a2bd64ed13289b7";
 const PROVIDER="https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161";
 const CREATE_ORDER = false;
 const SET_ACTIVE = true;
@@ -37,7 +43,52 @@ const CONFIRM_OFFER = false;
 
   let orderBook = new ethers.Contract(ORDER_BOOK_ADDRESS, OrderBook.abi, maker_wallet);
   console.log("orderBook.address: ", orderBook.address);
-  console.log("orderBook: ", orderBook);
+
+  let loginStuff = keystoreLogin({
+    signer: maker_wallet,
+    address: maker_wallet.address,
+    setSig: (_) => {},
+  });
+  let sig = await loginStuff.login();
+
+
+  let loginDetails = {
+    login: loginStuff.login,
+    isLoading: false,
+    isLoggedIn: true,
+    token: loginStuff.toToken(maker_wallet.address, sig),
+  };
+  let keypair = keystoreConstructor(loginDetails)
+  console.log(useEncryptionKeypairExpanded(await getEncryptionKeyPair(keypair)));
+
+  
+  // console.log("orderBook: ", orderBook);
+  // let cid = await uploadJson({
+  //   data: {
+      
+  //       offerSchema: DEFAULT_OFFER_SCHEMA,
+  //       title: "Title Of Order",
+  //       description: "Description",
+  //       primaryImageUrl: "ipfs://QmURWPrjSs7PAcM3mKvoWkosP9zZsqosdLQUwGczQsxYHo",
+  //       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
+  //       tokenAddressesSuggested: [erc20Address],
+  //       priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
+  //       sellersStakeSuggested: toBn(
+  //         state.sellersStake.toString(),
+  //         decimals
+  //       ).toHexString(),
+  //       buyersCostSuggested: toBn(
+  //         state.buyersCost.toString(),
+  //         decimals
+  //       ).toHexString(),
+  //       suggestedTimeout: toBn(
+  //         (60 * 60 * 24 * 7).toString(),
+  //         decimals
+  //       ).toHexString(),
+  //     }
+    
+  // });
+  // console.log(cid);
 
   return;
   let sellOrder = await orderBook.createOrder(
