@@ -16,6 +16,9 @@ module.exports = {
         '1/3':'33%',
         '60':'60%',
         '40':'40%'
+      },
+      gridTemplateColumns: {
+        'autoTile':'repeat(auto-fit, minmax(14rem,1fr))'
       }
     },
   },

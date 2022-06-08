@@ -1,23 +1,22 @@
 import { Suspense } from 'react';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import ManageSidebar from '../../components/ManageSidebar';
+import { useRouter } from 'next/router';
 
 export default function ManagementSummaryPage() {
+  let router = useRouter();
+  let n = router.pathname.lastIndexOf('/');
+  let page = router.pathname.substring(n + 1);
+  //console.log(page);
+
   return (
     <ConnectWalletLayout>
       <div className="h-full flex flex-col">
-        <div className="mt-6 flex-1 w-full">
-          <div className="max-w-6xl mx-auto px-4">
+        <div className="flex-1 w-full">
+          <div className="flex flex-row gap-4 h-full">
+            {ManageSidebar(page)}
             <Suspense fallback={<div></div>}>
-              <ManageSidebar>
-                <p>Hello friend!</p>
-                <p>
-                  You've made the equivalent of <b>0 USD</b> so far.
-                </p>
-                <p>
-                  You currently have <b>0</b> orders pending.
-                </p>
-              </ManageSidebar>
+              <div>Hello Friend!</div>
             </Suspense>
           </div>
         </div>

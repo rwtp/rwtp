@@ -1,46 +1,47 @@
-export default function ManageSidebar(props: { children: any }) {
+export default function ManageSidebar(page: string) {
+  console.log(page);
   return (
-    <div>
+    <div className="bg-gray-50 h-full">
       <div>
         <ul>
-          <li>
-            <a href="/manage">
+          <li
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
+              page == 'account' ? 'white' : 'gray-50'
+            }`}
+          >
+            <a href="/account">
               <div>Summary</div>
             </a>
           </li>
-          <li>
-            <a href="/manage/purchases">
+          <li
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
+              page == 'purchases' ? 'white' : 'gray-50'
+            }`}
+          >
+            <a href="/account/purchases">
               <div>Your Purchases</div>
             </a>
           </li>
-          <li>
-            <div>Your Sales</div>
-            <ul>
-              <li>
-                <a href="/manage/offers">
-                  <div>All Offers</div>
-                </a>
-              </li>
-              <li>
-                <a href="/manage/offers/pending">
-                  <div>Pending Offers</div>
-                </a>
-              </li>
-              <li>
-                <a href="/manage/offers/accepted">
-                  <div>Accepted Offers</div>
-                </a>
-              </li>
-            </ul>
+          <li
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
+              page == 'offers' ? 'white' : 'gray-50'
+            }`}
+          >
+            <a href="/account/offers">
+              <div>All Offers</div>
+            </a>
           </li>
-          <li>
-            <a href="/manage/listings">
+          <li
+            className={`w-full hover:opacity-50 whitespace-nowrap py-2 px-4 bg-${
+              page == 'listings' ? 'white' : 'gray-50'
+            }`}
+          >
+            <a href="/account/listings">
               <div>Your Listings</div>
             </a>
           </li>
         </ul>
       </div>
-      {props.children}
     </div>
   );
 }
