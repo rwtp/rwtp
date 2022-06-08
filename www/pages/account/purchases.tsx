@@ -200,7 +200,13 @@ function Purchases(props: { setTxHash: (_: any) => void }) {
     .slice(0)
     .reverse()
     .map((purchase: OfferData) => {
-      return <PurchaseTile purchase={purchase} setTxHash={props.setTxHash} />;
+      return (
+        <PurchaseTile
+          key={purchase.index + purchase.uri}
+          purchase={purchase}
+          setTxHash={props.setTxHash}
+        />
+      );
     });
 
   return <div className="w-full flex flex-col gap-4 mr-4">{purchasesView}</div>;
