@@ -465,7 +465,7 @@ function CreateOrderButton(props: {
         offerSchema: offerSchema,
         title: state.title,
         description: state.description,
-        primaryImageUrl,
+        primaryImage: primaryImageUrl,
         encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
         tokenAddressesSuggested: [erc20Address],
         priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
