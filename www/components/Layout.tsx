@@ -103,7 +103,7 @@ export function ConnectWalletLayout(props: {
   });
   return (
     <div className="flex flex-col h-full">
-      <div className="flex px-4 py-4  justify-between items-center w-full max-w-6xl mx-auto w-full">
+      <div className="flex px-4 py-4  justify-between items-center w-full mx-auto w-full">
         <div className="flex items-center">
           <Link href="/">
             <a className="flex items-center justify-center">
