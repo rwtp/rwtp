@@ -290,6 +290,30 @@ export function useOrderSubmitOffer(address: string) {
   };
 }
 
+export function useOffersFrom(taker: string) {
+  const metadata = useSubgraph<{
+    offers: Array<OfferData>;
+  }>([
+    `
+    query data($taker: ID){
+      offers(where:{
+        taker:$taker
+      }) {
+        ${OFFER_FIELDS}
+      }
+    }
+  `,
+    {
+      taker: taker,
+    },
+  ]);
+
+  return {
+    ...metadata,
+    data: metadata.data?.offers,
+  };
+}
+
 export function useOrderOffersFrom(order: string, taker: string) {
   const metadata = useSubgraph<{
     offers: Array<OfferData>;

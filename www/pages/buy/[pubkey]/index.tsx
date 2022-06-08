@@ -58,6 +58,8 @@ function Offer(props: {
     setIsLoading(false);
   }
 
+  console.log(props.offer.index);
+
   return (
     <FadeIn className="flex flex-col py-2">
       <div
