@@ -45,7 +45,6 @@ function ActionButtons(props: {
     setIsLoading(false);
   }
 
-  console.log(props.offer.index);
   async function onWithdraw() {
     if (!signer || !signer.data) return;
 
@@ -54,12 +53,11 @@ function ActionButtons(props: {
     setIsLoading(false);
   }
 
-  console.log(props.offer.index);
   if (state == 'Open') {
     return (
       <>
         <button
-          className="flex px-4 rounded text-sm py-1 bg-red-500 text-white hover:opacity-50 disabled:opacity-10"
+          className="flex px-4 rounded text-sm py-2 bg-red-500 text-white hover:opacity-50 disabled:opacity-10"
           onClick={() => onWithdraw()}
           disabled={isLoading}
         >
@@ -84,7 +82,10 @@ function ActionButtons(props: {
   }
 }
 
-function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}) {
+function PurchaseTile(props: {
+  purchase: OfferData;
+  setTxHash: (_: any) => void;
+}) {
   const account = useAccount();
   //const chainId = useChainId();
   //const offers = useOrderOffersFrom(order.address, account.data?.address ?? '');
@@ -116,9 +117,15 @@ function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}
     console.log('withdrawn');
   }
 
+  let currentState =
+    props.purchase.history[props.purchase.history.length - 1].state;
   // console.log(methods);
   return (
-    <div className="flex flex-row h-32 border gap-2">
+    <div
+      className={`flex flex-row h-32 border gap-2 bg-${
+        currentState === 'Withdrawn' ? 'gray-100' : 'white'
+      }`}
+    >
       <img
         className="h-full w-32 object-cover rounded-t mr-2"
         src={getPrimaryImageLink(props.purchase.order)}
@@ -128,8 +135,8 @@ function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}
         <div className="font-serif text-lg mt-2">
           {props.purchase.order.title}
         </div>
-        <div className="flex flex-row my-auto gap-4">
-          <div className="flex flex-col">
+        <div className="flex flex-row justify-between my-auto gap-4">
+          <div className="flex flex-col md:w-40">
             <div className="text-xs font-mono text-gray-400">Ordered</div>
             <div className="text-sm md:whitespace-nowrap">
               {dayjs
@@ -138,14 +145,11 @@ function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-xs font-mono text-gray-400">Status</div>
+            <div className="text-xs font-mono text-gray-400 md:w-40">
+              Status
+            </div>
             <div className="flex flex-row gap-1">
-              <div className="text-sm">
-                {
-                  props.purchase.history[props.purchase.history.length - 1]
-                    .state
-                }
-              </div>
+              <div className="text-sm">{currentState}</div>
               {/* <div className="text-sm text-gray-400 md:whitespace-nowrap">
                   Expires{' '}
                   {purchases.data[2].acceptedAt
@@ -155,7 +159,7 @@ function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="text-xs font-mono text-gray-400">Price</div>
+            <div className="text-xs font-mono text-gray-400 w-60">Price</div>
             <div className="text-sm md:whitespace-nowrap">
               {toUIString(
                 BigNumber.from(props.purchase.price),
@@ -164,7 +168,7 @@ function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}
               {props.purchase.order.tokensSuggested[0].symbol}
             </div>
           </div>
-          <div>
+          <div className="mr-4 w-40">
             <ActionButtons
               key={props.purchase.index + props.purchase.uri}
               offer={props.purchase}
@@ -179,7 +183,7 @@ function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}
   );
 }
 
-function Purchases(props: {setTxHash: (_: any) => void}) {
+function Purchases(props: { setTxHash: (_: any) => void }) {
   const account = useAccount();
   const purchases = useOffersFrom(account.data?.address || '');
 
@@ -202,7 +206,7 @@ function Purchases(props: {setTxHash: (_: any) => void}) {
     .slice(0)
     .reverse()
     .map((purchase: OfferData) => {
-      return <PurchaseTile purchase={purchase} setTxHash={props.setTxHash}/>;
+      return <PurchaseTile purchase={purchase} setTxHash={props.setTxHash} />;
     });
 
   return <div className="w-full flex flex-col gap-4 mr-4">{purchasesView}</div>;
@@ -213,16 +217,15 @@ export default function ManagePurchasesPage() {
   let n = router.pathname.lastIndexOf('/');
   let page = router.pathname.substring(n + 1);
   const [txHash, setTxHash] = useState('');
-  console.log("txHash:", txHash);
 
   return (
     <ConnectWalletLayout txHash={txHash}>
       <div className="h-full flex flex-col">
-        <div className="flex-1 w-full">
+        <div className="flex-1 max-w-6xl">
           <div className="flex flex-row gap-4 h-full">
             {ManageSidebar(page)}
             <Suspense fallback={<div></div>}>
-              <Purchases setTxHash={setTxHash}/>
+              <Purchases setTxHash={setTxHash} />
             </Suspense>
           </div>
         </div>
