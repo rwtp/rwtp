@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import * as nacl from 'tweetnacl';
 import { useKeystore } from './keystore';
-
-const ENCRYPTION_KEY = 'encryptionKey:0';
+import {
+  getEncryptionKeyPair,
+  useEncryptionKeypairExpanded,
+} from './keystoreLib';
 
 /**
  * Grab an encryption key from the keystore
@@ -16,28 +18,14 @@ export function useEncryptionKeypair() {
   // see - https://stackoverflow.com/questions/55840294/how-to-fix-missing-dependency-warning-when-using-useeffect-react-hook
   useEffect(() => {
     async function load() {
-      const result = await keystore.get(ENCRYPTION_KEY);
-      if (!result) {
-        let keypair = nacl.box.keyPair();
-        let secretKey = Buffer.from(keypair.secretKey).toString('hex');
-        await keystore.put(ENCRYPTION_KEY, secretKey);
-        setEncryptionKeypair(keypair);
-      }
-
-      const secretKey = Uint8Array.from(Buffer.from(result, 'hex'));
-      const keypair = nacl.box.keyPair.fromSecretKey(secretKey);
-      setEncryptionKeypair(keypair);
+      setEncryptionKeypair(await getEncryptionKeyPair(keystore));
     }
     load().catch(console.error);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (encryptionKeypair) {
-    return {
-      ...encryptionKeypair,
-      publicKeyAsHex: Buffer.from(encryptionKeypair.publicKey).toString('hex'),
-      secretKeyAsHex: Buffer.from(encryptionKeypair.secretKey).toString('hex'),
-    };
+    return useEncryptionKeypairExpanded(encryptionKeypair);
+  } else {
+    return null;
   }
-
-  return encryptionKeypair;
 }
