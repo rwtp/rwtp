@@ -127,3 +127,43 @@ export function encryptionKeypairExpanded(encryptionKeypair: nacl.BoxKeyPair) {
     secretKeyAsHex: Buffer.from(encryptionKeypair.secretKey).toString('hex'),
   };
 }
+
+interface EncryptionMessage {
+  receiverPublicEncryptionKey: string;
+  secretData: string;
+  senderPrivatekey: Uint8Array;
+}
+
+interface EncryptedMessage {
+  nonce: Uint8Array,
+  // Message that is encrypted
+  encrypted: Uint8Array
+}
+
+export function encryptMessage(msg: EncryptionMessage): EncryptedMessage {
+  const secretDataUTF8 = Buffer.from(msg.secretData, 'utf-8');
+  const nonce = nacl.randomBytes(24);
+  const sellersPublicEncryptionKey = Uint8Array.from(
+    Buffer.from(msg.receiverPublicEncryptionKey, 'hex')
+  );
+  const encrypted = nacl.box(
+    secretDataUTF8,
+    nonce,
+    sellersPublicEncryptionKey,
+    msg.senderPrivatekey
+  );
+  return {
+    nonce,
+    encrypted
+  };
+}
+
+export function formatMessageForUpload(msg: EncryptedMessage, publicKey: Uint8Array) {
+  return {
+    publicKey: Buffer.from(publicKey).toString(
+      'hex'
+    ),
+    nonce: Buffer.from(msg.nonce).toString('hex'),
+    message: Buffer.from(msg.encrypted).toString('hex'),
+  };
+}

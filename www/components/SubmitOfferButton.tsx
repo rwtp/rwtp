@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
 import nacl from 'tweetnacl';
 import { postJSONToIPFS } from '../lib/ipfs';
+import { encryptMessage, formatMessageForUpload } from '../lib/keystoreLib';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { useEncryptionKeypair } from '../lib/useEncryptionKey';
@@ -77,26 +78,13 @@ export function SubmitOfferButton(props: {
     if (!props.offerData) return;
     if (!buyersEncryptionKeypair) return;
     try {
-      const secretData = Buffer.from(JSON.stringify(props.offerData), 'utf-8');
-      const nonce = nacl.randomBytes(24);
-      const sellersPublicEncryptionKey = Uint8Array.from(
-        Buffer.from(props.order.encryptionPublicKey, 'hex')
-      );
+      const msg = encryptMessage({
+        receiverPublicEncryptionKey: props.order.encryptionPublicKey,
+        secretData: JSON.stringify(props.offerData),
+        senderPrivatekey: buyersEncryptionKeypair?.secretKey,
+      })
 
-      const encrypted = nacl.box(
-        secretData,
-        nonce,
-        sellersPublicEncryptionKey,
-        buyersEncryptionKeypair?.secretKey
-      );
-
-      const data = {
-        publicKey: Buffer.from(buyersEncryptionKeypair.publicKey).toString(
-          'hex'
-        ),
-        nonce: Buffer.from(nonce).toString('hex'),
-        message: Buffer.from(encrypted).toString('hex'),
-      };
+      const data = formatMessageForUpload(msg, buyersEncryptionKeypair.publicKey);
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');
