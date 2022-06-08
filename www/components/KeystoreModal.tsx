@@ -3,7 +3,7 @@ import { NextRouter } from 'next/router';
 import { FadeIn } from './FadeIn';
 
 export function KeystoreModal(props: {
-  login: () => Promise<void>;
+  login: () => Promise<string>;
   router: NextRouter;
 }) {
   return (

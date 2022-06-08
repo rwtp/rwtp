@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as nacl from 'tweetnacl';
 import { useKeystore } from './keystore';
-import {
-  getEncryptionKeyPair,
-  useEncryptionKeypairExpanded,
-} from './keystoreLib';
+import { getEncryptionKeyPair, encryptionKeypairExpanded } from './keystoreLib';
 
 /**
  * Grab an encryption key from the keystore
@@ -24,7 +21,7 @@ export function useEncryptionKeypair() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (encryptionKeypair) {
-    return useEncryptionKeypairExpanded(encryptionKeypair);
+    return encryptionKeypairExpanded(encryptionKeypair);
   } else {
     return null;
   }
