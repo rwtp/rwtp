@@ -2,7 +2,6 @@ import { RefreshIcon } from '@heroicons/react/solid';
 import { BigNumber } from 'ethers';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
-import nacl from 'tweetnacl';
 import { postJSONToIPFS } from '../lib/ipfs';
 import { encryptMessage, formatMessageForUpload } from '../lib/keystoreLib';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
@@ -82,9 +81,12 @@ export function SubmitOfferButton(props: {
         receiverPublicEncryptionKey: props.order.encryptionPublicKey,
         secretData: JSON.stringify(props.offerData),
         senderPrivatekey: buyersEncryptionKeypair?.secretKey,
-      })
+      });
 
-      const data = formatMessageForUpload(msg, buyersEncryptionKeypair.publicKey);
+      const data = formatMessageForUpload(
+        msg,
+        buyersEncryptionKeypair.publicKey
+      );
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');

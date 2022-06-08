@@ -135,9 +135,9 @@ interface EncryptionMessage {
 }
 
 interface EncryptedMessage {
-  nonce: Uint8Array,
+  nonce: Uint8Array;
   // Message that is encrypted
-  encrypted: Uint8Array
+  encrypted: Uint8Array;
 }
 
 export function encryptMessage(msg: EncryptionMessage): EncryptedMessage {
@@ -154,15 +154,16 @@ export function encryptMessage(msg: EncryptionMessage): EncryptedMessage {
   );
   return {
     nonce,
-    encrypted
+    encrypted,
   };
 }
 
-export function formatMessageForUpload(msg: EncryptedMessage, publicKey: Uint8Array) {
+export function formatMessageForUpload(
+  msg: EncryptedMessage,
+  publicKey: Uint8Array
+) {
   return {
-    publicKey: Buffer.from(publicKey).toString(
-      'hex'
-    ),
+    publicKey: Buffer.from(publicKey).toString('hex'),
     nonce: Buffer.from(msg.nonce).toString('hex'),
     message: Buffer.from(msg.encrypted).toString('hex'),
   };
