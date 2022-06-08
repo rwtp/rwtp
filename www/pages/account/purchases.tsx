@@ -84,12 +84,11 @@ function ActionButtons(props: {
   }
 }
 
-function PurchaseTile(props: { purchase: OfferData }) {
+function PurchaseTile(props: { purchase: OfferData, setTxHash: (_: any) => void}) {
   const account = useAccount();
   //const chainId = useChainId();
-  const [txHash, setTxHash] = useState('');
   //const offers = useOrderOffersFrom(order.address, account.data?.address ?? '');
-  const methods = useOrderMethods(account.data?.address || '');
+  const methods = useOrderMethods(props.purchase.order.address);
 
   async function onCancel(index: string) {
     const cancelTx = await methods.cancel.writeAsync({
@@ -111,9 +110,9 @@ function PurchaseTile(props: { purchase: OfferData }) {
       },
     });
 
-    setTxHash(withdrawTx.hash);
+    props.setTxHash(withdrawTx.hash);
     await withdrawTx.wait();
-    setTxHash('');
+    props.setTxHash('');
     console.log('withdrawn');
   }
 
@@ -180,7 +179,7 @@ function PurchaseTile(props: { purchase: OfferData }) {
   );
 }
 
-function Purchases() {
+function Purchases(props: {setTxHash: (_: any) => void}) {
   const account = useAccount();
   const purchases = useOffersFrom(account.data?.address || '');
 
@@ -203,7 +202,7 @@ function Purchases() {
     .slice(0)
     .reverse()
     .map((purchase: OfferData) => {
-      return <PurchaseTile purchase={purchase} />;
+      return <PurchaseTile purchase={purchase} setTxHash={props.setTxHash}/>;
     });
 
   return <div className="w-full flex flex-col gap-4 mr-4">{purchasesView}</div>;
@@ -213,15 +212,17 @@ export default function ManagePurchasesPage() {
   let router = useRouter();
   let n = router.pathname.lastIndexOf('/');
   let page = router.pathname.substring(n + 1);
+  const [txHash, setTxHash] = useState('');
+  console.log("txHash:", txHash);
 
   return (
-    <ConnectWalletLayout>
+    <ConnectWalletLayout txHash={txHash}>
       <div className="h-full flex flex-col">
         <div className="flex-1 w-full">
           <div className="flex flex-row gap-4 h-full">
             {ManageSidebar(page)}
             <Suspense fallback={<div></div>}>
-              <Purchases />
+              <Purchases setTxHash={setTxHash}/>
             </Suspense>
           </div>
         </div>
