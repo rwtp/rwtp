@@ -2,22 +2,17 @@ import {
   useOffersFrom,
   OfferData,
   OrderData,
-  useOrder,
   useOrderMethods,
-  useOrderOffersFrom,
 } from '../../lib/useOrder';
 import { Suspense, useState } from 'react';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import ManageSidebar from '../../components/ManageSidebar';
 import { useAccount, useSigner } from 'wagmi';
-import { FadeIn } from '../../components/FadeIn';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { toUIString } from '../../lib/ui-logic';
 import { BigNumber } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
-import { CheckCircleIcon, ChevronRightIcon } from '@heroicons/react/solid';
-import { useChainId } from '../../lib/useChainId';
 import { useOrderConfirm } from '../../lib/useOrderContract';
 
 function ActionButtons(props: {
@@ -86,7 +81,6 @@ function PurchaseTile(props: {
   purchase: OfferData;
   setTxHash: (_: any) => void;
 }) {
-  const account = useAccount();
   //const chainId = useChainId();
   //const offers = useOrderOffersFrom(order.address, account.data?.address ?? '');
   const methods = useOrderMethods(props.purchase.order.address);
