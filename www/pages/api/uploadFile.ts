@@ -8,25 +8,30 @@ type Response = {
   cid: string;
 };
 
-type Body = {
-  data: string;
+type ErrorResponse = {
+  message: string;
+};
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '5mb', // this is the max limit
+    },
+  },
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Response>
+  res: NextApiResponse<Response | ErrorResponse>
 ) {
-  const body = req.body as Body;
+  let input = Buffer.from(req.body, 'base64');
 
-  const projectId =
-    process.env.INFURA_IPFS_PROJECT_ID || '277IbGirb1KWD3z8myADmbbeCyI'; // dev key
-  const projectSecret =
-    process.env.INFURA_IPFS_PROJECT_SECRET ||
-    '23616240472a1d019108d445667d3710'; // dev secret
+  const projectId = process.env.INFURA_IPFS_PROJECT_ID;
+  const projectSecret = process.env.INFURA_IPFS_PROJECT_SECRET;
   const auth =
     'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
 
-  console.log("uploading to infura ipfs node");
+  console.log('uploading to infura ipfs node');
   const ipfs = create({
     host: 'ipfs.infura.io',
     port: 5001,
@@ -35,16 +40,9 @@ export default async function handler(
       authorization: auth,
     },
   });
-
-  let input;
-  if (typeof body.data == 'string') {
-    input = body.data;
-  } else {
-    input = JSON.stringify(body.data);
-  }
   const addResult = await ipfs.add(input);
 
-  console.log("uploading to the graph ipfs node");
+  console.log('uploading to the graph ipfs node');
   const graphIpfs = create({
     host: 'api.thegraph.com',
     apiPath: 'ipfs/api/v0',
@@ -52,7 +50,7 @@ export default async function handler(
     port: 443,
   });
   const graphIpfsResult = await graphIpfs.add(input);
-  console.log("uploaded to the graph ipfs node {}", graphIpfsResult);
+  console.log('uploaded to the graph ipfs node {}', graphIpfsResult);
 
   res.status(200).json({ cid: addResult.cid.toString() });
 }

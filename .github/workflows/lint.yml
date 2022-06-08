@@ -1,0 +1,29 @@
+name: lint
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  lint:
+    defaults:
+      run:
+        working-directory: www
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install modules
+      run: yarn
+    - name: Run ESLint
+      run: yarn lint
+  prettier:
+    defaults:
+      run:
+        working-directory: www
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install modules
+      run: yarn
+    - name: check Prettify code
+      run: yarn prettier-check

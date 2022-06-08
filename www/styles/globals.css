@@ -21,3 +21,25 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.pattern {
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23ececec' fill-opacity='0.95' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.right-triangle-down {
+	width: 0;
+	height: 0;
+	border-left: 0rem solid transparent;
+	border-right: 0.6rem solid transparent;
+	border-top: 0.6rem solid rgb(249 250 251);
+}
+
+.right-triangle-down-left {
+	width: 0;
+	height: 0;
+	border-left: 0.6rem solid transparent;
+	border-right: 0rem solid transparent;
+	border-top: 0.6rem solid rgb(249 250 251);
+}
+

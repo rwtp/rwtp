@@ -1,0 +1,106 @@
+---
+title: Metadata
+---
+
+# Metadata
+
+RWTP stores things like titles, descriptions, images, shipping address, and contact information off-chain. Client applications should use [IPFS](https://ipfs.io/) to store this data.[^1]
+
+## Type and Accepts
+
+An Order contains a `uri` that _must_ point to a JSON object. That object _must_ contain a minimum of two fields:
+
+```typescript
+interface Metadata {
+  $type: string;
+  $accepts: string[];
+}
+```
+
+The `$type` field is a URI pointing to a JSON schema defining metadata for the _order_ (such as the title, description, and photos). The `$accepts` field is an array of JSON schema URIs that define metadata for acceptable _offers_ (such as shipping details, contact information, and names).
+
+`$type` says "here's what I'm buying or selling". `$accepts` says "here's how I'd like you to give me an offer".
+
+### Offer metadata should be encrypted
+
+Before publishing a user's shipping address and other offer information, you should encrypt it. To ensure a the other party can decrypt it, all offers have the form:
+
+```typescript
+interface OfferMetadata {
+  publicKey: string;
+}
+```
+
+### Example of a `$type` schema
+
+Given a schema like the following:
+
+```json
+{
+  "title": "Simple Ecommerce Sell Order Schema",
+  "description": "A public billboard",
+  "type": "object",
+  "properties": {
+    "title": {
+      "title": "Title",
+      "description": "The main header describing the item",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "description": "A longer, more detailed description of the item",
+      "type": "string"
+    }
+  },
+  "required": ["title", "description"]
+}
+```
+
+You could upload metadata like the following:
+
+```json
+{
+  "title": "A 1-bedroom condo near a coffee shop",
+  "description": "A cute spot in a cool neighborhood./n Next to the Keychannel cafe."
+}
+```
+
+### Example of an `$accepts` schema
+
+Given the following schema:
+
+```json
+{
+  "title": "Simple Ecommerce Offer Schema",
+  "description": "Payload for buyer's metadata when the request to purchase an item.",
+  "type": "object",
+  "properties": {
+    "shippingAddress": {
+      "title": "Shipping Address",
+      "description": "Buyer's address to ship the item to.",
+      "type": "string"
+    },
+    "email": {
+      "title": "Email",
+      "description": "Email of the buyer requesting to buy a Listing.",
+      "type": "string",
+      "pattern": "^\\S+@\\S+\\.\\S+$",
+      "format": "email",
+      "minLength": 6,
+      "maxLength": 127
+    }
+  },
+  "required": ["email", "shippingAddress"]
+}
+```
+
+You could encrypt and then upload metadata like the following:
+
+```json
+{
+  "shippingAddress": "123 Main St",
+  "email": "alice@example.org"
+}
+```
+
+[^1] You're free to use other data storage solutions, like Arweave. However, the creators of Real World Trade Protocol pin and archive IPFS CIDs under a certain size limit to help secure the network.

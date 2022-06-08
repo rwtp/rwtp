@@ -1,18 +1,23 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import cn from 'classnames';
-import { useContract, useProvider } from 'wagmi';
-import { OrderBook } from 'rwtp';
-import { useEffect } from 'react';
 import useSWR from 'swr';
 import { request } from 'graphql-request';
+import { useChainId } from './useChainId';
 
-const fetcher = (query: any, variables: any) =>
-  request(
-    'https://api.thegraph.com/subgraphs/name/chitalian/real-world-trade-protocol-rinkeby',
-    query,
-    variables
-  );
+const RINKEBY = 'https://api.thegraph.com/subgraphs/name/rwtp/rinkeby';
+const OPTIMISM = 'https://api.thegraph.com/subgraphs/name/rwtp/optimism';
+const KOVAN = 'https://api.thegraph.com/subgraphs/name/rwtp/kovan';
+
+const fetcher = (url: string, query: any, variables: any) =>
+  request(url, query, variables);
 
 export function useSubgraph<T>(args: string | [string, any]) {
-  return useSWR<T>(args, fetcher);
+  const chainId = useChainId();
+
+  let chain = OPTIMISM;
+  if (chainId === 4) {
+    chain = RINKEBY;
+  } else if (chainId === 42) {
+    chain = KOVAN;
+  }
+
+  return useSWR<T>([chain, ...[args]].flat(), fetcher);
 }

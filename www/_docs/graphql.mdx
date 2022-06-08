@@ -1,0 +1,63 @@
+---
+title: GraphQL
+---
+
+# GraphQL
+
+You can use [the graph](https://thegraph.com/) to query orders with GraphQL. Use [the RWTP subgraph](https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp) to query orders.
+
+<a
+  className="bg-black rounded text-white px-4 py-2 no-underline hover:opacity-50"
+  href="https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp"
+>
+  Use the GraphQL Playground
+</a>
+
+## Example Query
+
+Use the following query to grab orders. This subgraph attempts to parse common metadata fields like "title", "priceSuggested", "sellersStakeSuggested", and "buyersCostSuggested".
+
+```graphql
+# https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp
+{
+  orders {
+    address
+    title
+    maker
+    priceSuggested
+    sellersStakeSuggested
+    buyersCostSuggested
+  }
+}
+```
+
+## Example with graphql-request
+
+Install [graphql-request](https://github.com/prisma-labs/graphql-request) and graphql.
+
+```bash
+yarn add graphql-request graphql
+```
+
+Then, query the subgraph.
+
+```typescript
+import { request, gql } from 'graphql-request';
+
+const query = gql`
+  {
+    orders {
+      address
+      title
+      maker
+      priceSuggested
+      sellersStakeSuggested
+      buyersCostSuggested
+    }
+  }
+`;
+
+const URL = 'https://api.thegraph.com/subgraphs/name/jacobpedd/rwtp';
+
+request(URL, query).then((data) => console.log(data));
+```

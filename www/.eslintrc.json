@@ -1,10 +1,19 @@
 {
   "extends": "next/core-web-vitals",
+  "plugins": ["unused-imports"],
   "rules": {
     "react/no-unescaped-entities": "off",
     "react/no-unknown-property": "off",
     "@next/next/no-page-custom-font": "off",
     "@next/next/no-html-link-for-pages": "off",
-    "react/jsx-no-target-blank": "off"
+    "react/jsx-no-target-blank": "off",
+    "@next/next/no-img-element": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+			"error",
+			{ "vars": "all", "varsIgnorePattern": "^_", "args": "after-used", "argsIgnorePattern": "^_" }
+		],
+    "no-var": "error"
+    
   }
 }

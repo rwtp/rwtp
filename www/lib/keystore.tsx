@@ -1,13 +1,12 @@
 import { useAccount, useSigner } from 'wagmi';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import useSWR from 'swr';
 import { useLocalStorage } from './useLocalStorage';
 import { ConnectWalletLayout } from '../components/Layout';
-import { ArrowLeftIcon, CheckCircleIcon } from '@heroicons/react/solid';
 import { useRouter } from 'next/router';
-import { FadeIn } from '../components/FadeIn';
+import { KeystoreModal } from '../components/KeystoreModal';
 
-function useKeystoreLogin() {
+export function useKeystoreLogin() {
   const signer = useSigner();
   const account = useAccount();
   const [sig, setSig] = useLocalStorage(
@@ -123,7 +122,7 @@ export function useKeystoreGet(key: string) {
   // Checks in the background if we're logged in.
   return useSWR(
     ['https://kv.rwtp.workers.dev/get' + key, login.token],
-    async (url: string, token: string, key: string) => {
+    async (url: string, token: string, _key: string) => {
       if (!token) return null;
 
       const res = await fetch(url, {
@@ -146,6 +145,7 @@ export function useKeystoreGet(key: string) {
 export function RequiresKeystore(props: { children: ReactNode }) {
   const login = useKeystore();
   const router = useRouter();
+  const account = useAccount();
 
   // Loading
   if (login.isLoading) {
@@ -160,66 +160,17 @@ export function RequiresKeystore(props: { children: ReactNode }) {
     return <>{props.children}</>;
   }
 
+  if (!account.data?.address) {
+    return (
+      <ConnectWalletLayout>
+        <div></div>
+      </ConnectWalletLayout>
+    );
+  }
+
   return (
     <ConnectWalletLayout>
-      <FadeIn className="bg-gray-50 h-full p-4 border-t flex items-center justify-center">
-        <div className="bg-white border max-w-xl mx-auto ">
-          <div className="p-8">
-            <h1 className="text-2xl mb-2 font-serif">
-              Allow this site to handle sensitive data?
-            </h1>
-            <p className="pb-2 ">
-              This page wants to handle personally identifiable information
-              required for shipping packages, like names, emails, mailing
-              addresses, and so on.
-            </p>
-            <div className="flex-col flex gap-2 mt-4">
-              <div className="flex items-center">
-                <CheckCircleIcon className="h-4 w-4 mr-2" />
-                Your information is encrypted in transit and at rest.
-              </div>
-              <div className="flex items-center">
-                <CheckCircleIcon className="h-4 w-4 mr-2" />
-                The creators of this website do not see your information.
-              </div>
-              <div className="flex items-center">
-                <CheckCircleIcon className="h-4 w-4 mr-2" />
-                <span>
-                  This website is{' '}
-                  <a
-                    className="underline"
-                    href="https://github.com/rwtp/rwtp"
-                    target="_blank"
-                  >
-                    {' '}
-                    open source
-                  </a>{' '}
-                  and researchers can audit the code.
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex px-4 pb-4 pt-4  justify-between">
-            <button
-              onClick={() => {
-                router.back();
-              }}
-              className=" px-4 py-2 rounded flex items-center"
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" /> Go back
-            </button>
-            <button
-              onClick={() => {
-                login.login().catch(console.error);
-              }}
-              className="bg-black hover:opacity-50 transition-all text-white px-4 py-2 rounded flex items-center"
-            >
-              Approve <CheckCircleIcon className="h-4 w-4 ml-2" />
-            </button>
-          </div>
-        </div>
-      </FadeIn>
+      <KeystoreModal router={router} login={login.login} />
     </ConnectWalletLayout>
   );
 }

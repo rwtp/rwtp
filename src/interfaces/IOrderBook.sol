@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '../SellOrder.sol';
+import '../Order.sol';
 
 interface IOrderBook {
-    event SellOrderCreated(address indexed sellOrder);
+    event OrderCreated(address indexed order);
 
     event OwnerChanged(address previous, address next);
 
@@ -19,11 +19,9 @@ interface IOrderBook {
 
     function setOwner(address _newOwner) external;
 
-    function createSellOrder(
-        address seller,
-        IERC20 token,
-        uint256 stake,
+    function createOrder(
+        address maker,
         string memory uri,
-        uint256 timeout
-    ) external returns (SellOrder);
+        bool isBuyOrder
+    ) external returns (Order);
 }

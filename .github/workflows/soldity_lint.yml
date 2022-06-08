@@ -1,0 +1,22 @@
+on: [push]
+
+name: lint
+
+jobs:
+  check:
+    name: Solidity lint check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install npm
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+
+      - name: Run Lint
+        run: |
+          npm install --save-dev prettier prettier-plugin-solidity
+          npx prettier --check 'src/**/*.sol'

@@ -1,5 +1,5 @@
 {
-  "version": "0.9.1",
+  "version": "0.10.9",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/ts/index.d.ts",
@@ -58,6 +58,7 @@
     "@rainbow-me/rainbowkit": "^0.1.0",
     "eth-sig-util": "^3.0.1",
     "evm-bn": "^1.1.1",
+    "katex": "^0.15.6",
     "tweetnacl": "^1.0.3",
     "zustand": "^4.0.0-rc.1"
   }

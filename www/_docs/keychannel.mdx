@@ -1,0 +1,65 @@
+---
+title: Encryption with Keychannel
+---
+
+# Encryption
+
+Real World Trade Protocol recommends using [Keychannel](https://github.com/rwtp/keychannel) to encrypt shipping and contact information.
+
+Unfortunately, existing wallets have not standardized on a way to use an _Ethereum_ keypair to encrypt or decrypt messages. ([Though efforts have been made](https://github.com/ethereum/EIPs/pull/1098)) Keychannel is a way to deterministically generate an alternative _encryption_ keypair from a signed message.
+
+## Creating a private key
+
+To generate a private key, have a user sign the following message, using [EIP-191](https://eips.ethereum.org/EIPS/eip-191). Use the signature of the message as a private key, for the purposes of encryption.
+
+```
+This software is requesting access to your private information, like shipping details or contact information.
+
+address: 0xb9c30c71a915a1B1483D803dd90273f12b8F5A8A
+inbox: 1
+```
+
+The `address` is the Ethereum address of the user in question. The `inbox` is an integer that increases if a user claims they've been compromised.
+
+Get the current `inbox` from the [Keychannel Smart Contract](https://github.com/rwtp/keychannel/blob/main/src/Keychannel.sol). If the user has never created a Keychannel encryption key; then their `inbox` will be `0`. A user can let folks know that their encryption key is compromised by generating a new inbox, which increments the number.
+
+### Example: Ethers
+
+```typescript
+import { ethers } from 'ethers';
+
+const msg = `This software is requesting access to your private information, like shipping details or contact information.
+
+address: 0xb9c30c71a915a1B1483D803dd90273f12b8F5A8A
+inbox: 1`;
+
+let sig = await wallet.signMessage(msg);
+```
+
+### Example: Wagmi
+
+```typescript
+import { useSignMessage } from 'wagmi';
+
+const msg = `This software is requesting access to your private information, like shipping details or contact information.
+
+address: 0xb9c30c71a915a1B1483D803dd90273f12b8F5A8A
+inbox: 1`;
+
+const signer = useSigner();
+signer.data?.signMessage(msg);
+```
+
+## Encrypting a message
+
+Use the signature as the encryption key.
+
+##
+
+## FAQ
+
+### Why not just have a client application store the encryption keypair?
+
+Multiple applications may need to use shipping information. For example, a wallet may want to show you status updates on your deliveries, even if you bought the product elsewhere.
+
+If a client application stores the keypair on behalf of the user, it restricts that application from composing easily with other applications.
