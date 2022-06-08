@@ -1,9 +1,17 @@
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { OrderBook, Order } from 'rwtp';
-import {uploadJson } from '../../www/pages/api/uploadJson'
-import {DEFAULT_OFFER_SCHEMA } from '../../www/lib/constants';
-import { keystoreLogin, keystoreConstructor, getEncryptionKeyPair, useEncryptionKeypairExpanded}from '../../www/lib/keystoreLib';
+import { uploadJson } from '../../www/pages/api/uploadJson'
+import { DEFAULT_OFFER_SCHEMA } from '../../www/lib/constants';
+import {
+  formatMessageForUpload,
+  encryptMessage,
+  keystoreLogin,
+  keystoreConstructor,
+  getEncryptionKeyPair,
+  encryptionKeypairExpanded
+} from '../../www/lib/keystoreLib';
 import { toBn } from 'evm-bn';
+import UPLOAD_DATA from './uploadData.json';
 
 let GAS = 13300000;
 let WRAPPED_ETH_ADDRESS = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
@@ -26,28 +34,11 @@ function purchasingToken(purchaseTokenAddress: string, wallet: ethers.Wallet): e
   return purchasingToken.attach(purchaseTokenAddress);
 }
 
-const MAKER_PRIVATE_KEY="0x3f7d04fe4ac257bb6d57d6d2cf35ad914d76479fa5072d9544ab357b603a23e9";
-const TAKER_PRIVATE_KEY="0x4043b30db6de101b6da7b0da195b7745910fb3a2fca51b861a2bd64ed13289b7";
-const PROVIDER="https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161";
-const CREATE_ORDER = false;
-const SET_ACTIVE = true;
-const BUY_SEQUENCE = false;
-const COMMIT_ORDER = false;
-const CONFIRM_OFFER = false;
-// MAIN FUNCTION
-(async function () {
-  // Create a wallet
-  const provider = new ethers.providers.JsonRpcProvider(PROVIDER);
-  const maker_wallet = new ethers.Wallet(MAKER_PRIVATE_KEY, provider);
-  console.log('Wallet address:', maker_wallet.address);
-
-  let orderBook = new ethers.Contract(ORDER_BOOK_ADDRESS, OrderBook.abi, maker_wallet);
-  console.log("orderBook.address: ", orderBook.address);
-
+async function getKeypair(wallet: any) {
   let loginStuff = keystoreLogin({
-    signer: maker_wallet,
-    address: maker_wallet.address,
-    setSig: (_) => {},
+    signer: wallet,
+    address: wallet.address,
+    setSig: (_) => { },
   });
   let sig = await loginStuff.login();
 
@@ -56,211 +47,182 @@ const CONFIRM_OFFER = false;
     login: loginStuff.login,
     isLoading: false,
     isLoggedIn: true,
-    token: loginStuff.toToken(maker_wallet.address, sig),
+    token: loginStuff.toToken(wallet.address, sig),
   };
   let keypair = keystoreConstructor(loginDetails)
-  console.log(useEncryptionKeypairExpanded(await getEncryptionKeyPair(keypair)));
+  return encryptionKeypairExpanded(await getEncryptionKeyPair(keypair));
+}
 
-  
+
+interface OrderData {
+  title: string, 
+  description: string,
+  primaryImage: string,
+  priceSuggested: number,
+  sellersStakeSuggested: number,
+  buyersCostSuggested: number,
+  suggestedTimeout: number,
+  token: string,
+  timeout: number,
+}
+
+async function createOrder(maker_wallet: any, orderData: OrderData) {
+  let orderBook = new ethers.Contract(ORDER_BOOK_ADDRESS, OrderBook.abi, maker_wallet);
+  console.log("orderBook.address: ", orderBook.address);
+  let keypair = await getKeypair(maker_wallet);
+  console.log(keypair);
   // console.log("orderBook: ", orderBook);
-  // let cid = await uploadJson({
-  //   data: {
-      
-  //       offerSchema: DEFAULT_OFFER_SCHEMA,
-  //       title: "Title Of Order",
-  //       description: "Description",
-  //       primaryImageUrl: "ipfs://QmURWPrjSs7PAcM3mKvoWkosP9zZsqosdLQUwGczQsxYHo",
-  //       encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
-  //       tokenAddressesSuggested: [erc20Address],
-  //       priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
-  //       sellersStakeSuggested: toBn(
-  //         state.sellersStake.toString(),
-  //         decimals
-  //       ).toHexString(),
-  //       buyersCostSuggested: toBn(
-  //         state.buyersCost.toString(),
-  //         decimals
-  //       ).toHexString(),
-  //       suggestedTimeout: toBn(
-  //         (60 * 60 * 24 * 7).toString(),
-  //         decimals
-  //       ).toHexString(),
-  //     }
-    
-  // });
-  // console.log(cid);
+  let cid = await uploadJson({
+    data: {
+      offerSchema: DEFAULT_OFFER_SCHEMA,
+      title: orderData.title,
+      description: orderData.description,
+      primaryImage: orderData.primaryImage,
+      encryptionPublicKey: keypair.publicKeyAsHex,
+      tokenAddressesSuggested: [orderData.token],
+      priceSuggested: BigNumber.from(orderData.priceSuggested).toHexString(),
+      sellersStakeSuggested: BigNumber.from(orderData.sellersStakeSuggested).toHexString(),
+      buyersCostSuggested: BigNumber.from(orderData.buyersCostSuggested).toHexString(),
+      suggestedTimeout: BigNumber.from(orderData.timeout).toHexString(),
+    }
+  });
 
-  return;
-  let sellOrder = await orderBook.createOrder(
+  return await orderBook.createOrder(
     maker_wallet.address,
-    WRAPPED_ETH_ADDRESS,
-    10,
-    "ipfs://QmZHqdtFg9rLh7fcxPGMKfVn3WxeTKNrv5WzAPZAv86Jb3",
-    1000,
+    cid,
+    false,
     { gasLimit: GAS }
-  )
+  );
+}
+interface OfferData {
+  schemadata: any,
+  token: string,
+  price: number,
+  buyersCost: number,
+  sellersCost: number,
+  timeout: number,
+  offerState: string,
+}
 
+async function create_offer(orderAddress: string, index: number, taker_wallet: any, maker_wallet: any, offer_data: OfferData) {
+  // create an offer
+  let takerOrderContract = new ethers.Contract(orderAddress, Order.abi, taker_wallet);
 
+  let takerPurchaseToken = purchasingToken(WRAPPED_ETH_ADDRESS, taker_wallet);
+  console.log("token:", takerPurchaseToken.address);
+  console.log("token.name: ", await takerPurchaseToken.name());
+  let deposit_txn = await takerPurchaseToken.deposit({ value: offer_data.price + offer_data.buyersCost });
+  console.log("deposit_txn: ", deposit_txn.hash);
+  let deposit_txn_receipt = await deposit_txn.wait();
+  console.log("deposit_txn_receipt: ", deposit_txn_receipt.transaction_hash);
+  let approval_txn = await takerPurchaseToken.approve(orderAddress, offer_data.price + offer_data.buyersCost);
+  console.log("approval_txn: ", approval_txn.hash);
+  let approval_confirmation = await approval_txn.wait();
+  console.log("approval_confirmation.transactionHash: ", approval_confirmation.transactionHash);
+  let allowance = await takerPurchaseToken.allowance(taker_wallet.address, orderAddress);
+  console.log("allowance: ", allowance.toString());
+  const maker_keypair = await getKeypair(maker_wallet);
+  const taker_keypair = await getKeypair(taker_wallet);
 
-  const args = [];
-  console.log("Running");
-  let rpc_url = args[0];
-  
-  let command = args[1];
-  console.log("Command: ", command);
-  if (command === "--createSellOrder" && args.length === 4) {
-    let privateKey = args[2];
-    let buyer_privateKey = args[3];
-    
+  const encrypted_message = encryptMessage({
+    receiverPublicEncryptionKey: maker_keypair.publicKeyAsHex,
+    secretData: JSON.stringify(offer_data.schemadata),
+    senderPrivatekey: taker_keypair.secretKey,
+  });
+  const data = formatMessageForUpload(encrypted_message, taker_keypair.publicKey)
+  let takerOffer = await takerOrderContract['submitOffer(uint128,address,uint128,uint128,uint128,uint128,string)'](
+    index,
+    offer_data.token,
+    offer_data.price,
+    offer_data.buyersCost,
+    offer_data.sellersCost,
+    offer_data.timeout,
+    await uploadJson({ data: data })
+  );
+  console.log("takerOrder:", takerOffer.hash);
+  let takerOrderWaited = await takerOffer.wait();
+  console.log("takerOrder.waited:", takerOrderWaited.transactionHash);
 
-    
-    console.log("creating wallet");
-    const sellerWallet = new ethers.Wallet(privateKey, provider);
-    console.log("wallet: ", sellerWallet.address);
-    let preBalance = await sellerWallet.getBalance();
-    console.log('Balance:', ethers.utils.formatEther(preBalance), 'ETH\n');
-
-
-    // Comment this if you want to create a new order book 
-    
-
-    // Uncomment this if you want to create a new order book
-    // let orderBook = await createOrderBook(sellerWallet);
-    console.log("orderBook: ", orderBook);
-    
-    console.log("orderBook.address: ", orderBook.address);
-    // return;
-    let sellOrderAddress = "";
-    if (CREATE_ORDER) {
-
-      let sellOrder = await orderBook.createSellOrder(
-        sellerWallet.address,
-        WRAPPED_ETH_ADDRESS,
-        10,
-        "ipfs://QmZHqdtFg9rLh7fcxPGMKfVn3WxeTKNrv5WzAPZAv86Jb3",
-        1000,
-        { gasLimit: GAS }
-      )
-      console.log("sellOrder: ", sellOrder.hash);
-      let waited = await sellOrder.wait();
-      // console.log("waited: ", waited);
-      // console.log("waited.events: ", waited.events);
-      console.log("waited.events[0].args: ", waited.events[0].args['sellOrder']);
-      sellOrderAddress = waited.events[0].args['sellOrder'];
-      return;
-    } else {
-      sellOrderAddress = "0xD84C9Aac4B3d2A9D12965B38b5B0b4A61d18972b"
-    }
-    
-    const buyerWallet = new ethers.Wallet(buyer_privateKey, provider);
-    console.log("buyerWallet: ", buyerWallet.address);
-    let buyerBalance = await buyerWallet.getBalance();
-    console.log('Buyer Balance:', ethers.utils.formatEther(buyerBalance), 'ETH\n');
-
-    let sellOrderContractBuyer = new ethers.Contract(sellOrderAddress, Order.abi, buyerWallet);
-
-    if (SET_ACTIVE) {
-      let sellOrderContractSeller = new ethers.Contract(sellOrderAddress, Order.abi, sellerWallet);
-      console.log(sellOrderContractSeller);
-      // return;
-      let setActive = await sellOrderContractSeller.setActive(false, { gasLimit: GAS });
-      console.log("setActive: ", setActive.hash);
-      let waited = await setActive.wait();
-      console.log("waited: ", waited);
-      return;
-    }
-    if (BUY_SEQUENCE) {
-    
-      // console.log("sellOrderContract: ", sellOrderContract);
-
-      console.log("sellOrderContract.address: ", sellOrderContractBuyer.address);
-      console.log("sellOrderContract.orderURI: ", await sellOrderContractBuyer.orderURI());
-
-      let buyerPurchaseToken = purchasingToken(await sellOrderContractBuyer.token(), buyerWallet);
-      console.log("token:", buyerPurchaseToken.address);
-      console.log("token.name: ", await buyerPurchaseToken.name());
-      // console.log(`Approving ${appPrice} to purchase ${appName}`);
-      // console.log("purchaseToken: ", purchaseToken);
-      let deposit_txn = await buyerPurchaseToken.deposit({value: 1000});
-      console.log("deposit_txn: ", deposit_txn.hash);
-      let deposit_txn_receipt = await deposit_txn.wait();
-      console.log("deposit_txn_receipt: ", deposit_txn_receipt.hash);
-      let approval_txn = await buyerPurchaseToken.approve(sellOrderContractBuyer.address, 100);
-      console.log("approval_txn: ", approval_txn.hash);
-      let approval_confirmation = await approval_txn.wait();
-      console.log("approval_confirmation: ", approval_confirmation.hash);
-      let allowance = await buyerPurchaseToken.allowance(buyerWallet.address, sellOrderContractBuyer.address);
-      console.log("allowance: ", allowance.toString());
-
-
-      let offer = await sellOrderContractBuyer['submitOffer(uint32,uint32,uint128,uint128,string)'](
-          0,
-          1,
-          3,
-          2,
-          'ipfs://blahblahblah',
-          { gasLimit: GAS }
-      )
-      console.log("offer: ", offer.hash);
-      let offer_receipt = await offer.wait();
-      console.log("offer_receipt: ", offer_receipt.hash);
-      return;
-    }
-
-
-    let sellOrderContractSeller = new ethers.Contract(sellOrderAddress, Order.abi, sellerWallet);
-    let offer = await sellOrderContractSeller.offers(buyerWallet.address, 0);
-    console.log("offer state: ", offer.state);
-    if (COMMIT_ORDER) {
-      if (offer.state != 1) {
-        console.log("Can only commit an offer that is in state 1");
-        return;
-      }
-
-      let sellerPurchaseToken = purchasingToken(await sellOrderContractSeller.token(), sellerWallet);
-      console.log("token:", sellerPurchaseToken.address);
-      console.log("token.name: ", await sellerPurchaseToken.name());
-      // console.log(`Approving ${appPrice} to purchase ${appName}`);
-      // console.log("purchaseToken: ", purchaseToken);
-      let deposit_txn = await sellerPurchaseToken.deposit({value: 1000});
-      console.log("deposit_txn: ", deposit_txn.hash);
-      let deposit_txn_receipt = await deposit_txn.wait();
-      console.log("deposit_txn_receipt: ", deposit_txn_receipt.hash);
-      let approval_txn = await sellerPurchaseToken.approve(sellOrderContractSeller.address, 1000);
-      console.log("approval_txn: ", approval_txn.hash);
-      let approval_confirmation = await approval_txn.wait();
-      console.log("approval_confirmation: ", approval_confirmation.hash);
-      let allowance = await sellerPurchaseToken.allowance(buyerWallet.address, sellOrderContractSeller.address);
-      console.log("allowance: ", allowance.toString());
-      
-      
-      let commit_txn = await sellOrderContractSeller.commit(buyerWallet.address, 0, { gasLimit: GAS });
-      console.log("commit_txn: ", commit_txn.hash);
-      let commit_txn_receipt = await commit_txn.wait();
-      console.log("commit_txn_receipt: ", commit_txn_receipt.transactionHash);
-      return;
-    }
-
-    if (CONFIRM_OFFER) {
-      if (offer.state != 2) {
-        console.log("Can only confirm an offer that is in state 2");
-        return;
-      }
-      let confirm_txn = await sellOrderContractBuyer.confirm(0, { gasLimit: GAS });
-      console.log("confirm_txn: ", confirm_txn.hash);
-      let confirm_txn_receipt = await confirm_txn.wait();
-      console.log("confirm_txn_receipt: ", confirm_txn_receipt.transactionHash);
-      return;
-    }
-    
-
-    
-
-
-
-
-  } else {
-    console.log("Invalid command", args[2]);
+}
+async function commitOffer(index: number, orderAddress: string, maker_wallet: any, taker_wallet: any, offer_data: OfferData)  {
+  const makerOrderContract = new ethers.Contract(orderAddress, Order.abi, maker_wallet);
+  console.log("index: ", index);
+  let offer = await makerOrderContract.offers(taker_wallet.address, index);
+  console.log("offer state: ", offer.state);
+  if (offer.state != 1) {
+    console.log("Can only commit an offer that is in state 1");
+    return;
   }
+  let makerPurchaseToken = purchasingToken(WRAPPED_ETH_ADDRESS, maker_wallet);
+  let deposit_txn = await makerPurchaseToken.deposit({ value: offer_data.sellersCost });
+  console.log("deposit_txn: ", deposit_txn.hash);
+  let deposit_txn_receipt = await deposit_txn.wait();
+  console.log("deposit_txn_receipt: ", deposit_txn_receipt.transaction_hash);
+  let approval_txn = await makerPurchaseToken.approve(makerOrderContract.address, offer_data.sellersCost);
+  console.log("approval_txn: ", approval_txn.hash);
+  let approval_confirmation = await approval_txn.wait();
+  console.log("approval_confirmation: ", approval_confirmation.transaction_hash);
+  let allowance = await makerPurchaseToken.allowance(maker_wallet.address, makerOrderContract.address);
+  console.log("allowance: ", allowance.toString());
+  let commit_txn = await makerOrderContract.commit(taker_wallet.address, index, { gasLimit: GAS });
+  console.log("commit_txn: ", commit_txn.hash);
+  let commit_txn_receipt = await commit_txn.wait();
+  console.log("commit_txn_receipt: ", commit_txn_receipt.transactionHash);
+}
+
+async function confirmOffer(index: number, orderAddress:string, taker_wallet: any)   {
+  const takerOrderContract = new ethers.Contract(orderAddress, Order.abi, taker_wallet);
+  console.log("index: ", index);
+  let offer = await takerOrderContract.offers(taker_wallet.address, index);
+  console.log("offer state: ", offer.state);
+  if (offer.state != 2) {
+    console.log("Can only confirm an offer that is in state 2");
+    return;
+  }
+  let confirm_txn = await takerOrderContract.confirm(taker_wallet.address, index, { gasLimit: GAS });
+  console.log("confirm_txn: ", confirm_txn.hash);
+  let confirm_txn_receipt = await confirm_txn.wait();
+  console.log("confirm_txn_receipt: ", confirm_txn_receipt.transactionHash);
+}
+
+const MAKER_PRIVATE_KEY = "0x3f7d04fe4ac257bb6d57d6d2cf35ad914d76479fa5072d9544ab357b603a23e9";
+const TAKER_PRIVATE_KEY = "0x4043b30db6de101b6da7b0da195b7745910fb3a2fca51b861a2bd64ed13289b7";
+const PROVIDER = "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161";
+
+(async function () {
+
+  const provider = new ethers.providers.JsonRpcProvider(PROVIDER);
+  const maker_wallet = new ethers.Wallet(MAKER_PRIVATE_KEY, provider);
+  const taker_wallet = new ethers.Wallet(TAKER_PRIVATE_KEY, provider);
+  console.log('maker address:', maker_wallet.address);
+  console.log('taker address:', taker_wallet.address);
+
+  for (let ord of UPLOAD_DATA.orders ) {
+    console.log("********* CREATING ORDER *********************")
+    console.log(ord)
+    const order = await createOrder(maker_wallet, ord);
+    let waited = await order.wait();
+    let orderAddress = waited.events[0].args['order'];
+    console.log('orderAddress:', orderAddress);
+    if (ord.offers) {
+      for (let offer of ord.offers) {
+        console.log("********* CREATING OFFER *********************")
+        console.log(offer)
+        const index = Math.floor(Math.random() * 1_000_000_000);
+        if (offer.offerState === "OPEN") {
+          await create_offer(orderAddress, index, taker_wallet, maker_wallet, offer);
+        } else if (offer.offerState === "COMMITTED") {
+          await create_offer(orderAddress, index, taker_wallet, maker_wallet, offer);
+          await commitOffer(index, orderAddress, maker_wallet, taker_wallet, offer);
+        } else if (offer.offerState === "CONFIRMED") {
+          await create_offer(orderAddress, index, taker_wallet, maker_wallet, offer);
+          await commitOffer(index, orderAddress, maker_wallet, taker_wallet, offer);
+          await confirmOffer(index, orderAddress, taker_wallet);
+        }        
+      }
+    }
+    console.log(order);
+  }
+  return
 
 })().catch(console.error);
