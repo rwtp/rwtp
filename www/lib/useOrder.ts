@@ -241,6 +241,14 @@ export function useOrderMethods(address: string) {
     'commitBatch'
   );
 
+  const refund = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: Order.abi,
+    },
+    'refund'
+  );
+
   return {
     submitOffer,
     withdrawOffer,
@@ -248,6 +256,7 @@ export function useOrderMethods(address: string) {
     commit,
     commitBatch,
     cancel,
+    refund,
   };
 }
 

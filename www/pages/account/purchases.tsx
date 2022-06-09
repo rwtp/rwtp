@@ -114,6 +114,15 @@ function PurchaseTile(props: {
   let currentState =
     props.purchase.history[props.purchase.history.length - 1].state;
   // console.log(methods);
+  const timeout = Number.parseInt(props.purchase.timeout);
+  const start_time = Number.parseInt(props.purchase.history[0].timestamp);
+  const sum = start_time + timeout;
+  console.log('timeout: ', dayjs.unix(sum).format('MMM D YYYY, h:mm a'));
+
+  console.log('timeout: ', timeout);
+  console.log('start_time: ', start_time);
+  console.log('sum: ', sum);
+
   return (
     <div
       className={`flex flex-row h-32 border gap-2 bg-${

@@ -38,9 +38,9 @@ export function SubmitOfferButton(props: {
     props.order.buyersCostSuggested ? props.order.buyersCostSuggested : 0
   );
   const timeout = BigNumber.from(
-    props.order.buyersCostSuggested
-      ? props.order.buyersCostSuggested
-      : 60 * 60 * 24 * 7
+    props.order.suggestedTimeout
+      ? props.order.suggestedTimeout
+      : 60 * 60 * 24 * 60 //60 days default
   );
   const token = props.order.tokensSuggested[0];
   const transferAmount = buyerTransferAmount(props.order);
