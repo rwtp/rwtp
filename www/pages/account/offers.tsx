@@ -1,7 +1,12 @@
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import ManageSidebar from '../../components/ManageSidebar';
-import { OfferData, useAllOffers } from '../../lib/useOrder';
+import {
+  OfferData,
+  OrderData,
+  useAllOffers,
+  useOrderMethods,
+} from '../../lib/useOrder';
 import { useAccount } from 'wagmi';
 import { DuplicateIcon } from '@heroicons/react/outline';
 import { FadeIn } from '../../components/FadeIn';
@@ -9,6 +14,83 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { toUIString } from '../../lib/ui-logic';
 import { BigNumber } from 'ethers';
+import { getExpirationNum } from '../../lib/ui-logic';
+
+function ActionButtons(props: { offer: OfferData; order: OrderData }) {
+  const state = props.offer.state;
+  const [isCancelLoading, setIsCancelLoading] = useState(false);
+  const [isCommitLoading, setIsCommitLoading] = useState(false);
+  // const signer = useSigner();
+  const account = useAccount();
+
+  const methods = useOrderMethods(props.order.address);
+
+  // *********THERE IS A BUG IN THE GRAPH FOR UPDATING TAKER CANCELED :(*************
+  //let offer = methods.useOffer([account.data?.address, props.offer.index]);
+  async function callCancel() {
+    const tx = await methods.cancel.writeAsync({
+      args: [account.data?.address, props.offer.index],
+      overrides: {
+        gasLimit: 1000000,
+      },
+    });
+
+    setIsCancelLoading(true);
+
+    await tx.wait();
+    setIsCancelLoading(false);
+    console.log('Canceled');
+    return tx.hash;
+  }
+
+  async function callCommit() {
+    const tx = await methods.commit.writeAsync({
+      args: [props.offer.taker, props.offer.index],
+      overrides: {
+        gasLimit: 1000000,
+      },
+    });
+
+    setIsCommitLoading(true);
+
+    await tx.wait();
+    setIsCommitLoading(false);
+    console.log('Committed');
+    return tx.hash;
+  }
+
+  if (state == 'Open') {
+    return (
+      <>
+        <div className="flex flex-col">
+          <button
+            className="px-1 rounded bg-black text-xs py-1 text-white hover:opacity-50 disabled:opacity-10"
+            onClick={() => callCommit()}
+            disabled={isCommitLoading}
+          >
+            Commit Order
+          </button>
+        </div>
+      </>
+    );
+  } else if (state == 'Committed') {
+    return (
+      <>
+        <div className="flex flex-col">
+          <button
+            className="bg-white rounded border border-black text-xs px-1 py-1 hover:opacity-50 disabled:opacity-10"
+            onClick={() => callCancel()}
+            disabled={isCancelLoading}
+          >
+            Request Cancellation
+          </button>
+        </div>
+      </>
+    );
+  } else {
+    return <></>;
+  }
+}
 
 function copyToClipboard(toCopy: string) {
   navigator.clipboard.writeText(toCopy).then(() => {
@@ -35,8 +117,17 @@ function OffersTableRow(props: { offer: OfferData }) {
 
   const uriPrefix = orderId.slice(0, 8) + '…';
 
+  console.log(props.offer.taker);
   return (
-    <tr className="border-b">
+    <tr
+      className={`border-b text-${
+        props.offer.state === 'Withdrawn' ||
+        props.offer.state === 'Refunded' ||
+        props.offer.state === 'Confirmed'
+          ? 'gray-400'
+          : 'black'
+      }`}
+    >
       <td className="px-4 py-1 whitespace-nowrap">
         {dayjs
           .unix(Number.parseInt(opened.timestamp))
@@ -45,7 +136,7 @@ function OffersTableRow(props: { offer: OfferData }) {
       <td className="px-4 py-1 whitespace-nowrap">{props.offer.order.title}</td>
       <td className="px-4 py-1 whitespace-nowrap">
         <button
-          className="flex flex-row"
+          className="flex flex-row hover:opacity-50 cursor-copy"
           onClick={(_e) => copyToClipboard(orderId)}
         >
           <pre>{uriPrefix}</pre>
@@ -53,8 +144,10 @@ function OffersTableRow(props: { offer: OfferData }) {
         </button>
       </td>
       <td className="px-4 py-1 whitespace-nowrap">
-        {props.offer.acceptedAt
-          ? props.offer.acceptedAt + props.offer.timeout
+        {getExpirationNum(props.offer) != 0
+          ? dayjs
+              .unix(getExpirationNum(props.offer))
+              .format('MMM D YYYY, h:mm a')
           : ''}
       </td>
       {/* <td></td>
@@ -75,7 +168,13 @@ function OffersTableRow(props: { offer: OfferData }) {
       </td>
       {/* <td></td> */}
       <td className="px-4 py-1 whitespace-nowrap">{lastState.state}</td>
-      <td className="px-4 py-1 whitespace-nowrap">We need buttons!</td>
+      <td className="px-4 py-1 whitespace-nowrap">
+        <ActionButtons
+          key={props.offer.index + props.offer.uri + props.offer.acceptedAt}
+          offer={props.offer}
+          order={props.offer.order}
+        />
+      </td>
     </tr>
   );
 }
