@@ -10,10 +10,38 @@ import ManageSidebar from '../../components/ManageSidebar';
 import { useAccount, useSigner } from 'wagmi';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
-import { toUIString } from '../../lib/ui-logic';
+import {
+  toUIString,
+  getExpirationNum,
+  getBuyerFriendlyStatus,
+} from '../../lib/ui-logic';
 import { BigNumber } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
 import { useOrderConfirm } from '../../lib/useOrderContract';
+
+function ExpirationStatement(props: { offer: OfferData }) {
+  const expirationNum = getExpirationNum(props.offer);
+  if (expirationNum === 0 || props.offer.state === 'Confirmed') {
+    return <></>;
+  } else {
+    const expirationDate = dayjs
+      .unix(expirationNum)
+      .format('MMM D YYYY, h:mm a');
+    if (Date.now() / 1000 > expirationNum) {
+      return (
+        <div className="text-sm text-gray-400">
+          Autoconfirmed on {expirationDate}
+        </div>
+      );
+    } else {
+      return (
+        <div className="text-sm text-emerald-600">
+          Autoconfirms on {expirationDate}
+        </div>
+      );
+    }
+  }
+}
 
 function ActionButtons(props: {
   offer: OfferData;
@@ -31,7 +59,7 @@ function ActionButtons(props: {
     BigNumber.from(props.offer.index)
   );
 
-  async function onConfirm() {
+  async function onConfirmUI() {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
@@ -40,7 +68,16 @@ function ActionButtons(props: {
     setIsLoading(false);
   }
 
-  async function onWithdraw() {
+  async function onCancelUI() {
+    if (!signer || !signer.data) return;
+
+    setIsLoading(true);
+    console.log(props.offer.index);
+    await props.onCancel(props.offer.index);
+    setIsLoading(false);
+  }
+
+  async function onWithdrawUI() {
     if (!signer || !signer.data) return;
 
     setIsLoading(true);
@@ -51,29 +88,40 @@ function ActionButtons(props: {
   if (state == 'Open') {
     return (
       <>
-        <button
-          className="flex px-4 rounded text-sm py-2 bg-red-500 text-white hover:opacity-50 disabled:opacity-10"
-          onClick={() => onWithdraw()}
-          disabled={isLoading}
-        >
-          Withdraw Offer
-        </button>
+        <div className="flex flex-col">
+          <button
+            className="px-4 rounded border border-black text-sm py-2 bg-white hover:opacity-50 disabled:opacity-10"
+            onClick={() => onWithdrawUI()}
+            disabled={isLoading}
+          >
+            Withdraw Offer
+          </button>
+        </div>
       </>
     );
   } else if (state == 'Committed') {
     return (
       <>
-        <button
-          className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
-          onClick={() => onConfirm()}
-          disabled={isLoading}
-        >
-          Confirm Order
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            className="bg-black rounded text-white text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
+            onClick={() => onConfirmUI()}
+            disabled={isLoading}
+          >
+            Confirm Order
+          </button>
+          <button
+            className="bg-white rounded border border-black text-sm px-4 py-2 hover:opacity-50 disabled:opacity-10"
+            onClick={() => onCancelUI()}
+            disabled={isLoading}
+          >
+            Request Cancellation
+          </button>
+        </div>
       </>
     );
   } else {
-    return <div></div>;
+    return <></>;
   }
 }
 
@@ -93,7 +141,9 @@ function PurchaseTile(props: {
       },
     });
 
+    props.setTxHash(cancelTx.hash);
     await cancelTx.wait();
+
     console.log('canceled');
   }
 
@@ -113,15 +163,8 @@ function PurchaseTile(props: {
 
   let currentState =
     props.purchase.history[props.purchase.history.length - 1].state;
-  // console.log(methods);
-  const timeout = Number.parseInt(props.purchase.timeout);
-  const start_time = Number.parseInt(props.purchase.history[0].timestamp);
-  const sum = start_time + timeout;
-  console.log('timeout: ', dayjs.unix(sum).format('MMM D YYYY, h:mm a'));
 
-  console.log('timeout: ', timeout);
-  console.log('start_time: ', start_time);
-  console.log('sum: ', sum);
+  const start_time = Number.parseInt(props.purchase.history[0].timestamp);
 
   return (
     <div
@@ -138,28 +181,28 @@ function PurchaseTile(props: {
         <div className="font-serif text-lg mt-2">
           {props.purchase.order.title}
         </div>
-        <div className="flex flex-row justify-between my-auto gap-4">
+        <div className="flex flex-row justify-between mt-2 gap-4">
           <div className="flex flex-col md:w-40">
             <div className="text-xs font-mono text-gray-400">Ordered</div>
             <div className="text-sm md:whitespace-nowrap">
-              {dayjs
-                .unix(Number.parseInt(props.purchase.history[0].timestamp))
-                .format('MMM D YYYY, h:mm a')}
+              {dayjs.unix(start_time).format('MMM D YYYY, h:mm a')}
             </div>
           </div>
           <div className="flex flex-col">
             <div className="text-xs font-mono text-gray-400 md:w-40">
               Status
             </div>
-            <div className="flex flex-row gap-1">
-              <div className="text-sm">{currentState}</div>
-              {/* <div className="text-sm text-gray-400 md:whitespace-nowrap">
+
+            <div className="text-sm">
+              {getBuyerFriendlyStatus(currentState)}
+            </div>
+            <ExpirationStatement offer={props.purchase} />
+            {/* <div className="text-sm text-gray-400 md:whitespace-nowrap">
                   Expires{' '}
                   {purchases.data[2].acceptedAt
                     ? purchases.data[2].acceptedAt + purchases.data[2].timeout
                     : ''}
                 </div> */}
-            </div>
           </div>
           <div className="flex flex-col">
             <div className="text-xs font-mono text-gray-400 w-60">Price</div>
@@ -171,16 +214,16 @@ function PurchaseTile(props: {
               {props.purchase.order.tokensSuggested[0].symbol}
             </div>
           </div>
-          <div className="mr-4 w-40">
-            <ActionButtons
-              key={props.purchase.index + props.purchase.uri}
-              offer={props.purchase}
-              order={props.purchase.order}
-              onCancel={onCancel}
-              onWithdraw={onWithdraw}
-            />
-          </div>
         </div>
+      </div>
+      <div className="mr-4 mt-2 w-40">
+        <ActionButtons
+          key={props.purchase.index + props.purchase.uri}
+          offer={props.purchase}
+          order={props.purchase.order}
+          onCancel={onCancel}
+          onWithdraw={onWithdraw}
+        />
       </div>
     </div>
   );
@@ -206,8 +249,12 @@ function Purchases(props: { setTxHash: (_: any) => void }) {
   //console.log(purchases);
 
   const purchasesView = purchases.data
-    .slice(0)
-    .reverse()
+    .sort((purchase_0, purchase_1) => {
+      return (
+        Number.parseInt(purchase_1.history[0].timestamp) -
+        Number.parseInt(purchase_0.history[0].timestamp)
+      );
+    })
     .map((purchase: OfferData) => {
       return (
         <PurchaseTile

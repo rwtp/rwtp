@@ -1,6 +1,7 @@
 import { fromBn } from 'evm-bn';
 import { BigNumber } from 'ethers';
-import { OrderData } from './useOrder';
+import { OfferData, OrderData } from './useOrder';
+import dayjs from 'dayjs';
 
 export function toUIString(amount: BigNumber, decimals: number) {
   return fromBn(amount, decimals);
@@ -30,5 +31,27 @@ export function getUserFriendlyBuyerCost(
       toUIString(buyersRefund, order.tokensSuggested[0].decimals),
       true,
     ];
+  }
+}
+
+export function getExpirationNum(offer: OfferData) {
+  const timeout = Number.parseInt(offer.timeout);
+  const acceptedAt = Number.parseInt(offer.acceptedAt);
+  if (acceptedAt != 0) {
+    return acceptedAt + timeout;
+  } else {
+    return 0;
+  }
+}
+
+export function getBuyerFriendlyStatus(status: string) {
+  if (status === 'Committed') {
+    return 'In Progress';
+  } else if (status === 'Open') {
+    return "Pending Seller's Approval";
+  } else if (status === 'Confirmed') {
+    return 'Complete';
+  } else {
+    return status;
   }
 }
