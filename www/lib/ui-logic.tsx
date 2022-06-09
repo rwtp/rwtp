@@ -1,7 +1,7 @@
 import { fromBn } from 'evm-bn';
 import { BigNumber } from 'ethers';
 import { OfferData, OrderData } from './useOrder';
-import dayjs from 'dayjs';
+// import dayjs from 'dayjs';
 
 export function toUIString(amount: BigNumber, decimals: number) {
   return fromBn(amount, decimals);

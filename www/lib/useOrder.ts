@@ -1,4 +1,4 @@
-import { useContractWrite } from 'wagmi';
+import { useContractRead, useContractWrite } from 'wagmi';
 import { useSubgraph } from './useSubgraph';
 import { Order } from 'rwtp';
 import { BigNumber } from 'ethers';
@@ -249,6 +249,19 @@ export function useOrderMethods(address: string) {
     'refund'
   );
 
+  const useOffer = (args: any) =>
+    useContractRead(
+      {
+        addressOrName: address,
+        contractInterface: Order.abi,
+      },
+      'offers',
+      {
+        args: args,
+      }
+    );
+
+
   return {
     submitOffer,
     withdrawOffer,
@@ -257,6 +270,7 @@ export function useOrderMethods(address: string) {
     commitBatch,
     cancel,
     refund,
+    useOffer,
   };
 }
 
