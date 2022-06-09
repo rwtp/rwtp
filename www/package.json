@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@eth-optimism/tokenlist": "git+https://github.com/ethereum-optimism/ethereum-optimism.github.io.git#af613ec3c5e511dbd0dc7c9cdd3d6eda311905c6",
+    "@headlessui/react": "^1.6.4",
     "@heroicons/react": "^1.0.6",
     "@metamask/eth-sig-util": "^4.0.1",
     "@rainbow-me/rainbowkit": "^0.1.0",

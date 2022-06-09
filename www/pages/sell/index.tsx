@@ -283,7 +283,7 @@ export default function Page() {
         <div className=" p-4 max-w-6xl mx-auto w-full mt-8">
           <div className="pb-8">
             <h1 className="font-serif text-2xl pb-1">Sell to the world</h1>
-            <p className="pb-4">Learn more about Sell Orders.</p>
+            <p className="pb-4">Sell anything from SaaS to siracha.</p>
             <div className="flex">
               <Link href="/sell/new">
                 <a className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 justify-between">
