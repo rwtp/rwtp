@@ -89,6 +89,11 @@ export function OfferForm(props: {
     );
   });
   let schema = JSON.parse(props.schema);
+
+  // legacy schema unwrap
+  if (schema.data) {
+    schema = schema.data;
+  }
   return (
     <div className="flex flex-1 flex-col w-full">
       <div className="font-serif mb-2 text-2xl">Checkout</div>

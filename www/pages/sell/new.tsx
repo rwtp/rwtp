@@ -404,7 +404,7 @@ function CreateOrderButton(props: {
       return customIPFSSchema;
     } else if (customJSONSchema) {
       // REAL-416: handle error if upload fails
-      const cid = await postJSONToIPFS(JSON.parse(customJSONSchema), false);
+      const cid = await postJSONToIPFS(JSON.parse(customJSONSchema), true);
       return `ipfs://${cid}`;
     } else {
       return `ipfs://${DEFAULT_OFFER_SCHEMA}`;
