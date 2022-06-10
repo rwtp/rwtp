@@ -82,9 +82,12 @@ export function SubmitOfferButton(props: {
         receiverPublicEncryptionKey: props.order.encryptionPublicKey,
         secretData: JSON.stringify(props.offerData),
         senderPrivatekey: buyersEncryptionKeypair?.secretKey,
-      })
+      });
 
-      const data = formatMessageForUpload(msg, buyersEncryptionKeypair.publicKey);
+      const data = formatMessageForUpload(
+        msg,
+        buyersEncryptionKeypair.publicKey
+      );
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');
