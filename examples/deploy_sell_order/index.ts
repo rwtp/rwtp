@@ -10,12 +10,14 @@ import {
   getEncryptionKeyPair,
   encryptionKeypairExpanded
 } from '../../www/lib/keystoreLib';
-import { toBn } from 'evm-bn';
 import UPLOAD_DATA from './uploadData.json';
 
 let GAS = 13300000;
 let WRAPPED_ETH_ADDRESS = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
 let ORDER_BOOK_ADDRESS = "0xbd2e1dbe56053ee310249ce5969208ad7aa72dd0";
+const MAKER_PRIVATE_KEY = process.env.MAKER_PRIVATE_KEY;
+const TAKER_PRIVATE_KEY = process.env.TAKER_PRIVATE_KEY;
+const PROVIDER = "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161";
 
 function factory(contract: any, wallet: ethers.Wallet): ethers.ContractFactory {
   return new ethers.ContractFactory(contract.abi, contract.bytecode, wallet);
@@ -185,9 +187,7 @@ async function confirmOffer(index: number, orderAddress:string, taker_wallet: an
   console.log("confirm_txn_receipt: ", confirm_txn_receipt.transactionHash);
 }
 
-const MAKER_PRIVATE_KEY = "0x3f7d04fe4ac257bb6d57d6d2cf35ad914d76479fa5072d9544ab357b603a23e9";
-const TAKER_PRIVATE_KEY = "0x4043b30db6de101b6da7b0da195b7745910fb3a2fca51b861a2bd64ed13289b7";
-const PROVIDER = "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161";
+
 
 (async function () {
 
