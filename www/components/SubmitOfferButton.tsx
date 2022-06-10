@@ -2,7 +2,6 @@ import { RefreshIcon } from '@heroicons/react/solid';
 import { BigNumber } from 'ethers';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
-import nacl from 'tweetnacl';
 import { postJSONToIPFS } from '../lib/ipfs';
 import { encryptMessage, formatMessageForUpload } from '../lib/keystoreLib';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
