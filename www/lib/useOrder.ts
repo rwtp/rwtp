@@ -261,7 +261,6 @@ export function useOrderMethods(address: string) {
       }
     );
 
-
   return {
     submitOffer,
     withdrawOffer,
