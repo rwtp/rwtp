@@ -261,7 +261,10 @@ export function useOrderMethods(address: string) {
       }
     );
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
   return {
     submitOffer,
     withdrawOffer,

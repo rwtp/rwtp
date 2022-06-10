@@ -1,0 +1,131 @@
+{
+    "orders": [
+        {
+            "title": "Automated Test 0002",
+            "description": "This is a test for using uploadData JSON",
+            "primaryImage": "ipfs://QmURWPrjSs7PAcM3mKvoWkosP9zZsqosdLQUwGczQsxYHo",
+            "priceSuggested": 20000000,
+            "sellersStakeSuggested": 100000000000,
+            "buyersCostSuggested": 302000000,
+            "suggestedTimeout": 10000000000,
+            "timeout": 1000000000,
+            "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab"
+        },
+        {
+            "title": "Inga expire test",
+            "description": "This is a test for using uploadData JSON",
+            "primaryImage": "ipfs://QmURWPrjSs7PAcM3mKvoWkosP9zZsqosdLQUwGczQsxYHo",
+            "priceSuggested": 10000,
+            "sellersStakeSuggested": 20000,
+            "buyersCostSuggested": 30000,
+            "suggestedTimeout": 10000000000,
+            "timeout": 1000000000,
+            "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+            "offers": [
+                {
+                    "schemadata": {
+                        "address": "1 main street",
+                        "phone": "88888888",
+                        "special instructions": "spin to the left"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 700,
+                    "buyersCost": 20,
+                    "sellersCost": 10000,
+                    "timeout": 5000000,
+                    "offerState": "OPEN"
+                },
+                {
+                    "schemadata": {
+                        "address": "100 main street",
+                        "phone": "4444444",
+                        "special instructions": "spin to the MIDDLE"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 200,
+                    "buyersCost": 100,
+                    "sellersCost": 30000,
+                    "timeout": 2500000,
+                    "offerState": "OPEN"
+                },
+                {
+                    "schemadata": {
+                        "address": "2 main street",
+                        "phone": "98421098",
+                        "special instructions": "spin to the right"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 800,
+                    "buyersCost": 10,
+                    "sellersCost": 20000,
+                    "timeout": 1000000,
+                    "offerState": "COMMITTED"
+                },
+                {
+                    "schemadata": {
+                        "address": "3 main street",
+                        "phone": "0000021",
+                        "special instructions": "spin upside down"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 900,
+                    "buyersCost": 100,
+                    "sellersCost": 20000,
+                    "timeout": 50000,"offerState": "OPEN"},
+                {
+
+                    "schemadata": {
+                        "address": "1 main street",
+                        "phone": "88888888",
+                        "special instructions": "spin to the left"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 700,
+                    "buyersCost": 900,
+                    "sellersCost": 10000,
+                    "timeout": 5000000,
+                    "offerState": "OPEN"
+                },
+                {
+                    "schemadata": {
+                        "address": "100 main street",
+                        "phone": "4444444",
+                        "special instructions": "spin to the MIDDLE"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 200,
+                    "buyersCost": 300,
+                    "sellersCost": 30000,
+                    "timeout": 2500000,
+                    "offerState": "OPEN"
+                },
+                {
+                    "schemadata": {
+                        "address": "2 main street",
+                        "phone": "98421098",
+                        "special instructions": "spin to the right"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 5,
+                    "buyersCost": 10,
+                    "sellersCost": 20000,
+                    "timeout": 1000000,
+                    "offerState": "COMMITTED"
+                },
+                {
+                    "schemadata": {
+                        "address": "3 main street",
+                        "phone": "0000021",
+                        "special instructions": "spin upside down"
+                    },
+                    "token": "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+                    "price": 50,
+                    "buyersCost": 100,
+                    "sellersCost": 20000,
+                    "timeout": 50000,
+                    "offerState": "COMMITTED"
+                }
+            ]
+        }
+    ]
+}
