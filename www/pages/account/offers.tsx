@@ -116,6 +116,7 @@ function OffersTableRow(props: { offer: OfferData }) {
   const orderId = uri.replace('ipfs://', '');
   const uriPrefix = orderId.slice(0, 8) + '…';
 
+  console.log(props.offer.taker);
   return (
     <tr
       className={`border-b text-${

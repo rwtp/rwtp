@@ -36,7 +36,7 @@ export default function Landing() {
                 Real World Trade Protocol
               </h1>
               <p className="text-lg text-gray-800">
-                A peer-to-peer protocol for buying and selling real-world goods
+                A peer-to-peer protocol for buying and selling off-chain goods
                 on Ethereum.
               </p>
               <div className="flex">
