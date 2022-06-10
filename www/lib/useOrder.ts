@@ -249,6 +249,14 @@ export function useOrderMethods(address: string) {
     'refund'
   );
 
+  const setActive = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: Order.abi,
+    },
+    'setActive'
+  );
+
   const useOffer = (args: any) =>
     useContractRead(
       {
@@ -261,10 +269,6 @@ export function useOrderMethods(address: string) {
       }
     );
 
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
   return {
     submitOffer,
     withdrawOffer,
@@ -273,6 +277,7 @@ export function useOrderMethods(address: string) {
     commitBatch,
     cancel,
     refund,
+    setActive,
     useOffer,
   };
 }

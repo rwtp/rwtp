@@ -185,10 +185,11 @@ function PurchaseTile(props: {
     props.purchase.history[props.purchase.history.length - 1].state;
 
   const start_time = Number.parseInt(props.purchase.history[0].timestamp);
+  console.log(props.purchase);
 
   return (
     <div
-      className={`flex flex-row h-32 border gap-2 bg-${
+      className={`flex flex-row md:h-32 border gap-4 bg-${
         currentState === 'Withdrawn' ||
         currentState === 'Refunded' ||
         currentState === 'Confirmed'
@@ -197,20 +198,20 @@ function PurchaseTile(props: {
       }`}
     >
       <img
-        className="h-full w-32 object-cover rounded-t mr-2"
+        className="h-full w-32 object-cover"
         src={getPrimaryImageLink(props.purchase.order)}
         alt="item"
       />
       <div className="flex flex-col w-full">
-        <div className="flex flex-row gap-4 justify-between">
+        <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="font-serif text-lg mt-2 ">
             {props.purchase.order.title}
           </div>
-          <div className="mx-4 mt-2 text-sm text-gray-400 whitespace-nowrap">
+          <div className="md:mx-4 mt-2 text-sm text-gray-400 whitespace-nowrap">
             Ordered on {dayjs.unix(start_time).format('MMM D YYYY, h:mm a')}
           </div>
         </div>
-        <div className="grid grid-cols-3 mt-2 gap-4">
+        <div className="flex flex-col md:grid md:grid-cols-3 mt-2 gap-4">
           {/* <div className="flex flex-col">
             <div className="text-xs font-mono text-gray-400">Ordered</div>
             <div className="text-sm">
@@ -244,7 +245,7 @@ function PurchaseTile(props: {
               {props.purchase.order.tokensSuggested[0].symbol} */}
             </div>
           </div>
-          <div className="mr-4">
+          <div className="mb-4 mr-2 md:mb-0 md:mr-4">
             <ActionButtons
               key={props.purchase.index + props.purchase.uri}
               offer={props.purchase}

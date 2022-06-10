@@ -7,7 +7,7 @@ import {
   useAllOffers,
   useOrderMethods,
 } from '../../lib/useOrder';
-import { useAccount } from 'wagmi';
+import { useAccount, useSigner } from 'wagmi';
 import { DuplicateIcon } from '@heroicons/react/outline';
 import { FadeIn } from '../../components/FadeIn';
 import dayjs from 'dayjs';
@@ -15,29 +15,25 @@ import { useRouter } from 'next/router';
 import { toUIString } from '../../lib/ui-logic';
 import { BigNumber } from 'ethers';
 import { getExpirationNum } from '../../lib/ui-logic';
+import { formatTokenAmount, useTokenMethods } from '../../lib/tokens';
 
 function ActionButtons(props: { offer: OfferData; order: OrderData }) {
   const state = props.offer.state;
+  const signer = useSigner();
+
   const [isCancelLoading, setIsCancelLoading] = useState(false);
   const [isCommitLoading, setIsCommitLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   // const signer = useSigner();
-<<<<<<< HEAD
-  const account = useAccount();
-=======
-  //const account = useAccount();
->>>>>>> origin/main
 
   const methods = useOrderMethods(props.order.address);
+  const tokenMethods = useTokenMethods(props.offer.tokenAddress);
 
   // *********THERE IS A BUG IN THE GRAPH FOR UPDATING TAKER CANCELED :(*************
   //let offer = methods.useOffer([account.data?.address, props.offer.index]);
   async function callCancel() {
     const tx = await methods.cancel.writeAsync({
-<<<<<<< HEAD
-      args: [account.data?.address, props.offer.index],
-=======
       args: [props.offer.taker, props.offer.index],
->>>>>>> origin/main
       overrides: {
         gasLimit: 1000000,
       },
@@ -52,19 +48,53 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
   }
 
   async function callCommit() {
-    const tx = await methods.commit.writeAsync({
-      args: [props.offer.taker, props.offer.index],
-      overrides: {
-        gasLimit: 1000000,
-      },
-    });
-
+    if (!signer || !signer.data) return;
     setIsCommitLoading(true);
 
-    await tx.wait();
+    console.log(
+      `Requesting ${formatTokenAmount(
+        props.offer.sellersStake,
+        props.offer.token
+      )} ${props.offer.token.symbol}`
+    );
+    const approveTxHash = await approveTokens();
+    if (!approveTxHash) {
+      setIsCommitLoading(false);
+      return;
+    }
+    console.log(`Committing`);
+    const submitTxHash = await commit();
     setIsCommitLoading(false);
-    console.log('Committed');
-    return tx.hash;
+    if (!submitTxHash) return;
+  }
+
+  async function commit(): Promise<string | undefined> {
+    try {
+      const tx = await methods.commit.writeAsync({
+        args: [props.offer.taker, props.offer.index],
+      });
+      await tx.wait();
+      return tx.hash;
+    } catch (error) {
+      //setErrorMessage('Error Committing');
+      console.log(error);
+      return undefined;
+    }
+  }
+
+  async function approveTokens(): Promise<string | undefined> {
+    try {
+      const tx = await tokenMethods.approve.writeAsync({
+        args: [props.offer.order.address, props.offer.sellersStake],
+      });
+
+      await tx.wait();
+      return tx.hash;
+    } catch (error) {
+      //setErrorMessage('Error Approving');
+      console.log(error);
+      return undefined;
+    }
   }
 
   if (state == 'Open') {
@@ -124,7 +154,6 @@ function OffersTableRow(props: { offer: OfferData }) {
   const orderId = uri.replace('ipfs://', '');
   const uriPrefix = orderId.slice(0, 8) + '…';
 
-  console.log(props.offer.taker);
   return (
     <tr
       className={`border-b text-${
@@ -151,7 +180,7 @@ function OffersTableRow(props: { offer: OfferData }) {
         </button>
       </td>
       <td className="px-4 py-1 whitespace-nowrap">
-        {getExpirationNum(props.offer) != 0
+        {getExpirationNum(props.offer) != 0 && props.offer.state === 'Committed'
           ? dayjs
               .unix(getExpirationNum(props.offer))
               .format('MMM D YYYY, h:mm a')
