@@ -21,7 +21,7 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
   const [isCancelLoading, setIsCancelLoading] = useState(false);
   const [isCommitLoading, setIsCommitLoading] = useState(false);
   // const signer = useSigner();
-  const account = useAccount();
+  //const account = useAccount();
 
   const methods = useOrderMethods(props.order.address);
 
@@ -29,7 +29,7 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
   //let offer = methods.useOffer([account.data?.address, props.offer.index]);
   async function callCancel() {
     const tx = await methods.cancel.writeAsync({
-      args: [account.data?.address, props.offer.index],
+      args: [props.offer.taker, props.offer.index],
       overrides: {
         gasLimit: 1000000,
       },
@@ -114,7 +114,6 @@ function OffersTableRow(props: { offer: OfferData }) {
     console.error('URI does not start with `ipfs://`');
   }
   const orderId = uri.replace('ipfs://', '');
-
   const uriPrefix = orderId.slice(0, 8) + '…';
 
   console.log(props.offer.taker);
@@ -195,14 +194,21 @@ function OffersTable() {
     return <div className="text-gray-500">There are no open offers.</div>;
   }
 
-  const allOffers = offers.data.map((o: OfferData) => {
-    return (
-      <OffersTableRow
-        key={`${o.order.address}${o.index}${o.taker}${o.acceptedAt}`}
-        offer={o}
-      />
-    );
-  });
+  const allOffers = offers.data
+    .sort((purchase_0: any, purchase_1: any) => {
+      return (
+        Number.parseInt(purchase_1.history[0].timestamp) -
+        Number.parseInt(purchase_0.history[0].timestamp)
+      );
+    })
+    .map((o: OfferData) => {
+      return (
+        <OffersTableRow
+          key={`${o.order.address}${o.index}${o.taker}${o.acceptedAt}`}
+          offer={o}
+        />
+      );
+    });
 
   return (
     <FadeIn>

@@ -18,7 +18,7 @@ module.exports = {
         '40':'40%'
       },
       gridTemplateColumns: {
-        'autoTile':'repeat(auto-fit, minmax(14rem,1fr))'
+        'autoTile':'repeat(auto-fit, minmax(14rem,20rem))'
       }
     },
   },
