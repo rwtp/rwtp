@@ -1,4 +1,4 @@
-import { useContractWrite } from 'wagmi';
+import { useContractRead, useContractWrite } from 'wagmi';
 import { useSubgraph } from './useSubgraph';
 import { Order } from 'rwtp';
 import { BigNumber } from 'ethers';
@@ -64,6 +64,20 @@ const ORDER_FIELDS = `
   offerSchemaUri
 `;
 
+export interface OfferHistory {
+  timestamp: string;
+  state: string;
+  makerCanceled: boolean;
+  takerCanceled: boolean;
+}
+
+const OFFER_HISTORY_FIELDS = `
+  timestamp
+  state
+  makerCanceled
+  takerCanceled
+`;
+
 export interface OfferData {
   index: string;
   taker: string;
@@ -74,6 +88,7 @@ export interface OfferData {
   sellersStake: string;
   timeout: string;
   uri: string;
+  maker: string;
   messagePublicKey: string;
   messageNonce: string;
   message: string;
@@ -83,6 +98,7 @@ export interface OfferData {
   acceptedAt: string;
   makerCanceled: string;
   takerCanceled: string;
+  history: OfferHistory[];
 }
 
 const OFFER_FIELDS = `
@@ -93,6 +109,7 @@ const OFFER_FIELDS = `
   sellersStake
   timeout
   uri
+  maker
   messagePublicKey
   messageNonce
   message
@@ -107,6 +124,9 @@ const OFFER_FIELDS = `
   tokenAddress
   token {
     ${ERC20_FIELDS}
+  }
+  history(orderBy: timestamp) {
+    ${OFFER_HISTORY_FIELDS}
   }
 `;
 
@@ -221,6 +241,27 @@ export function useOrderMethods(address: string) {
     'commitBatch'
   );
 
+  const refund = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: Order.abi,
+    },
+    'refund'
+  );
+
+  const useOffer = (args: any) =>
+    useContractRead(
+      {
+        addressOrName: address,
+        contractInterface: Order.abi,
+      },
+      'offers',
+      {
+        args: args,
+      }
+    );
+
+
   return {
     submitOffer,
     withdrawOffer,
@@ -228,6 +269,8 @@ export function useOrderMethods(address: string) {
     commit,
     commitBatch,
     cancel,
+    refund,
+    useOffer,
   };
 }
 
@@ -267,6 +310,30 @@ export function useOrderSubmitOffer(address: string) {
     data,
     isError,
     isLoading,
+  };
+}
+
+export function useOffersFrom(taker: string) {
+  const metadata = useSubgraph<{
+    offers: Array<OfferData>;
+  }>([
+    `
+    query data($taker: ID){
+      offers(where:{
+        taker:$taker
+      }) {
+        ${OFFER_FIELDS}
+      }
+    }
+  `,
+    {
+      taker: taker,
+    },
+  ]);
+
+  return {
+    ...metadata,
+    data: metadata.data?.offers,
   };
 }
 
@@ -358,4 +425,31 @@ export function buyerTransferAmount(order: OrderData): BigNumber {
     order.buyersCostSuggested ? order.buyersCostSuggested : 0
   );
   return cost.gt(price) ? price.add(cost.sub(price)) : price;
+}
+
+export function useAllOffers(maker: string) {
+  const metadata = useSubgraph<{
+    offers: Array<
+      OrderData & {
+        offers: Array<OfferData>;
+      }
+    >;
+  }>([
+    `
+    query allOffers($first: Int, $maker: Bytes) {
+      offers(where:{maker:$maker}) {
+        ${OFFER_FIELDS}
+      }
+    }
+  `,
+    {
+      first: 10,
+      maker,
+    },
+  ]);
+
+  return {
+    ...metadata,
+    data: metadata.data?.offers,
+  };
 }

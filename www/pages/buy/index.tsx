@@ -84,7 +84,9 @@ function Results(props: { searchText: string }) {
 
   return (
     <FadeIn>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">{orderData}</div>
+      <div className="grid grid-cols-2 md:grid-cols-autoTile gap-2">
+        {orderData}
+      </div>
     </FadeIn>
   );
 }
@@ -95,7 +97,7 @@ export default function Page() {
     <ConnectWalletLayout>
       <div className="h-full flex flex-col">
         <div className="mt-6 flex-1 w-full">
-          <div className="max-w-6xl mx-auto px-4">
+          <div className="mx-auto px-4">
             <Suspense fallback={<div></div>}>
               <div className="flex flex-row bg-white border rounded text-sm mb-4 w-full flex-1">
                 <div className="pl-2 pr-2 py-2 flex items-center">
