@@ -6,30 +6,31 @@ title: Metadata
 
 RWTP stores things like titles, descriptions, images, shipping address, and contact information off-chain. Client applications should use [IPFS](https://ipfs.io/) to store this data.[^1]
 
-## Type and Accepts
-
-An Order contains a `uri` that _must_ point to a JSON object. That object _must_ contain a minimum of two fields:
+An Order contains a `uri` that _must_ point to a JSON object. That object _must_ contain a minimum of three fields:
 
 ```typescript
-interface Metadata {
+interface OrderMetadata {
+  // A JSON Schema defining this object
   $type: string;
+
+  // JSON schemas defining accepted metadata for the offer
   $accepts: string[];
+
+  // A publicKey that offerers should encrypt their metadata with
+  // This is not the user's Ethereum address.
+  publicKey: string;
+
+  // A message that, if signed by the user, can be used to generate
+  // the keypair associated with the publicKey.
+  scope?: string;
 }
 ```
+
+## Type and Accepts
 
 The `$type` field is a URI pointing to a JSON schema defining metadata for the _order_ (such as the title, description, and photos). The `$accepts` field is an array of JSON schema URIs that define metadata for acceptable _offers_ (such as shipping details, contact information, and names).
 
 `$type` says "here's what I'm buying or selling". `$accepts` says "here's how I'd like you to give me an offer".
-
-### Offer metadata should be encrypted
-
-Before publishing a user's shipping address and other offer information, you should encrypt it. To ensure a the other party can decrypt it, all offers have the form:
-
-```typescript
-interface OfferMetadata {
-  publicKey: string;
-}
-```
 
 ### Example of a `$type` schema
 
@@ -102,5 +103,51 @@ You could encrypt and then upload metadata like the following:
   "email": "alice@example.org"
 }
 ```
+
+## Encryption
+
+Offers to buy orders or sell orders have metadata. Before publishing a user's shipping address and other offer information, you should encrypt it with the `publicKey` in the `OrderMetadata`.
+
+To ensure a the other party can decrypt it, all offers have the form:
+
+```typescript
+interface OfferMetadata {
+  // The encrypted data, as a hex-encoded JSON string.
+  message: string;
+
+  // A random string included in the message, as a hex-encoded string.
+  // Used to ensure the same string does not encrypt to the same message
+  nonce: string;
+
+  // The public key of the offerer that was used to encrypt the message.
+  publicKey: string;
+
+  // A message that, if signed by the user, can be used to regenerate the
+  // private key and unlock the message for the offerer.
+  scope?: string;
+}
+```
+
+### Generating an encryption key
+
+RWTP client applications frequently need access to encrypted information and lots of it. However, it is not a very bad idea to give an application your ethereum private key.
+
+Therefore, we recommend you have a user sign a message, and using the `sha256(sig)` as the private key for the purposes of encryption.
+
+For example:
+
+```js
+import { signatureToPrivateKey } from 'rwtp';
+
+const scope =
+  'Do you want to allow this software to access your shipping information?';
+
+const sig = await signer.signMessage('scope');
+const key = signatureToPrivateKey(sig);
+```
+
+The `scope` is the literal message that you have the user sign. Store the scope in the metadata so you can regenerate the encryption again. If you don't store the scope, it may be hard to change the human-readable message.
+
+---
 
 [^1] You're free to use other data storage solutions, like Arweave. However, the creators of Real World Trade Protocol pin and archive IPFS CIDs under a certain size limit to help secure the network.
