@@ -20,7 +20,7 @@ export function useEncryption() {
     const key = await createEncryptionKey(signer.data, message);
 
     store.setPrivateKey(key);
-  }, [signer.data]);
+  }, [signer.data, store]);
 
   return {
     generate,

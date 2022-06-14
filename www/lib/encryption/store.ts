@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 type EncryptionState = {
   privateKey?: Uint8Array;
-  setPrivateKey: (privateKey: Uint8Array) => void;
+  setPrivateKey: (_privateKey: Uint8Array) => void;
 };
 
 /**

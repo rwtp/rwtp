@@ -9,7 +9,7 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import { useAccount, useNetwork } from 'wagmi';
 import { useEncryption } from '../lib/encryption/hooks';
-import { useKeystoreLogin } from '../lib/keystore';
+
 import { useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import { ERC20Data } from '../lib/useOrder';
