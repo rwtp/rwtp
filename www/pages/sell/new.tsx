@@ -462,11 +462,11 @@ function CreateOrderButton(props: {
         primaryImageUrl = 'ipfs://' + primaryImageCid;
       }
       return await postJSONToIPFS({
+        publicKey: sellersEncryptionKeypair?.publicKeyAsHex,
         offerSchema: offerSchema,
         title: state.title,
         description: state.description,
         primaryImage: primaryImageUrl,
-        encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
         tokenAddressesSuggested: [erc20Address],
         priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
         sellersStakeSuggested: toBn(

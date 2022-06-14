@@ -1,15 +1,15 @@
 import { CheckCircleIcon, ArrowLeftIcon } from '@heroicons/react/solid';
 import { NextRouter } from 'next/router';
+import { useEncryption } from '../lib/encryption/hooks';
 import { FadeIn } from './FadeIn';
 
-export function KeystoreModal(props: {
-  login: () => Promise<string>;
-  router: NextRouter;
-}) {
+export function KeystoreModal(props: { router: NextRouter }) {
+  const encryption = useEncryption();
+
   return (
     <div className="fixed top-0 left-0 right-0 bottom-0">
       <FadeIn className="bg-gray-300 bg-opacity-50 h-full w-full p-4 border-t flex items-center justify-center">
-        <div className="bg-white border max-w-xl mx-auto">
+        <div className="bg-white border shadow-xl border-black max-w-xl mx-auto mb-24">
           <div className="p-8">
             <h1 className="text-2xl mb-2 font-serif">
               Allow this site to handle sensitive data?
@@ -57,7 +57,7 @@ export function KeystoreModal(props: {
             </button>
             <button
               onClick={() => {
-                props.login().catch(console.error);
+                encryption.generate().catch(console.error);
               }}
               className="bg-black hover:opacity-50 transition-all text-white px-4 py-2 rounded flex items-center"
             >

@@ -9,7 +9,7 @@ import { ethers } from 'ethers';
  * @param sig, A signature, such as 0xc7558dfc1c3324e2260bfc4198...
  * @returns Uint8Array
  */
-export function signatureToPrivateKey(sig: string) {
+function signatureToPrivateKey(sig: string) {
   let data = Buffer.from(sig, 'hex');
   if (sig.startsWith('0x')) {
     data = Buffer.from(sig.split('0x')[1], 'hex');
@@ -27,4 +27,4 @@ const OrderBook = {
   address: '0xbd2e1dbe56053ee310249ce5969208ad7aa72dd0',
 };
 
-export { Order, OrderBook };
+export { Order, OrderBook, signatureToPrivateKey };
