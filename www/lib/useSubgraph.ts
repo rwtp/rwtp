@@ -21,7 +21,7 @@ export function useSubgraph<T>(args: string | [string, any]) {
     chain = KOVAN;
   } else if (chainId === 1) {
     chain = MAINNET;
-  } else if ((chainId = 137)) {
+  } else if (chainId === 137) {
     chain = POLYGON;
   }
 
