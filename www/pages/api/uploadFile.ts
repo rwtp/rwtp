@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { create } from 'ipfs-http-client';
 import { AbortController } from 'node-abort-controller';
+import { cors } from '../../lib/cors';
 
 global.AbortController = AbortController;
 
@@ -24,6 +25,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response | ErrorResponse>
 ) {
+  await cors(req, res);
+
   let input = Buffer.from(req.body, 'base64');
 
   const projectId = process.env.INFURA_IPFS_PROJECT_ID;
