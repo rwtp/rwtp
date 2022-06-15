@@ -190,10 +190,11 @@ async function confirmOffer(index: number, orderAddress:string, taker_wallet: an
 
 
 (async function () {
+  
 
   const provider = new ethers.providers.JsonRpcProvider(PROVIDER);
-  const maker_wallet = new ethers.Wallet(MAKER_PRIVATE_KEY, provider);
-  const taker_wallet = new ethers.Wallet(TAKER_PRIVATE_KEY, provider);
+  const maker_wallet = new ethers.Wallet(MAKER_PRIVATE_KEY!, provider);
+  const taker_wallet = new ethers.Wallet(TAKER_PRIVATE_KEY!, provider);
   console.log('maker address:', maker_wallet.address);
   console.log('taker address:', taker_wallet.address);
 
@@ -218,7 +219,18 @@ async function confirmOffer(index: number, orderAddress:string, taker_wallet: an
           await create_offer(orderAddress, index, taker_wallet, maker_wallet, offer);
           await commitOffer(index, orderAddress, maker_wallet, taker_wallet, offer);
           await confirmOffer(index, orderAddress, taker_wallet);
-        }        
+        }else if (offer.offerState === "CANCELED") {
+          await create_offer(orderAddress, index, taker_wallet, maker_wallet, offer);
+          await commitOffer(index, orderAddress, maker_wallet, taker_wallet, offer);
+          const takerOrderContract = new ethers.Contract(orderAddress, Order.abi, taker_wallet);
+          const makerOrderContract = new ethers.Contract(orderAddress, Order.abi, maker_wallet);
+          const makerCancel = makerOrderContract.cancel(taker_wallet.address, index, { gasLimit: GAS });
+          const takerCancel = takerOrderContract.cancel(taker_wallet.address, index, { gasLimit: GAS });
+          console.log("taker cancel.hash: ", await takerCancel.hash);
+          console.log("maker cancel.hash: ", await makerCancel.hash);
+
+
+        }
       }
     }
     console.log(order);
