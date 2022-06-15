@@ -1,11 +1,4 @@
-import {
-  useOffersFrom,
-  OfferData,
-  OrderData,
-  useOrderMethods,
-  useAllOrderOffers,
-  useOrderOffersFrom,
-} from '../../lib/useOrder';
+import { OfferData, OrderData, useAllOrderOffers } from '../../lib/useOrder';
 import { Suspense, useState } from 'react';
 import { ConnectWalletLayout, Footer } from '../../components/Layout';
 import ManageSidebar from '../../components/ManageSidebar';
@@ -14,28 +7,11 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import {
   toUIString,
-  getExpirationNum,
-  getBuyerFriendlyStatus,
+  //   getExpirationNum,
+  //   getBuyerFriendlyStatus,
 } from '../../lib/ui-logic';
 import { BigNumber } from 'ethers';
 import { getPrimaryImageLink } from '../../lib/image';
-
-// function ActionButtons(props: { listing: OrderData }) {
-//     const [isSetActiveLoading, setisSetActiveLoadingg] = useState(false);
-//     //const signer = useSigner();
-//     const account = useAccount();
-
-//     const methods = useOrderMethods(props.order.address);
-
-//     async function callToggleActive(active:boolean) {
-//       const tx = await methods.confirm.writeAsync({
-//         args: [active],
-//         overrides: {
-//           gasLimit: 1000000,
-//         },
-//       });
-//     }
-// }
 
 function RenderOffers(props: { listing: OrderData }) {
   const totalOffers = props.listing.offers.length;
@@ -48,34 +24,6 @@ function RenderOffers(props: { listing: OrderData }) {
     );
   } else {
     return (
-      //   <div className="flex flex-col gap-1">
-      //     <div className="flex flex-row gap-2 w-full">
-      //       <div className="text-sm font-mono text-gray-400">Total Offers:</div>
-      //       <div className="text-sm">{totalOffers}</div>
-      //     </div>
-      //     <div className="ml-4 flex flex-row gap-2 w-full">
-      //       <div className="text-sm font-mono text-gray-400">In Progress:</div>
-      //       <div className="text-sm">
-      //         {
-      //           props.listing.offers.filter(
-      //             (l: OfferData) =>
-      //               l.history[l.history.length - 1].state === 'Committed'
-      //           ).length
-      //         }
-      //       </div>
-      //     </div>
-      //     <div className="ml-4 flex flex-row gap-2 w-full">
-      //       <div className="text-sm font-mono text-gray-400">Completed:</div>
-      //       <div className="text-sm">
-      //         {
-      //           props.listing.offers.filter(
-      //             (l: OfferData) =>
-      //               l.history[l.history.length - 1].state === 'Confirmed'
-      //           ).length
-      //         }
-      //       </div>
-      //     </div>
-      //   </div>
       <div className="flex flex-col gap-1">
         <div className="grid grid-cols-2 gap-2 w-full">
           <div className="flex flex-col gap-1">
@@ -121,11 +69,13 @@ function ListingTile(props: {
   console.log(props.listing.offers);
   return (
     <div className={`flex flex-col lg:flex-row border gap-4 p-2 pr-4`}>
-      <img
-        className="object-cover w-full h-60 lg:w-36 lg:h-36"
-        src={getPrimaryImageLink(props.listing)}
-        alt="item"
-      />
+      <div className="w-36">
+        <img
+          className="object-cover w-full h-60 lg:h-36"
+          src={getPrimaryImageLink(props.listing)}
+          alt="item"
+        />
+      </div>
       <div className="flex flex-col w-full">
         <div className="flex flex-row gap-4 justify-between">
           <div className="overflow-hidden font-serif text-lg">
@@ -220,7 +170,11 @@ function Listings(props: { setTxHash: (_: any) => void }) {
       );
     });
 
-  return <div className="w-full flex flex-col gap-4 mr-4">{listingView}</div>;
+  return (
+    <div className="w-full h-5/6 flex flex-col gap-4 mr-4 overflow-auto">
+      {listingView}
+    </div>
+  );
 }
 
 export default function ManageListingPage() {
@@ -230,18 +184,16 @@ export default function ManageListingPage() {
   const [txHash, setTxHash] = useState('');
 
   return (
-    <ConnectWalletLayout txHash={txHash}>
-      <div className="h-full flex flex-col">
-        <div className="flex-1 max-w-6xl">
-          <div className="flex flex-row gap-4 h-full">
-            {ManageSidebar(page)}
-            <Suspense fallback={<div></div>}>
-              <Listings setTxHash={setTxHash} />
-            </Suspense>
-          </div>
+    <div className="flex flex-col h-screen w-screen pr-2">
+      <ConnectWalletLayout txHash={txHash}>
+        <div className="flex flex-row gap-4 h-full max-w-6xl">
+          {ManageSidebar(page)}
+          <Suspense fallback={<div></div>}>
+            <Listings setTxHash={setTxHash} />
+          </Suspense>
         </div>
-        <Footer />
-      </div>
-    </ConnectWalletLayout>
+      </ConnectWalletLayout>
+      <Footer />
+    </div>
   );
 }

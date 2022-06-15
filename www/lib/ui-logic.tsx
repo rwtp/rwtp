@@ -67,11 +67,33 @@ export function getExpirationNum(offer: OfferData) {
   }
 }
 
-export function getBuyerFriendlyStatus(status: string) {
+export function getBuyerFriendlyStatus(offer: OfferData) {
+  const status = offer.state;
   if (status === 'Committed') {
+    if (offer.makerCanceled) {
+      return 'Seller Canceled';
+    } else if (offer.takerCanceled) {
+      return "Pending Seller's Cancellation";
+    }
     return 'In Progress';
   } else if (status === 'Open') {
     return "Pending Seller's Approval";
+  } else if (status === 'Confirmed') {
+    return 'Complete';
+  } else {
+    return status;
+  }
+}
+
+export function getSellerFriendlyStatus(offer: OfferData) {
+  const status = offer.state;
+  if (status === 'Committed') {
+    if (offer.makerCanceled) {
+      return "Pending Buyer's Cancelation";
+    } else if (offer.takerCanceled) {
+      return 'Buyer Canceled';
+    }
+    return status;
   } else if (status === 'Confirmed') {
     return 'Complete';
   } else {

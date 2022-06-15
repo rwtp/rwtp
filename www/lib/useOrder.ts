@@ -32,7 +32,7 @@ export interface OrderData {
   buyersCostSuggested: string;
   suggestedTimeout: string;
   error: string;
-  offers: string;
+  offers: Array<OfferData>;
   offerCount: string;
   maker: string;
   createdAt: string;
@@ -96,8 +96,8 @@ export interface OfferData {
   state: string;
   order: OrderData;
   acceptedAt: string;
-  makerCanceled: string;
-  takerCanceled: string;
+  makerCanceled: boolean;
+  takerCanceled: boolean;
   history: OfferHistory[];
 }
 
