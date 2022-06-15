@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { create } from 'ipfs-http-client';
 import { AbortController } from 'node-abort-controller';
+import { cors } from '../../lib/cors';
 
 global.AbortController = AbortController;
 
@@ -53,6 +54,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Response>
 ) {
+  await cors(req, res);
+
   const body = req.body as Body;
   res.status(200).json({ cid: await uploadJson(body) });
 }
