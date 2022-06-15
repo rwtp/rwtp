@@ -26,7 +26,21 @@ export function useEncryption() {
     generate,
     hasKey,
     keypair: store.privateKey
-      ? nacl.box.keyPair.fromSecretKey(store.privateKey)
+      ? nacl.box.keyPair.fromSecretKey(toUint8Array(store.privateKey))
       : undefined,
   };
+}
+
+function toUint8Array(obj: any) {
+  if (Array.isArray(obj)) {
+    return Uint8Array.from(obj);
+  }
+
+  // When storing a Uint8Array in local storage, it sometimes gets converted
+  // into an "object" where the keys are the indices of the array.
+  if (typeof obj === 'object') {
+    return Uint8Array.from(Object.values(obj));
+  }
+
+  throw new Error("Can't convert object to Uint8Array.");
 }
