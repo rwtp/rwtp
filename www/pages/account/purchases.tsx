@@ -59,7 +59,7 @@ function RenderPenalizeConsequences(props: { offer: OfferData }) {
 
   if (hasRefund && buyersCostAmount != '0') {
     return (
-      <div className="flex flex-col max-w-xs">
+      <div className="flex flex-col">
         <p className="my-2 text-sm">
           This should only be used as a last resort if the seller is dishonest
           or unresponsive. If you press this button you will get a refund of{' '}
@@ -77,7 +77,7 @@ function RenderPenalizeConsequences(props: { offer: OfferData }) {
   } else if (hasRefund && buyersCostAmount === '0') {
     return (
       <div className="flex flex-col">
-        <p className="my-2">
+        <p className="my-2 text-sm">
           This should only be used as a last resort if the seller is dishonest
           or unresponsive. If you press this button the seller will lose{' '}
           <b>
@@ -90,7 +90,7 @@ function RenderPenalizeConsequences(props: { offer: OfferData }) {
   } else {
     return (
       <div className="flex flex-col">
-        <p className="my-2">
+        <p className="my-2 text-sm">
           This should only be used as a last resort if the seller is dishonest
           or unresponsive. If you press this button, you will lose your deposit
           of{' '}
@@ -164,16 +164,7 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
     return tx.hash;
   }
 
-  // *********THERE IS A BUG IN THE GRAPH FOR UPDATING TAKER CANCELED :(*************
-  //let offer = methods.useOffer([account.data?.address, props.offer.index]);
   async function callCancel() {
-    // const last_offer = props.offer.history[props.offer.history.length - 1];
-    // console.log('props.last_offer', last_offer.takerCanceled);
-    // console.log('props.address', props.offer.taker);
-    // console.log('props.offer:', props.offer.timestamp);
-    // console.log('taker_canceled:', props.offer.takerCanceled);
-    // console.log('data:', offer.data);
-    // return;
     const tx = await methods.cancel.writeAsync({
       args: [account.data?.address, props.offer.index],
       overrides: {
@@ -184,16 +175,22 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
     setIsCancelLoading(true);
 
     await tx.wait();
-    // console.log('before ', props.offer.takerCanceled);
     setIsCancelLoading(false);
-    // let data = await methods.offer;
-    // console.log('data:', data);
-    // console.log('after ', props.offer.takerCanceled);
     console.log('Canceled');
     return tx.hash;
   }
 
-  console.log('taker canceled: ', props.offer.takerCanceled);
+  let [_buyersCostName, buyersCostAmount, hasRefund] = getBuyersBuyerCost(
+    props.offer
+  );
+
+  let reportString = '';
+
+  if (hasRefund && buyersCostAmount != '0') {
+    reportString = `Get Refund`;
+  } else if (!hasRefund) {
+    reportString = `Lose Deposit`;
+  }
 
   if (state == 'Open') {
     return (
@@ -240,11 +237,11 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
                 onClick={() => callRefund()}
                 disabled={isRefundLoading}
               >
-                Penalize Seller
+                Report Fraud and {reportString}
               </button>
             }
           >
-            <div className="flex flex-col border rounded bg-white drop-shadow-md p-4 px-6">
+            <div className="flex flex-col border rounded bg-white drop-shadow-md p-4 px-6 max-w-xs">
               <div className="font-serif text-lg text-center">
                 Are you sure?
               </div>
