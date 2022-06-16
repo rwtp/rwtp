@@ -187,13 +187,15 @@ export default function ManageListingPage() {
     <div className="flex flex-col h-screen w-screen pr-2">
       <ConnectWalletLayout txHash={txHash}>
         <div className="flex flex-row gap-4 h-full max-w-6xl">
-          {ManageSidebar(page)}
+          <div>{ManageSidebar(page)}</div>
           <Suspense fallback={<div></div>}>
             <Listings setTxHash={setTxHash} />
           </Suspense>
         </div>
+        <div className="w-full mb-0">
+          <Footer />
+        </div>
       </ConnectWalletLayout>
-      <Footer />
     </div>
   );
 }

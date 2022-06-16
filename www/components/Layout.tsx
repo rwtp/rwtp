@@ -102,7 +102,7 @@ export function ConnectWalletLayout(props: {
     hash: props.txHash,
   });
   return (
-    <div className="flex flex-col h-full">
+    <div className="relative flex flex-col flex-initial h-full">
       <div className="flex px-4 py-4 justify-between items-center w-full mx-auto w-full">
         <div className="flex items-center">
           <Link href="/">
@@ -227,7 +227,7 @@ export function ConnectWalletLayout(props: {
           </a>
         </div>
       </div>
-      <div className="h-full w-full bg-white">
+      <div className="relative flex flex-col flex-initial h-full w-full bg-white">
         <>{props.children}</>
       </div>
     </div>
@@ -236,7 +236,7 @@ export function ConnectWalletLayout(props: {
 
 export function Footer() {
   return (
-    <div className="relative mb-0 px-4 py-2 w-full bg-black text-sm text-gray-200 gap-2">
+    <div className="px-4 py-2 w-full bg-black text-sm text-gray-200">
       RWTP is currently unaudited protocol; use at your own risk.
     </div>
   );

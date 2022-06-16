@@ -387,16 +387,18 @@ export default function ManagePurchasesPage() {
   const [txHash, setTxHash] = useState('');
 
   return (
-    <div className="flex flex-col relative h-screen w-screen">
+    <div className="relative h-screen w-screen">
       <ConnectWalletLayout txHash={txHash}>
         <div className="relative max-w-6xl flex flex-row gap-4 h-full">
-          {ManageSidebar(page)}
+          <div>{ManageSidebar(page)}</div>
           <Suspense fallback={<div></div>}>
             <Purchases setTxHash={setTxHash} />
           </Suspense>
         </div>
+        <div className="w-full mb-0">
+          <Footer />
+        </div>
       </ConnectWalletLayout>
-      <Footer />
     </div>
   );
 }
