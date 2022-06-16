@@ -32,7 +32,7 @@ export interface OrderData {
   buyersCostSuggested: string;
   suggestedTimeout: string;
   error: string;
-  offers: string;
+  offers: Array<OfferData>;
   offerCount: string;
   maker: string;
   createdAt: string;
@@ -96,8 +96,8 @@ export interface OfferData {
   state: string;
   order: OrderData;
   acceptedAt: string;
-  makerCanceled: string;
-  takerCanceled: string;
+  makerCanceled: boolean;
+  takerCanceled: boolean;
   history: OfferHistory[];
 }
 
@@ -249,6 +249,14 @@ export function useOrderMethods(address: string) {
     'refund'
   );
 
+  const setActive = useContractWrite(
+    {
+      addressOrName: address,
+      contractInterface: Order.abi,
+    },
+    'setActive'
+  );
+
   const useOffer = (args: any) =>
     useContractRead(
       {
@@ -269,6 +277,7 @@ export function useOrderMethods(address: string) {
     commitBatch,
     cancel,
     refund,
+    setActive,
     useOffer,
   };
 }

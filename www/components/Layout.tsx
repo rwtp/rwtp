@@ -103,7 +103,7 @@ export function ConnectWalletLayout(props: {
   });
   return (
     <div className="flex flex-col h-full">
-      <div className="flex px-4 py-4  justify-between items-center w-full mx-auto w-full">
+      <div className="flex px-4 py-4 justify-between items-center w-full mx-auto w-full">
         <div className="flex items-center">
           <Link href="/">
             <a className="flex items-center justify-center">
@@ -126,7 +126,7 @@ export function ConnectWalletLayout(props: {
                 chain,
                 openConnectModal,
                 openChainModal,
-                openAccountModal,
+                // openAccountModal,
               }) => {
                 if (!mounted || !account || !chain || !switchNetwork) {
                   return (
@@ -174,13 +174,24 @@ export function ConnectWalletLayout(props: {
                       <SwitchHorizontalIcon className="h-4 w-4 ml-2" />
                     </button>
                     {waitForTransaction.status != 'loading' && (
-                      <button
-                        className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
-                        onClick={() => openAccountModal()}
+                      // <button
+                      //   className="bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50"
+                      //   onClick={() => openAccountModal()}
+                      // >
+                      //   {account.ensName ? account.ensName : keyDetails}
+                      //   {/* <FingerPrintIcon className="h-4 w-4 ml-2" /> */}
+                      // </button>
+                      <a
+                        href="/account"
+                        className={cn({
+                          'flex px-4 rounded text-sm py-1': true,
+                          'bg-black text-white':
+                            router.pathname.startsWith('/account'),
+                          border: !router.pathname.startsWith('/account'),
+                        })}
                       >
                         {account.ensName ? account.ensName : keyDetails}
-                        <FingerPrintIcon className="h-4 w-4 ml-2" />
-                      </button>
+                      </a>
                     )}
                     {waitForTransaction.status == 'loading' && (
                       <div className="animate-pulse bg-white border text-sm border-gray-200 rounded px-2 py-1 flex items-center font-mono hover:opacity-50">
@@ -216,7 +227,7 @@ export function ConnectWalletLayout(props: {
           </a>
         </div>
       </div>
-      <div className="h-full bg-white">
+      <div className="h-full w-full bg-white">
         <>{props.children}</>
       </div>
     </div>
@@ -225,10 +236,8 @@ export function ConnectWalletLayout(props: {
 
 export function Footer() {
   return (
-    <div className="flex px-4 py-2 bg-black text-sm text-gray-200 gap-2">
-      <div className="flex gap-2 text-center w-full">
-        RWTP is currently unaudited protocol; use at your own risk.
-      </div>
+    <div className="relative mb-0 px-4 py-2 w-full bg-black text-sm text-gray-200 gap-2">
+      RWTP is currently unaudited protocol; use at your own risk.
     </div>
   );
 }

@@ -7,23 +7,27 @@ import {
   useAllOffers,
   useOrderMethods,
 } from '../../lib/useOrder';
-import { useAccount } from 'wagmi';
+import { useAccount, useSigner } from 'wagmi';
 import { DuplicateIcon } from '@heroicons/react/outline';
 import { FadeIn } from '../../components/FadeIn';
 import dayjs from 'dayjs';
 import { useRouter } from 'next/router';
 import { toUIString } from '../../lib/ui-logic';
 import { BigNumber } from 'ethers';
-import { getExpirationNum } from '../../lib/ui-logic';
+import { getExpirationNum, getSellerFriendlyStatus } from '../../lib/ui-logic';
+import { formatTokenAmount, useTokenMethods } from '../../lib/tokens';
 
 function ActionButtons(props: { offer: OfferData; order: OrderData }) {
   const state = props.offer.state;
+  const signer = useSigner();
+
   const [isCancelLoading, setIsCancelLoading] = useState(false);
   const [isCommitLoading, setIsCommitLoading] = useState(false);
+  // const [errorMessage, setErrorMessage] = useState('');
   // const signer = useSigner();
-  //const account = useAccount();
 
   const methods = useOrderMethods(props.order.address);
+  const tokenMethods = useTokenMethods(props.offer.tokenAddress);
 
   // *********THERE IS A BUG IN THE GRAPH FOR UPDATING TAKER CANCELED :(*************
   //let offer = methods.useOffer([account.data?.address, props.offer.index]);
@@ -44,19 +48,53 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
   }
 
   async function callCommit() {
-    const tx = await methods.commit.writeAsync({
-      args: [props.offer.taker, props.offer.index],
-      overrides: {
-        gasLimit: 1000000,
-      },
-    });
-
+    if (!signer || !signer.data) return;
     setIsCommitLoading(true);
 
-    await tx.wait();
+    console.log(
+      `Requesting ${formatTokenAmount(
+        props.offer.sellersStake,
+        props.offer.token
+      )} ${props.offer.token.symbol}`
+    );
+    const approveTxHash = await approveTokens();
+    if (!approveTxHash) {
+      setIsCommitLoading(false);
+      return;
+    }
+    console.log(`Committing`);
+    const submitTxHash = await commit();
     setIsCommitLoading(false);
-    console.log('Committed');
-    return tx.hash;
+    if (!submitTxHash) return;
+  }
+
+  async function commit(): Promise<string | undefined> {
+    try {
+      const tx = await methods.commit.writeAsync({
+        args: [props.offer.taker, props.offer.index],
+      });
+      await tx.wait();
+      return tx.hash;
+    } catch (error) {
+      //setErrorMessage('Error Committing');
+      console.log(error);
+      return undefined;
+    }
+  }
+
+  async function approveTokens(): Promise<string | undefined> {
+    try {
+      const tx = await tokenMethods.approve.writeAsync({
+        args: [props.offer.order.address, props.offer.sellersStake],
+      });
+
+      await tx.wait();
+      return tx.hash;
+    } catch (error) {
+      //setErrorMessage('Error Approving');
+      console.log(error);
+      return undefined;
+    }
   }
 
   if (state == 'Open') {
@@ -80,9 +118,11 @@ function ActionButtons(props: { offer: OfferData; order: OrderData }) {
           <button
             className="bg-white rounded border border-black text-xs px-1 py-1 hover:opacity-50 disabled:opacity-10"
             onClick={() => callCancel()}
-            disabled={isCancelLoading}
+            disabled={isCancelLoading || props.offer.makerCanceled}
           >
-            Request Cancellation
+            {props.offer.takerCanceled
+              ? 'Agree to Cancel'
+              : 'Request Cancelation'}
           </button>
         </div>
       </>
@@ -107,8 +147,6 @@ function OffersTableRow(props: { offer: OfferData }) {
     console.error('First state transition for an offer was not `Open`');
   }
 
-  let lastState = props.offer.history[props.offer.history.length - 1];
-
   const uri = props.offer.uri;
   if (!uri.startsWith('ipfs://')) {
     console.error('URI does not start with `ipfs://`');
@@ -116,13 +154,14 @@ function OffersTableRow(props: { offer: OfferData }) {
   const orderId = uri.replace('ipfs://', '');
   const uriPrefix = orderId.slice(0, 8) + '…';
 
-  console.log(props.offer.taker);
+  const stateString = getSellerFriendlyStatus(props.offer);
   return (
     <tr
       className={`border-b text-${
         props.offer.state === 'Withdrawn' ||
         props.offer.state === 'Refunded' ||
-        props.offer.state === 'Confirmed'
+        props.offer.state === 'Confirmed' ||
+        props.offer.state === 'Canceled'
           ? 'gray-400'
           : 'black'
       }`}
@@ -136,14 +175,14 @@ function OffersTableRow(props: { offer: OfferData }) {
       <td className="px-4 py-1 whitespace-nowrap">
         <button
           className="flex flex-row hover:opacity-50 cursor-copy"
-          onClick={(_e) => copyToClipboard(orderId)}
+          onClick={(_e) => copyToClipboard(props.offer.uri)}
         >
           <pre>{uriPrefix}</pre>
           <DuplicateIcon className="h-4 w-4 ml-2" />
         </button>
       </td>
       <td className="px-4 py-1 whitespace-nowrap">
-        {getExpirationNum(props.offer) != 0
+        {getExpirationNum(props.offer) != 0 && props.offer.state === 'Committed'
           ? dayjs
               .unix(getExpirationNum(props.offer))
               .format('MMM D YYYY, h:mm a')
@@ -166,7 +205,7 @@ function OffersTableRow(props: { offer: OfferData }) {
         {props.offer.order.tokensSuggested[0].symbol}
       </td>
       {/* <td></td> */}
-      <td className="px-4 py-1 whitespace-nowrap">{lastState.state}</td>
+      <td className="px-4 py-1 whitespace-nowrap">{stateString}</td>
       <td className="px-4 py-1 whitespace-nowrap">
         <ActionButtons
           key={props.offer.index + props.offer.uri + props.offer.acceptedAt}
@@ -191,7 +230,16 @@ function OffersTable() {
   }
 
   if (offers.data.length === 0) {
-    return <div className="text-gray-500">There are no open offers.</div>;
+    return (
+      <div className="flex flex-col text-gray-500 h-full mt-16">
+        <img
+          className="object-fit h-48 mb-8 mx-auto"
+          src={'/sad.png'}
+          alt="sadman"
+        />
+        <div className="text-center">You have no open offers :(</div>
+      </div>
+    );
   }
 
   const allOffers = offers.data
@@ -212,7 +260,7 @@ function OffersTable() {
 
   return (
     <FadeIn>
-      <table className="table-auto text-left">
+      <table className="table-auto text-left h-full max-w-full">
         <thead className="bg-gray-50">
           <tr>
             <th className="px-4 py-2 whitespace-nowrap">Order Date</th>
@@ -239,21 +287,23 @@ export default function ManageOffersPage() {
   let n = router.pathname.lastIndexOf('/');
   let page = router.pathname.substring(n + 1);
   return (
-    <ConnectWalletLayout>
-      <div className="h-full flex flex-col">
-        <div className="flex-1 w-full">
-          <div className="flex flex-row gap-4 h-full">
-            {ManageSidebar(page)}
-            <Suspense fallback={<div></div>}>
-              <div className="px-2 space-y-4">
-                <h1 className="font-serif text-3xl pb-1">All Offers</h1>
+    <div className="flex flex-col h-screen w-screen">
+      <ConnectWalletLayout>
+        <div className="flex flex-row gap-4 h-full w-full">
+          {ManageSidebar(page)}
+          <Suspense fallback={<div></div>}>
+            <div className="relative space-y-4 h-5/6 max-w-85 pr-4">
+              <h1 className="font-serif text-3xl pb-1">All Offers</h1>
+              <div className={`h-full w-full overflow-auto`}>
                 <OffersTable />
               </div>
-            </Suspense>
-          </div>
+            </div>
+          </Suspense>
         </div>
+      </ConnectWalletLayout>
+      <div className="mb-0">
         <Footer />
       </div>
-    </ConnectWalletLayout>
+    </div>
   );
 }
