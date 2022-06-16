@@ -343,7 +343,7 @@ function Purchases(props: { setTxHash: (_: any) => void }) {
 
   if (purchases.data.length === 0) {
     return (
-      <div className="flex flex-col text-gray-500 w-full h-full mt-32 overflow-none">
+      <div className="flex flex-col text-gray-500 w-full h-1/2 mt-32 overflow-none">
         <img
           className="object-fit h-48 mb-8 mx-auto"
           src={'/sad.png'}

@@ -171,7 +171,7 @@ function Listings(props: { setTxHash: (_: any) => void }) {
     });
 
   return (
-    <div className="w-full h-5/6 flex flex-col gap-4 mr-4 overflow-auto">
+    <div className="w-full h-[calc(100%-12rem)] flex flex-col flex-initial gap-4 mr-4 overflow-auto">
       {listingView}
     </div>
   );
@@ -184,9 +184,9 @@ export default function ManageListingPage() {
   const [txHash, setTxHash] = useState('');
 
   return (
-    <div className="flex flex-col h-screen w-screen pr-2">
+    <div className="flex flex-col h-screen w-screen">
       <ConnectWalletLayout txHash={txHash}>
-        <div className="flex flex-row gap-4 h-full max-w-6xl">
+        <div className="relative flex flex-row gap-4 h-full max-w-6xl">
           <div>{ManageSidebar(page)}</div>
           <Suspense fallback={<div></div>}>
             <Listings setTxHash={setTxHash} />

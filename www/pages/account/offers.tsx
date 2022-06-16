@@ -260,7 +260,7 @@ function OffersTable() {
 
   return (
     <FadeIn className="relative w-full h-[calc(100%-4rem)]">
-      <div className="border rounded overflow-auto max-h-[80vh] w-[calc(100%-13rem)]">
+      <div className="border rounded overflow-auto max-h-[80vh] w-full">
         <table className="table-auto text-left h-full max-w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -294,7 +294,7 @@ export default function ManageOffersPage() {
         <div className="relative flex flex-row gap-4 h-full w-full">
           <div>{ManageSidebar(page)}</div>
           <Suspense fallback={<div></div>}>
-            <div className="relative space-y-4 h-full w-full pr-4">
+            <div className="relative space-y-4 h-full w-[calc(100%-13rem)] pr-4">
               <h1 className="font-serif text-3xl pb-1">All Offers</h1>
               <OffersTable />
             </div>
