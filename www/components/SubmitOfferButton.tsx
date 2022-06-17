@@ -2,11 +2,11 @@ import { RefreshIcon } from '@heroicons/react/solid';
 import { BigNumber } from 'ethers';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
+import { encrypt } from '../lib/encryption/core';
+import { useEncryption } from '../lib/encryption/hooks';
 import { postJSONToIPFS } from '../lib/ipfs';
-import { encryptMessage, formatMessageForUpload } from '../lib/keystoreLib';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
-import { useEncryptionKeypair } from '../lib/useEncryptionKey';
 import {
   buyerTransferAmount,
   OrderData,
@@ -23,7 +23,7 @@ export function SubmitOfferButton(props: {
   const chainId = useChainId();
   const tokenMethods = useTokenMethods(props.order.tokenAddressesSuggested[0]);
   const orderMethods = useOrderMethods(props.order.address);
-  const buyersEncryptionKeypair = useEncryptionKeypair();
+  const encryption = useEncryption();
 
   const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -75,18 +75,15 @@ export function SubmitOfferButton(props: {
 
   async function uploadBuyerData(): Promise<string | undefined> {
     if (!props.offerData) return;
-    if (!buyersEncryptionKeypair) return;
+    if (!encryption.keypair) return;
     try {
-      const msg = encryptMessage({
+      const msg = encrypt({
         receiverPublicEncryptionKey: props.order.encryptionPublicKey,
         secretData: JSON.stringify(props.offerData),
-        senderPrivatekey: buyersEncryptionKeypair?.secretKey,
+        senderPrivatekey: encryption.keypair?.secretKey,
       });
 
-      const data = formatMessageForUpload(
-        msg,
-        buyersEncryptionKeypair.publicKey
-      );
+      const data = formatMessageForUpload(msg, encryption.keypair.publicKey);
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');

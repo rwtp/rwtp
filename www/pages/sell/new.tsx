@@ -6,7 +6,6 @@ import { ethers } from 'ethers';
 import { toBn } from 'evm-bn';
 import { useRouter } from 'next/router';
 import { ConnectWalletLayout } from '../../components/Layout';
-import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import SelectSearch from 'react-select-search';
 import { renderToken, getNetworkList } from '../../lib/tokenDropdown';
 import { DEFAULT_TOKEN } from '../../lib/constants';
@@ -29,6 +28,7 @@ import {
   postJSONToIPFS,
   postFileToIPFS,
 } from '../../lib/ipfs';
+import { useEncryption } from '../../lib/encryption/hooks';
 
 export default function Page() {
   const { activeChain } = useNetwork();
@@ -383,7 +383,7 @@ function CreateOrderButton(props: {
   const signer = useSigner();
   const router = useRouter();
   const chainId = useChainId();
-  const sellersEncryptionKeypair = useEncryptionKeypair();
+  const encryption = useEncryption();
   const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -462,11 +462,13 @@ function CreateOrderButton(props: {
         primaryImageUrl = 'ipfs://' + primaryImageCid;
       }
       return await postJSONToIPFS({
+        publicKey: encryption.keypair
+          ? Buffer.from(encryption.keypair.publicKey).toString('hex')
+          : '',
         offerSchema: offerSchema,
         title: state.title,
         description: state.description,
         primaryImage: primaryImageUrl,
-        encryptionPublicKey: sellersEncryptionKeypair?.publicKeyAsHex,
         tokenAddressesSuggested: [erc20Address],
         priceSuggested: toBn(state.price.toString(), decimals).toHexString(),
         sellersStakeSuggested: toBn(

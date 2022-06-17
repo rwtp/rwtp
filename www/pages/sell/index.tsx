@@ -18,19 +18,19 @@ import {
   useOrderMethods,
 } from '../../lib/useOrder';
 import nacl from 'tweetnacl';
-import { useEncryptionKeypair } from '../../lib/useEncryptionKey';
 import {
   HasTokenBalanceButton,
   KeyStoreConnectedButton,
   WalletConnectedButton,
 } from '../../components/Buttons';
 import { formatTokenAmount, useTokenMethods } from '../../lib/tokens';
+import { useEncryption } from '../../lib/encryption/hooks';
 
 function Offer(props: {
   offer: OfferData;
   setTxHash: Dispatch<SetStateAction<string>>;
 }) {
-  const sellersEncryptionKeypair = useEncryptionKeypair();
+  const encryption = useEncryption();
   const signer = useSigner();
   const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -40,13 +40,13 @@ function Offer(props: {
   const offer = props.offer;
 
   useEffect(() => {
-    if (sellersEncryptionKeypair) {
+    if (encryption.keypair) {
       try {
         const decrypted = nacl.box.open(
           Buffer.from(offer.message, 'hex'),
           Buffer.from(offer.messageNonce, 'hex'),
           Buffer.from(offer.messagePublicKey, 'hex'),
-          sellersEncryptionKeypair.secretKey
+          encryption.keypair.secretKey
         );
         setDecryptedMessage(Buffer.from(decrypted!).toString());
       } catch (error) {
@@ -54,7 +54,7 @@ function Offer(props: {
       }
     }
   }, [
-    sellersEncryptionKeypair,
+    encryption.keypair,
     offer.message,
     offer.messageNonce,
     offer.messagePublicKey,
