@@ -7626,10 +7626,10 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rwtp@^0.11.1:
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.11.1.tgz#d652d63ab11b7663ccd22b952f095c26ae7ba6e6"
-  integrity sha512-+vaJ6Uy1DJ5beEwBKTaQSXQeb9z4EuOYHi+Z+I/qEdsVORWlmeV07st7IadIIDF4lHTyBqlsOfKl7kJsg45OIg==
+rwtp@0.11.2-1:
+  version "0.11.2-1"
+  resolved "https://registry.yarnpkg.com/rwtp/-/rwtp-0.11.2-1.tgz#3f2d046a2699d29ef2973bda4c2a8137f9501378"
+  integrity sha512-NgM2kAag8D7/vb9sDiFasDq3+cw67DOR61b9hvisLfZjLh6W3wY2kQsfYdeo8MeQRe6KjNQrysViKzskqPX5Ow==
   dependencies:
     "@headlessui/react" "^1.6.1"
     "@openzeppelin/contracts" "^4.6.0"

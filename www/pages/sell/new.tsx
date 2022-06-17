@@ -29,7 +29,6 @@ import {
   postFileToIPFS,
 } from '../../lib/ipfs';
 import { useEncryption } from '../../lib/encryption/hooks';
-import { keyAsHex } from '../../lib/encryption/core';
 
 export default function Page() {
   const { activeChain } = useNetwork();
@@ -464,7 +463,7 @@ function CreateOrderButton(props: {
       }
       return await postJSONToIPFS({
         publicKey: encryption.keypair
-          ? keyAsHex(encryption.keypair).publicKeyAsHex
+          ? Buffer.from(encryption.keypair.publicKey).toString('hex')
           : '',
         offerSchema: offerSchema,
         title: state.title,

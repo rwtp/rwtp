@@ -14,7 +14,7 @@ export async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
     };
   }
 
-  const result = await fetch('https://rwtp.org/api/uploadJson', {
+  const result = await fetch('https://www.rwtp.org/api/uploadJson', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ export async function postJSONToIPFS(data: any, addDataTag: boolean = true) {
 }
 
 export async function postFileToIPFS(file: Buffer) {
-  const result = await fetch('https://rwtp.org/api/uploadFile', {
+  const result = await fetch('https://www.rwtp.org/api/uploadFile', {
     method: 'POST',
     body: file.toString('base64'),
   });

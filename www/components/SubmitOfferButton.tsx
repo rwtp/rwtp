@@ -2,9 +2,9 @@ import { RefreshIcon } from '@heroicons/react/solid';
 import { BigNumber } from 'ethers';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
+import { encrypt } from '../lib/encryption/core';
 import { useEncryption } from '../lib/encryption/hooks';
 import { postJSONToIPFS } from '../lib/ipfs';
-import { encryptMessage, formatMessageForUpload } from '../lib/keystoreLib';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
 import { useChainId } from '../lib/useChainId';
 import {
@@ -77,7 +77,7 @@ export function SubmitOfferButton(props: {
     if (!props.offerData) return;
     if (!encryption.keypair) return;
     try {
-      const msg = encryptMessage({
+      const msg = encrypt({
         receiverPublicEncryptionKey: props.order.encryptionPublicKey,
         secretData: JSON.stringify(props.offerData),
         senderPrivatekey: encryption.keypair?.secretKey,
