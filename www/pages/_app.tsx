@@ -17,7 +17,14 @@ import Head from 'next/head';
 
 const { chains, provider } = configureChains(
   // [chain.mainnet, chain.polygon, chain.optimism, chain.rinkeby],
-  [chain.optimism, chain.rinkeby, chain.kovan, chain.polygon, chain.mainnet],
+  [
+    chain.optimism,
+    chain.rinkeby,
+    chain.kovan,
+    chain.polygon,
+    chain.mainnet,
+    chain.goerli,
+  ],
   [apiProvider.fallback()]
 );
 
