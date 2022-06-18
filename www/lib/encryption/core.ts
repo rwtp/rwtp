@@ -20,6 +20,10 @@ interface EncryptedMessage {
   encrypted: Uint8Array;
 }
 
+export function toHex(arr: Uint8Array) {
+  return Buffer.from(arr).toString('hex');
+}
+
 export function encrypt(args: EncryptionParameters): EncryptedMessage {
   const secretDataUTF8 = Buffer.from(args.message, 'utf-8');
   const nonce = nacl.randomBytes(24);

@@ -2,7 +2,7 @@ import { RefreshIcon } from '@heroicons/react/solid';
 import { BigNumber } from 'ethers';
 import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction, useState } from 'react';
-import { encrypt } from '../lib/encryption/core';
+import { encrypt, toHex } from '../lib/encryption/core';
 import { useEncryption } from '../lib/encryption/hooks';
 import { postJSONToIPFS } from '../lib/ipfs';
 import { formatTokenAmount, useTokenMethods } from '../lib/tokens';
@@ -79,11 +79,16 @@ export function SubmitOfferButton(props: {
     try {
       const msg = encrypt({
         receiverPublicEncryptionKey: props.order.encryptionPublicKey,
-        secretData: JSON.stringify(props.offerData),
+        message: JSON.stringify(props.offerData),
         senderPrivatekey: encryption.keypair?.secretKey,
       });
 
-      const data = formatMessageForUpload(msg, encryption.keypair.publicKey);
+      const data = {
+        publicKey: toHex(encryption.keypair.publicKey),
+        message: toHex(msg.encrypted),
+        nonce: toHex(msg.nonce),
+        scope: encryption.scope,
+      };
       return await postJSONToIPFS(data);
     } catch (error) {
       setLoadingMessage('');

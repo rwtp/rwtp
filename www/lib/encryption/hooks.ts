@@ -25,6 +25,7 @@ export function useEncryption() {
   return {
     generate,
     hasKey,
+    scope: message,
     keypair: store.privateKey
       ? nacl.box.keyPair.fromSecretKey(toUint8Array(store.privateKey))
       : undefined,
