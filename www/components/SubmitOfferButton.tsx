@@ -84,7 +84,7 @@ export function SubmitOfferButton(props: {
       });
 
       const data = {
-        publicKey: toHex(encryption.keypair.publicKey),
+        encryptionPublicKey: toHex(encryption.keypair.publicKey),
         message: toHex(msg.encrypted),
         nonce: toHex(msg.nonce),
         scope: encryption.scope,
