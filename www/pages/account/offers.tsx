@@ -231,9 +231,9 @@ function OffersTable() {
 
   if (offers.data.length === 0) {
     return (
-      <div className="flex flex-col text-gray-500 h-full mt-16">
+      <div className="flex flex-col text-gray-500 h-[calc(100%-4rem)]">
         <img
-          className="object-fit h-48 mb-8 mx-auto"
+          className="object-fit h-48 mb-8 mx-auto mt-32"
           src={'/sad.png'}
           alt="sadman"
         />
@@ -259,25 +259,27 @@ function OffersTable() {
     });
 
   return (
-    <FadeIn>
-      <table className="table-auto text-left h-full max-w-full">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-2 whitespace-nowrap">Order Date</th>
-            <th className="px-4 py-2 whitespace-nowrap">Item</th>
-            <th className="px-4 py-2 whitespace-nowrap">Order ID</th>
-            <th className="px-4 py-2 whitespace-nowrap">Expires</th>
-            {/* <th>Buyer Email</th> */}
-            {/* <th>Qty</th> */}
-            <th className="px-4 py-2 whitespace-nowrap">Total</th>
-            <th className="px-4 py-2 whitespace-nowrap">Your Deposit Held</th>
-            {/* <th>Shipping Status</th> */}
-            <th className="px-4 py-2 whitespace-nowrap">Order Status</th>
-            <th className="px-4 py-2 whitespace-nowrap">Action</th>
-          </tr>
-        </thead>
-        <tbody>{allOffers}</tbody>
-      </table>
+    <FadeIn className="relative w-full h-[calc(100%-4rem)]">
+      <div className="border rounded overflow-auto max-h-[80vh] w-full">
+        <table className="table-auto text-left h-full max-w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 whitespace-nowrap">Order Date</th>
+              <th className="px-4 py-2 whitespace-nowrap">Item</th>
+              <th className="px-4 py-2 whitespace-nowrap">Order ID</th>
+              <th className="px-4 py-2 whitespace-nowrap">Expires</th>
+              {/* <th>Buyer Email</th> */}
+              {/* <th>Qty</th> */}
+              <th className="px-4 py-2 whitespace-nowrap">Total</th>
+              <th className="px-4 py-2 whitespace-nowrap">Your Deposit Held</th>
+              {/* <th>Shipping Status</th> */}
+              <th className="px-4 py-2 whitespace-nowrap">Order Status</th>
+              <th className="px-4 py-2 whitespace-nowrap">Action</th>
+            </tr>
+          </thead>
+          <tbody>{allOffers}</tbody>
+        </table>
+      </div>
     </FadeIn>
   );
 }
@@ -287,23 +289,21 @@ export default function ManageOffersPage() {
   let n = router.pathname.lastIndexOf('/');
   let page = router.pathname.substring(n + 1);
   return (
-    <div className="flex flex-col h-screen w-screen">
+    <div className="relative h-screen w-screen">
       <ConnectWalletLayout>
-        <div className="flex flex-row gap-4 h-full w-full">
-          {ManageSidebar(page)}
+        <div className="relative flex flex-row gap-4 h-full w-full">
+          <div>{ManageSidebar(page)}</div>
           <Suspense fallback={<div></div>}>
-            <div className="relative space-y-4 h-5/6 max-w-85 pr-4">
+            <div className="relative space-y-4 h-full w-[calc(100%-13rem)] pr-4">
               <h1 className="font-serif text-3xl pb-1">All Offers</h1>
-              <div className={`h-full w-full overflow-auto`}>
-                <OffersTable />
-              </div>
+              <OffersTable />
             </div>
           </Suspense>
         </div>
+        <div className="w-full mb-0">
+          <Footer />
+        </div>
       </ConnectWalletLayout>
-      <div className="mb-0">
-        <Footer />
-      </div>
     </div>
   );
 }

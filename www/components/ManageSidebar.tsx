@@ -1,6 +1,6 @@
 export default function ManageSidebar(page: string) {
   return (
-    <div className="bg-gray-100 h-full">
+    <div className="bg-gray-100 h-full w-48">
       <div>
         <ul>
           <li
