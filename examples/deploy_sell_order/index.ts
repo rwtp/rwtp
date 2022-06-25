@@ -228,12 +228,19 @@ async function confirmOffer(index: number, orderAddress:string, taker_wallet: an
           const takerCancel = takerOrderContract.cancel(taker_wallet.address, index, { gasLimit: GAS });
           console.log("taker cancel.hash: ", await takerCancel.hash);
           console.log("maker cancel.hash: ", await makerCancel.hash);
-
-
         }
       }
     }
     console.log(order);
+    
+    if (ord.flags) {
+      if(ord.flags.UPDATE_URI) {
+        let new_url = ord.flags.UPDATE_URI;
+        const makerOrderContract = new ethers.Contract(orderAddress, Order.abi, maker_wallet);
+        const new_uri_set = makerOrderContract.setURI(new_url, { gasLimit: GAS });
+        console.log("new_uri_set new_uri_set.hash: ", await new_uri_set.hash);
+      }
+    }
   }
   return
 
