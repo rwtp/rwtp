@@ -106,7 +106,7 @@ function BuyPage({ order }: { order: OrderData }) {
 
   return (
     <ConnectWalletLayout txHash={txHash}>
-      <div className="flex flex-col max-w-6xl mx-auto py-2 px-4">
+      <div className="flex flex-col max-w-6xl w-full mx-auto py-2 px-4">
         <div className="pb-2 text-sm flex items-center text-gray-400">
           <a className="underline" href="/buy">
             Browse Listings
@@ -155,7 +155,7 @@ function BuyPage({ order }: { order: OrderData }) {
                       <div className="text-sm text-gray-400 whitespace-nowrap">
                         Seller's Deposit:
                       </div>
-                      <p className="text-sm whitespace-nowrap">
+                      <p className="text-sm">
                         {toUIString(
                           BigNumber.from(order.priceSuggested),
                           order.tokensSuggested[0].decimals
