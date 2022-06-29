@@ -18,11 +18,11 @@ interface OrderMetadata {
 
   // A publicKey that offerers should encrypt their metadata with
   // This is not the user's Ethereum address.
-  publicKey: string;
+  $encryptionPublicKey: string;
 
   // A message that, if signed by the user, can be used to generate
-  // the keypair associated with the publicKey.
-  scope?: string;
+  // the keypair associated with the encryptionPublicKey.
+  $scope?: string;
 }
 ```
 
@@ -106,7 +106,7 @@ You could encrypt and then upload metadata like the following:
 
 ## Encryption
 
-Offers to buy orders or sell orders have metadata. Before publishing a user's shipping address and other offer information, you should encrypt it with the `publicKey` in the `OrderMetadata`.
+Offers to buy orders or sell orders have metadata. Before publishing a user's shipping address and other offer information, you should encrypt it with the `encryptionPublicKey` in the `OrderMetadata`.
 
 To ensure a the other party can decrypt it, all offers have the form:
 
@@ -120,7 +120,7 @@ interface OfferMetadata {
   nonce: string;
 
   // The public key of the offerer that was used to encrypt the message.
-  publicKey: string;
+  encryptionPublicKey: string;
 
   // A message that, if signed by the user, can be used to regenerate the
   // private key and unlock the message for the offerer.
