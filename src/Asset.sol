@@ -9,6 +9,20 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 contract Vendor is Ownable {
     uint16 private _feeInBasisPoints;
 
+    event Purchased(
+        address indexed asset,
+        address indexed user,
+        uint256 amount
+    );
+    event Redeemed(
+        address indexed asset,
+        address indexed user,
+        uint256 amount,
+        string uri
+    );
+    event SetFee(uint16 feeInBasisPoints);
+    event SetOwner(address owner);
+
     constructor() {
         _feeInBasisPoints = 100;
         _transferOwnership(msg.sender);
@@ -17,11 +31,13 @@ contract Vendor is Ownable {
     /// Sets a new owner
     function setOwner(address newOwner) external onlyOwner {
         _transferOwnership(newOwner);
+        emit SetOwner(newOwner);
     }
 
     /// Sets a new fee
     function setFee(uint16 feeInBasisPoints) external onlyOwner {
         _feeInBasisPoints = feeInBasisPoints;
+        emit SetFee(_feeInBasisPoints);
     }
 
     /// Returns the fee
@@ -67,8 +83,29 @@ contract Vendor is Ownable {
         require(toVendorResult, 'Transfer to vendor failed');
 
         asset.mint(msg.sender, amount);
+
+        emit Purchased(address(asset), msg.sender, amount);
+    }
+
+    /// Requests that the token be redeemed for the underlying asset.
+    /// Burns the token, and emits an event containing shipping information
+    function redeem(
+        AssetERC20 asset,
+        uint256 amount,
+        string memory uri
+    ) external virtual {
+        // Check that the user has enough tokens to redeem
+        require(asset.balanceOf(msg.sender) >= amount);
+
+        asset.burn(msg.sender, amount);
+
+        emit Redeemed(address(asset), msg.sender, amount, uri);
     }
 }
+
+// TODO
+// - Add supply cap
+// - Add reserve
 
 contract AssetERC20 is ERC20, Ownable {
     uint256 public price;
@@ -77,10 +114,6 @@ contract AssetERC20 is ERC20, Ownable {
     /// The seller's treasury that the payment
     /// eventually goes to
     address public seller;
-
-    event Minted(address indexed user, uint256 amount);
-    event Closed(address indexed user, uint256 amount);
-    event Redeemed(address indexed user, uint256 amount, string uri);
 
     constructor(
         string memory _name,
@@ -95,20 +128,19 @@ contract AssetERC20 is ERC20, Ownable {
         _transferOwnership(msg.sender);
     }
 
+    /// Sets the seller to a new seller
+    function setSeller(address newSeller) external virtual {
+        require(msg.sender == seller);
+        seller = newSeller;
+    }
+
     /// Mints the token, only callable by the owner.
     function mint(address to, uint256 amount) external virtual onlyOwner {
         _mint(to, amount);
-        emit Minted(to, amount);
     }
 
-    /// Requests that the token be redeemed for the underlying asset.
-    /// Burns the token, and emits an event containing shipping information
-    function redeem(uint256 amount, string memory uri) external virtual {
-        // Check that the user has enough tokens to redeem
-        require(balanceOf(msg.sender) >= amount);
-
-        _burn(msg.sender, amount);
-
-        emit Redeemed(msg.sender, amount, uri);
+    /// Burns the token, only callable by the owner
+    function burn(address to, uint256 amount) external virtual onlyOwner {
+        _burn(to, amount);
     }
 }
