@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
 
 /// Lets you purchase new tokens, and then redeem them.
 contract Vendor is Ownable {
@@ -68,6 +69,8 @@ contract Vendor is Ownable {
         uint256 toVendor = (total * _feeInBasisPoints) / 10000;
         uint256 toSeller = total - toVendor;
 
+        asset.mint(msg.sender, amount);
+
         bool toSellerResult = asset.token().transferFrom(
             msg.sender,
             asset.seller(),
@@ -81,8 +84,6 @@ contract Vendor is Ownable {
             toVendor
         );
         require(toVendorResult, 'Transfer to vendor failed');
-
-        asset.mint(msg.sender, amount);
 
         emit Purchased(address(asset), msg.sender, amount);
     }
@@ -107,7 +108,7 @@ contract Vendor is Ownable {
 // - Add supply cap
 // - Add reserve
 
-contract AssetERC20 is ERC20, Ownable {
+contract AssetERC20 is ERC20, Ownable, Pausable {
     uint256 public price;
     IERC20 public token;
 
@@ -129,18 +130,40 @@ contract AssetERC20 is ERC20, Ownable {
     }
 
     /// Sets the seller to a new seller
-    function setSeller(address newSeller) external virtual {
+    function setSeller(address newSeller) external virtual whenNotPaused {
         require(msg.sender == seller);
         seller = newSeller;
     }
 
     /// Mints the token, only callable by the owner.
-    function mint(address to, uint256 amount) external virtual onlyOwner {
+    function mint(address to, uint256 amount)
+        external
+        virtual
+        onlyOwner
+        whenNotPaused
+    {
         _mint(to, amount);
     }
 
     /// Burns the token, only callable by the owner
-    function burn(address to, uint256 amount) external virtual onlyOwner {
+    function burn(address to, uint256 amount)
+        external
+        virtual
+        onlyOwner
+        whenNotPaused
+    {
         _burn(to, amount);
+    }
+
+    /// Pauses the token, in case of emergencies
+    function pause() public virtual {
+        require(msg.sender == seller);
+        _pause();
+    }
+
+    /// Unpauses the token, resuming operations
+    function unpause() public virtual {
+        require(msg.sender == seller);
+        _unpause();
     }
 }

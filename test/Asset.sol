@@ -7,8 +7,6 @@ import '../src/Asset.sol';
 import './ERC20Mock.sol';
 
 contract VendorTest is Test {
-    function setUp() public {}
-
     function stringEq(string memory a, string memory b)
         public
         view
@@ -84,23 +82,28 @@ contract VendorTest is Test {
         assert(stringEq(asset.name(), 'Name'));
         assert(stringEq(asset.symbol(), 'symb'));
     }
+}
+
+contract PurchaseTests is Test {
+    address seller = address(0x4234567890123456784012345678901234567821);
+    address buyer = address(0x4234567890123456784012345678901234567822);
+    ERC20Mock currency = new ERC20Mock('ERC20', 'ERC20', buyer, 1000);
+    Vendor vendor = new Vendor();
+    AssetERC20 asset;
+
+    event Redeemed(
+        address indexed asset,
+        address indexed user,
+        uint256 amount,
+        string uri
+    );
+
+    function setUp() public {
+        vm.prank(seller);
+        asset = vendor.createAssetERC20('Name', 'symb', 100, currency);
+    }
 
     function testPurchase() public {
-        address seller = address(0x4234567890123456784012345678901234567821);
-        address buyer = address(0x4234567890123456784012345678901234567822);
-
-        ERC20Mock currency = new ERC20Mock('ERC20', 'ERC20', buyer, 1000);
-
-        Vendor vendor = new Vendor();
-
-        vm.prank(seller);
-        AssetERC20 asset = vendor.createAssetERC20(
-            'Name',
-            'symb',
-            100,
-            currency
-        );
-
         vm.startPrank(buyer);
         currency.approve(address(vendor), 1000);
         vendor.purchase(asset, 1);
@@ -116,29 +119,7 @@ contract VendorTest is Test {
         assert(asset.balanceOf(buyer) == 1);
     }
 
-    event Redeemed(
-        address indexed asset,
-        address indexed user,
-        uint256 amount,
-        string uri
-    );
-
     function testRedeem() public {
-        address seller = address(0x4234567890123456784012345678901234567821);
-        address buyer = address(0x4234567890123456784012345678901234567822);
-
-        ERC20Mock currency = new ERC20Mock('ERC20', 'ERC20', buyer, 1000);
-
-        Vendor vendor = new Vendor();
-
-        vm.prank(seller);
-        AssetERC20 asset = vendor.createAssetERC20(
-            'Name',
-            'symb',
-            100,
-            currency
-        );
-
         vm.startPrank(buyer);
         currency.approve(address(vendor), 1000);
         vendor.purchase(asset, 2);
@@ -157,18 +138,44 @@ contract VendorTest is Test {
     }
 
     function testFailRedeemWhenNoAsset() public {
-        address seller = address(0x4234567890123456784012345678901234567821);
-        address buyer = address(0x4234567890123456784012345678901234567822);
-        ERC20Mock currency = new ERC20Mock('ERC20', 'ERC20', buyer, 1000);
-        Vendor vendor = new Vendor();
-        vm.prank(seller);
-        AssetERC20 asset = vendor.createAssetERC20(
-            'Name',
-            'symb',
-            100,
-            currency
-        );
-
         vendor.redeem(asset, 1, 'ipfs://foobar');
+    }
+
+    function testFailPurchaseIfPaused() public {
+        vm.startPrank(seller);
+        asset.pause();
+        vm.stopPrank();
+
+        vm.startPrank(buyer);
+        currency.approve(address(vendor), 1000);
+        vendor.purchase(asset, 2);
+        vm.stopPrank();
+    }
+
+    function testFailRedeemIfPaused() public {
+        vm.startPrank(buyer);
+        currency.approve(address(vendor), 1000);
+        vendor.purchase(asset, 2);
+        vm.stopPrank();
+
+        vm.prank(seller);
+        asset.pause();
+
+        vm.prank(buyer);
+        vendor.redeem(asset, 2, 'ipfs://');
+    }
+
+    function testUnpause() public {
+        vm.startPrank(seller);
+        asset.pause();
+        asset.unpause();
+        vm.stopPrank();
+
+        vm.startPrank(buyer);
+        currency.approve(address(vendor), 1000);
+        vendor.purchase(asset, 2);
+        vm.stopPrank();
+
+        assert(asset.balanceOf(buyer) == 2);
     }
 }
