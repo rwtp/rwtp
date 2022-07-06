@@ -72,7 +72,8 @@ contract VendorTest is Test {
             'Name',
             'symb',
             10,
-            currency
+            currency,
+            100000
         );
 
         assert(asset.price() == 10);
@@ -100,7 +101,7 @@ contract PurchaseTests is Test {
 
     function setUp() public {
         vm.prank(seller);
-        asset = vendor.createAssetERC20('Name', 'symb', 100, currency);
+        asset = vendor.createAssetERC20('Name', 'symb', 100, currency, 1000000);
     }
 
     function testPurchase() public {
@@ -177,5 +178,20 @@ contract PurchaseTests is Test {
         vm.stopPrank();
 
         assert(asset.balanceOf(buyer) == 2);
+    }
+
+    function testFailIfBeyondSupplyCap() public {
+        AssetERC20 cappedAsset = vendor.createAssetERC20(
+            'Name',
+            'symb',
+            1,
+            currency,
+            10
+        );
+
+        vm.startPrank(buyer);
+        currency.approve(address(vendor), 1000);
+        vendor.purchase(cappedAsset, 20);
+        vm.stopPrank();
     }
 }

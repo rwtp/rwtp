@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/security/Pausable.sol';
 
@@ -51,14 +52,16 @@ contract Vendor is Ownable {
         string memory name,
         string memory symbol,
         uint256 price,
-        IERC20 token
+        IERC20 token,
+        uint256 cap
     ) external virtual returns (AssetERC20) {
         AssetERC20 asset = new AssetERC20(
             name,
             symbol,
             price,
             token,
-            msg.sender
+            msg.sender,
+            cap
         );
 
         return asset;
@@ -105,12 +108,12 @@ contract Vendor is Ownable {
 }
 
 // TODO
-// - Add supply cap
 // - Add reserve
 
 contract AssetERC20 is ERC20, Ownable, Pausable {
     uint256 public price;
     IERC20 public token;
+    uint256 public cap;
 
     /// The seller's treasury that the payment
     /// eventually goes to
@@ -121,12 +124,19 @@ contract AssetERC20 is ERC20, Ownable, Pausable {
         string memory _symbol,
         uint256 _price,
         IERC20 _token,
-        address _seller
+        address _seller,
+        uint256 _cap
     ) ERC20(_name, _symbol) {
         price = _price;
         token = _token;
         seller = _seller;
+        cap = _cap;
         _transferOwnership(msg.sender);
+    }
+
+    function _mint(address account, uint256 amount) internal virtual override {
+        require(totalSupply() + amount <= cap, 'cap exceeded');
+        super._mint(account, amount);
     }
 
     /// Sets the seller to a new seller
