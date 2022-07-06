@@ -73,6 +73,7 @@ contract VendorTest is Test {
             'symb',
             10,
             currency,
+            1,
             100000
         );
 
@@ -101,7 +102,14 @@ contract PurchaseTests is Test {
 
     function setUp() public {
         vm.prank(seller);
-        asset = vendor.createAssetERC20('Name', 'symb', 100, currency, 1000000);
+        asset = vendor.createAssetERC20(
+            'Name',
+            'symb',
+            100,
+            currency,
+            1,
+            1000000
+        );
     }
 
     function testPurchase() public {
@@ -125,6 +133,8 @@ contract PurchaseTests is Test {
         currency.approve(address(vendor), 1000);
         vendor.purchase(asset, 2);
 
+        vm.warp(block.timestamp + 100000);
+
         assert(asset.balanceOf(buyer) == 2);
 
         // Expect is the same as the one we're about to emit
@@ -135,6 +145,26 @@ contract PurchaseTests is Test {
         vendor.redeem(asset, 1, 'ipfs://');
 
         assert(asset.balanceOf(buyer) == 1);
+        vm.stopPrank();
+    }
+
+    function testFailRedeemIfBeforeTimeout() public {
+        vm.startPrank(buyer);
+        currency.approve(address(vendor), 1000);
+        vendor.purchase(asset, 2);
+
+        // No warp
+
+        // Redeem asset
+        vendor.redeem(asset, 1, 'ipfs://');
+    }
+
+    function testFailPurchaseAfterTimeout() public {
+        vm.warp(block.timestamp + 100000);
+
+        vm.startPrank(buyer);
+        currency.approve(address(vendor), 1000);
+        vendor.purchase(asset, 1);
         vm.stopPrank();
     }
 
@@ -186,6 +216,7 @@ contract PurchaseTests is Test {
             'symb',
             1,
             currency,
+            1,
             10
         );
 

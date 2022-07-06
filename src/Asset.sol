@@ -53,6 +53,7 @@ contract Vendor is Ownable {
         string memory symbol,
         uint256 price,
         IERC20 token,
+        uint128 timeout,
         uint256 cap
     ) external virtual returns (AssetERC20) {
         AssetERC20 asset = new AssetERC20(
@@ -61,6 +62,7 @@ contract Vendor is Ownable {
             price,
             token,
             msg.sender,
+            timeout,
             cap
         );
 
@@ -92,7 +94,8 @@ contract Vendor is Ownable {
     }
 
     /// Requests that the token be redeemed for the underlying asset.
-    /// Burns the token, and emits an event containing shipping information
+    /// Burns the token, and emits an event containing metadata,
+    /// such as shipping information.
     function redeem(
         AssetERC20 asset,
         uint256 amount,
@@ -107,13 +110,15 @@ contract Vendor is Ownable {
     }
 }
 
-// TODO
-// - Add reserve
+/// TODO:
+/// - Timeout
 
 contract AssetERC20 is ERC20, Ownable, Pausable {
     uint256 public price;
     IERC20 public token;
     uint256 public cap;
+    uint256 public minted;
+    uint256 public expiresAt;
 
     /// The seller's treasury that the payment
     /// eventually goes to
@@ -125,17 +130,22 @@ contract AssetERC20 is ERC20, Ownable, Pausable {
         uint256 _price,
         IERC20 _token,
         address _seller,
+        uint128 _timeout,
         uint256 _cap
     ) ERC20(_name, _symbol) {
         price = _price;
         token = _token;
         seller = _seller;
         cap = _cap;
+        expiresAt = block.timestamp + _timeout;
+        minted = 0;
         _transferOwnership(msg.sender);
     }
 
     function _mint(address account, uint256 amount) internal virtual override {
-        require(totalSupply() + amount <= cap, 'cap exceeded');
+        require(minted + amount <= cap, 'cap exceeded');
+
+        minted += amount;
         super._mint(account, amount);
     }
 
@@ -152,6 +162,11 @@ contract AssetERC20 is ERC20, Ownable, Pausable {
         onlyOwner
         whenNotPaused
     {
+        // Don't allow minting before timeout.
+        require(
+            block.timestamp < expiresAt,
+            'Minting is not allowed after the timeout'
+        );
         _mint(to, amount);
     }
 
@@ -162,6 +177,11 @@ contract AssetERC20 is ERC20, Ownable, Pausable {
         onlyOwner
         whenNotPaused
     {
+        // Don't allow burning before timeout.
+        require(
+            block.timestamp >= expiresAt,
+            'Burning is not allowed before the timeout'
+        );
         _burn(to, amount);
     }
 
