@@ -72,10 +72,7 @@ export default function Landing() {
           <h2 className="text-3xl font-serif pb-2">
             Sell to anyone with a few lines of code.
           </h2>
-          <p>
-            Build automated companies, decentralized e-commerce, low-cost
-            futures markets, and (maybe) more.
-          </p>
+          <p>Easily become purchasable by DAOs.</p>
           <div className="my-4 bg-gray-900 py-4 px-4 rounded flex whitespace-pre-wrap text-xs scroll-auto">
             <SyntaxHighlighter
               useInlineStyles={false}
