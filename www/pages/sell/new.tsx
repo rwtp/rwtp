@@ -512,7 +512,12 @@ function CreateOrderButton(props: {
       )}
       {errorMessage && (
         <>
-          <button className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded">
+          <button
+            className="cursor-not-allowed mt-4 bg-red-500 text-white px-4 py-2 w-full flex justify-center font-bold rounded"
+            onClick={() => {
+              setErrorMessage('');
+            }}
+          >
             <div>{errorMessage}</div>
           </button>
         </>
