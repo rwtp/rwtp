@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 
@@ -14,7 +15,18 @@ contract AssetERC721 is ERC721, Ownable {
 
     // A mapping of productIds to products
     mapping(uint256 => Product) public products;
+
+    // A mapping of listingIds to listings
     mapping(uint256 => Listing) public listings;
+
+    // A mapping of tokenIds to listingIds
+    mapping(uint256 => uint256) public tokenIdsToListingIds;
+
+    /// @dev the fee rate in parts per million
+    uint256 public fee = 10000; // default is 1%
+
+    /// @dev The denominator of parts per million
+    uint256 constant ONE_MILLION = 1000000;
 
     event Purchase(
         uint256 indexed tokenId,
@@ -54,7 +66,7 @@ contract AssetERC721 is ERC721, Ownable {
         // The price of the entire package
         uint256 price;
         // The token to purchase it in
-        address token;
+        IERC20 token;
         // The number of times someone can buy this listing
         uint256 sets;
         // The timestamp at which you can purchase this
@@ -109,7 +121,7 @@ contract AssetERC721 is ERC721, Ownable {
         string memory uri,
         uint256 supply,
         uint256 price,
-        address token,
+        IERC20 token,
         uint256 sets,
         uint256 purchasePeriodBegins,
         uint256 purchasePeriodEnds,
@@ -134,6 +146,35 @@ contract AssetERC721 is ERC721, Ownable {
 
         emit CreateListing(listingId);
         return listingId;
+    }
+
+    function purchase(uint256 listingId) public returns (uint256) {
+        Listing storage listing = listings[listingId];
+        Product memory product = products[listing.productId];
+
+        require(listing.supply > 0, 'Uninitialized listing');
+        require(product.owner != address(0), 'Uninitialized product');
+        require(
+            listing.purchasePeriodBegins <= block.timestamp &&
+                block.timestamp <= listing.purchasePeriodEnds,
+            'Purchase period has not begun'
+        );
+        require(listing.sets > 0, 'No more sets remaining');
+
+        // Reduce sets by 1
+        listing.sets--;
+
+        // Mint token & connect it to the listingId
+        uint256 tokenId = _mint(msg.sender);
+        tokenIdsToListingIds[tokenId] = listingId;
+
+        // Transfer payment
+        uint256 toContractOwner = (listing.price * fee) / ONE_MILLION;
+        uint256 toProductOwner = listing.price - toContractOwner;
+        listing.token.transferFrom(msg.sender, owner(), toContractOwner);
+        listing.token.transferFrom(msg.sender, product.owner, toProductOwner);
+
+        return tokenId;
     }
 
     // // Redeems a given amount of tokens
