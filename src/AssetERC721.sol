@@ -14,6 +14,7 @@ contract AssetERC721 is ERC721, Ownable {
 
     // A mapping of productIds to products
     mapping(uint256 => Product) public products;
+    mapping(uint256 => Listing) public listings;
 
     event Purchase(
         uint256 indexed tokenId,
@@ -29,7 +30,9 @@ contract AssetERC721 is ERC721, Ownable {
     event CreateProduct(uint256 indexed productId);
     event CreateListing(uint256 indexed listingId);
 
-    constructor() ERC721('RWTP', 'rwtp') {}
+    constructor() ERC721('RWTP', 'rwtp') {
+        _transferOwnership(msg.sender);
+    }
 
     // A "Product", like a jacket or a shirt.
     // Products have prices and can be listed for sale.
@@ -70,6 +73,20 @@ contract AssetERC721 is ERC721, Ownable {
             'Not the product owner'
         );
         _;
+    }
+
+    function setProductURI(uint256 productId, string memory uri)
+        public
+        onlyProductOwner(productId)
+    {
+        products[productId].uri = uri;
+    }
+
+    function setProductOwner(uint256 productId, address newOwner)
+        public
+        onlyProductOwner(productId)
+    {
+        products[productId].owner = newOwner;
     }
 
     /// Creates a new product
@@ -113,16 +130,11 @@ contract AssetERC721 is ERC721, Ownable {
 
         uint256 listingId = _listingIdCounter.current();
         _listingIdCounter.increment();
+        listings[listingId] = listing;
 
         emit CreateListing(listingId);
         return listingId;
     }
-
-    // function createListing(uint256 productId) public returns (uint256) {
-    //     uint256 listingId = _listingIdCounter.current();
-    //     listings[listingId] = listing;
-    //     return listingId;
-    // }
 
     // // Redeems a given amount of tokens
     // function redeem(
