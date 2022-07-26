@@ -189,7 +189,7 @@ contract AssetERC721 is ERC721, AccessControl {
     }
 
     function setFee(uint256 newFee) public onlyRole(SET_FEE_ROLE) {
-        require(newFee >= ONE_MILLION, 'Fee cannot be more than 100%');
+        require(newFee <= ONE_MILLION, 'Fee cannot be more than 100%');
         fee = newFee;
     }
 

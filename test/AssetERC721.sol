@@ -10,6 +10,36 @@ function stringEq(string memory a, string memory b) view returns (bool) {
         keccak256(abi.encodePacked((b))));
 }
 
+contract AdminTests is Test {
+    AssetERC721 asset = new AssetERC721();
+
+    function testDefaultHasRole() public {
+        assert(asset.hasRole(asset.SET_FEE_ROLE(), address(this)));
+        assert(asset.hasRole(asset.SET_TREASURY_ROLE(), address(this)));
+        assert(asset.hasRole(asset.SELLER_ROLE(), address(this)));
+    }
+
+    function testSetFee() public {
+        asset.setFee(200);
+        assert(asset.fee() == 200);
+    }
+
+    function testFailSetFeeIfNotSetFeeRole() public {
+        vm.prank(address(0x1));
+        asset.setFee(200);
+    }
+
+    function testSetTreasury() public {
+        asset.setTreasury(address(0x1));
+        assert(asset.treasury() == address(0x1));
+    }
+
+    function testFailSetTreasuryIfNotSetTreasuryRole() public {
+        vm.prank(address(0x1));
+        asset.setTreasury(address(0x1));
+    }
+}
+
 contract RedeemTests is Test {
     ERC20Mock mockToken = new ERC20Mock('wETH', 'WETH', address(this), 0);
 
