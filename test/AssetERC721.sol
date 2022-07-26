@@ -36,7 +36,8 @@ contract RedeemTests is Test {
             block.timestamp, // purchase begins
             block.timestamp + 3600, // purchase ends
             block.timestamp + 3600 * 2,
-            block.timestamp + 3600 * 3
+            block.timestamp + 3600 * 3,
+            0
         );
 
         mockToken.mint(buyer, 100);
@@ -49,12 +50,12 @@ contract RedeemTests is Test {
 
     function testFailRedeemIfNotYourToken() public {
         vm.prank(address(0x1));
-        asset.redeem(tokenId, 1, 'https://redemption.example.com');
+        asset.redeem(tokenId, 1, 0, 'https://redemption.example.com');
     }
 
     function testRedeem() public {
         vm.prank(buyer);
-        asset.redeem(tokenId, 1, 'https://redemption.example.com');
+        asset.redeem(tokenId, 1, 0, 'https://redemption.example.com');
 
         uint256 supply = asset.supplyOf(tokenId);
         require(supply == 99, 'supply is not 99');
@@ -63,24 +64,23 @@ contract RedeemTests is Test {
 
     function testFailRedeemIfNotEnoughSupply() public {
         vm.prank(buyer);
-        asset.redeem(tokenId, 101, 'https://redemption.example.com');
+        asset.redeem(tokenId, 101, 0, 'https://redemption.example.com');
     }
 
     function testRedeemBurnsToken() public {
         vm.prank(buyer);
-        asset.redeem(tokenId, 100, 'https://redemption.example.com');
+        asset.redeem(tokenId, 100, 0, 'https://redemption.example.com');
 
         require(!asset.exists(tokenId), 'token still exists');
     }
 
     function testRedeemTwice() public {
         vm.prank(buyer);
-        asset.redeem(tokenId, 1, 'https://redemption.example.com');
-        require(supply == 99, 'supply is not 99');
+        asset.redeem(tokenId, 1, 0, 'https://redemption.example.com');
         require(asset.exists(tokenId), 'token does not exist');
 
         vm.prank(buyer);
-        asset.redeem(tokenId, 99, 'https://redemption.example.com');
+        asset.redeem(tokenId, 99, 0, 'https://redemption.example.com');
 
         require(!asset.exists(tokenId), 'token still exists');
     }
@@ -109,7 +109,8 @@ contract PurchaseTests is Test {
             block.timestamp, // purchase begins
             block.timestamp + 3600, // purchase ends
             block.timestamp + 3600 * 2,
-            block.timestamp + 3600 * 3
+            block.timestamp + 3600 * 3,
+            0
         );
 
         address buyer = address(0x1234567890123456789012345678901234567890);
@@ -149,7 +150,8 @@ contract PurchaseTests is Test {
             block.timestamp + 3600, // purchase begins
             block.timestamp + 3600, // purchase ends
             block.timestamp + 3600 * 2,
-            block.timestamp + 3600 * 3
+            block.timestamp + 3600 * 3,
+            0
         );
 
         address buyer = address(0x1234567890123456789012345678901234567890);
@@ -173,7 +175,8 @@ contract PurchaseTests is Test {
             block.timestamp, // purchase begins
             block.timestamp + 3600, // purchase ends
             block.timestamp + 3600 * 2,
-            block.timestamp + 3600 * 3
+            block.timestamp + 3600 * 3,
+            0
         );
 
         vm.warp(block.timestamp + 3600 + 1);
@@ -199,7 +202,8 @@ contract PurchaseTests is Test {
             block.timestamp, // purchase begins
             block.timestamp + 3600, // purchase ends
             block.timestamp + 3600 * 2,
-            block.timestamp + 3600 * 3
+            block.timestamp + 3600 * 3,
+            0
         );
 
         // Purchase once
@@ -218,6 +222,18 @@ contract PurchaseTests is Test {
 contract AssetTests is Test {
     ERC20Mock mockToken = new ERC20Mock('wETH', 'WETH', address(this), 100000);
 
+    function testCreateShippingRate() public {
+        AssetERC721 asset = new AssetERC721();
+        uint256 shippingRateId = asset.createShippingRate(100, 'US');
+        (string memory uri, uint256 price, address owner) = asset.shippingRates(
+            shippingRateId
+        );
+        require(shippingRateId == 0, 'shippingRateId should be 0');
+        require(price == 100, 'shipping rate price is not 100');
+        require(owner == address(this), 'shipping rate owner is not this');
+        require(stringEq(uri, 'US'), 'shipping rate uri is not US');
+    }
+
     function testCreateListing() public {
         AssetERC721 asset = new AssetERC721();
         uint256 productId = asset.createProduct('https://example.com');
@@ -232,7 +248,8 @@ contract AssetTests is Test {
             block.timestamp,
             block.timestamp + 3600,
             block.timestamp + 3600 * 2,
-            block.timestamp + 3600 * 3
+            block.timestamp + 3600 * 3,
+            1
         );
         assert(listingId == 0);
 

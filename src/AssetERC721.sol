@@ -12,12 +12,19 @@ contract AssetERC721 is ERC721, Ownable {
     Counters.Counter private _tokenIdCounter;
     Counters.Counter private _listingIdCounter;
     Counters.Counter private _productIdCounter;
+    Counters.Counter private _shippingIdCounter;
 
-    // A mapping of productIds to products
+    // A mapping of productIds to Products
     mapping(uint256 => Product) public products;
 
-    // A mapping of listingIds to listings
+    // A mapping of listingIds to Listings
     mapping(uint256 => Listing) public listings;
+
+    // A mapping of shippingRateIds to ShippingRates
+    mapping(uint256 => ShippingRate) public shippingRates;
+
+    // A mapping of listingIds to accepted shippingRateIds
+    mapping(uint256 => mapping(uint256 => bool)) public acceptedShippingRates;
 
     // A mapping of tokenIds to listingIds
     mapping(uint256 => uint256) public tokenIdsToListingIds;
@@ -37,6 +44,7 @@ contract AssetERC721 is ERC721, Ownable {
     );
     event CreateProduct(uint256 indexed productId);
     event CreateListing(uint256 indexed listingId);
+    event CreateShippingRate(uint256 indexed shippingRateId);
     event SetProductOwner(uint256 indexed productId, address indexed newOwner);
     event SetProductURI(uint256 indexed productId, string newURI);
 
@@ -77,6 +85,15 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 redemptionPeriodEnds;
     }
 
+    struct ShippingRate {
+        // URI to arbitrary shipping metadata
+        string uri;
+        // The additional fee for shipping
+        uint256 price;
+        // The owner of this shipping rate that's allowed to modify it
+        address owner;
+    }
+
     modifier onlyProductOwner(uint256 productId) {
         require(
             msg.sender == products[productId].owner,
@@ -87,6 +104,11 @@ contract AssetERC721 is ERC721, Ownable {
 
     modifier onlyIfTokenExists(uint256 tokenId) {
         require(tokenId != 0, 'Token does not exist');
+        _;
+    }
+
+    modifier onlyIfItsYourToken(uint256 tokenId) {
+        require(msg.sender == ownerOf(tokenId), 'Not the token owner');
         _;
     }
 
@@ -120,6 +142,24 @@ contract AssetERC721 is ERC721, Ownable {
         return productId;
     }
 
+    function createShippingRate(uint256 price, string memory uri)
+        public
+        returns (uint256)
+    {
+        ShippingRate memory shippingRate;
+        shippingRate.price = price;
+        shippingRate.uri = uri;
+        shippingRate.owner = msg.sender;
+
+        uint256 shippingRateId = _shippingIdCounter.current();
+        _shippingIdCounter.increment();
+
+        shippingRates[shippingRateId] = shippingRate;
+        emit CreateShippingRate(shippingRateId);
+
+        return shippingRateId;
+    }
+
     /// Creates a new listing for sale
     function createListing(
         uint256 productId,
@@ -131,7 +171,8 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 purchasePeriodBegins,
         uint256 purchasePeriodEnds,
         uint256 redemptionPeriodBegins,
-        uint256 redemptionPeriodEnds
+        uint256 redemptionPeriodEnds,
+        uint256 defaultShippingRateId
     ) public onlyProductOwner(productId) returns (uint256) {
         Listing memory listing;
         listing.productId = productId;
@@ -148,6 +189,9 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 listingId = _listingIdCounter.current();
         _listingIdCounter.increment();
         listings[listingId] = listing;
+
+        // Add the default shipping rate to the listing
+        acceptedShippingRates[listingId][defaultShippingRateId] = true;
 
         emit CreateListing(listingId);
         return listingId;
@@ -187,16 +231,37 @@ contract AssetERC721 is ERC721, Ownable {
     function redeem(
         uint256 tokenId,
         uint256 amount,
+        uint256 shippingRateId,
         string memory uri
-    ) public {
+    ) public onlyIfItsYourToken(tokenId) {
         Listing storage listing = listings[tokenIdsToListingIds[tokenId]];
+        Product memory product = products[listing.productId];
 
-        require(ownerOf(tokenId) == msg.sender, 'Not your token');
+        require(
+            acceptedShippingRates[tokenIdsToListingIds[tokenId]][
+                shippingRateId
+            ],
+            'Shipping rate not accepted'
+        );
         require(amount > 0, 'Amount must be greater than 0');
         require(
             listing.supply - amount >= 0,
             'Not enough supply in this token'
         );
+
+        // If there's a shipping fee, transfer it.
+        uint256 shippingFee = shippingRates[shippingRateId].price;
+        if (shippingFee > 0) {
+            // Shipping fees are also subject to contract fee
+            uint256 toContractOwner = (shippingFee * fee) / ONE_MILLION;
+            uint256 toProductOwner = shippingFee - toContractOwner;
+            listing.token.transferFrom(msg.sender, owner(), toContractOwner);
+            listing.token.transferFrom(
+                msg.sender,
+                product.owner,
+                toProductOwner
+            );
+        }
 
         listing.supply -= amount;
         if (listing.supply == 0) {
@@ -216,26 +281,6 @@ contract AssetERC721 is ERC721, Ownable {
         }
         return listings[tokenIdsToListingIds[tokenId]].supply;
     }
-
-    // Merges two assets together into a single asset
-    // function merge(uint256 tokenIdFrom, uint256 tokenIdTo) public {
-    //     require(supplies[tokenIdFrom] > 0);
-    //     require(supplies[tokenIdTo] > 0);
-    //     supplies[tokenIdTo] += supplies[tokenIdFrom];
-    //     supplies[tokenIdFrom] = 0;
-    //     _burn(tokenIdFrom);
-    // }
-
-    // // Splits an asset into the original asset, and a new one with an amount received
-    // // from the original asset.
-    // function split(uint256 tokenId, uint256 amount) public {
-    //     require(supplies[tokenId] >= amount);
-    //     require(amount > 0);
-
-    //     supplies[tokenId] -= amount;
-    //     uint256 newId = _mint(msg.sender);
-    //     supplies[newId] = amount;
-    // }
 
     /// Mints a token, relatively safely.
     function _mint(address to) internal returns (uint256) {
