@@ -6,9 +6,13 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
 import '@openzeppelin/contracts/access/AccessControl.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
 
-contract AssetERC721 is ERC721, AccessControl {
+contract AssetERC721 is ERC721, AccessControl, Pausable {
     using Counters for Counters.Counter;
+
+    // The role that's allowed to pause in an emergency
+    bytes32 public constant PAUSE_ROLE = keccak256('PAUSE_ROLE');
 
     // Allowed to modify fees
     bytes32 public constant SET_FEE_ROLE = keccak256('SET_FEE_ROLE');
@@ -100,6 +104,7 @@ contract AssetERC721 is ERC721, AccessControl {
         _grantRole(SET_FEE_ROLE, msg.sender);
         _grantRole(SET_TREASURY_ROLE, msg.sender);
         _grantRole(SELLER_ROLE, msg.sender);
+        _grantRole(PAUSE_ROLE, msg.sender);
         treasury = msg.sender;
     }
 
@@ -179,6 +184,10 @@ contract AssetERC721 is ERC721, AccessControl {
     modifier onlyIfItsYourToken(uint256 tokenId) {
         require(msg.sender == ownerOf(tokenId), 'Not the token owner');
         _;
+    }
+
+    function pause() public onlyRole(PAUSE_ROLE) {
+        _pause();
     }
 
     function setTreasury(address newTreasury)
@@ -396,7 +405,11 @@ contract AssetERC721 is ERC721, AccessControl {
         return listingId;
     }
 
-    function purchase(uint256 listingId) public returns (uint256) {
+    function purchase(uint256 listingId)
+        public
+        whenNotPaused
+        returns (uint256)
+    {
         Listing storage listing = listings[listingId];
         Product memory product = products[listing.productId];
 
@@ -432,7 +445,7 @@ contract AssetERC721 is ERC721, AccessControl {
         uint256 amount,
         uint256 shippingRateId,
         string memory uri
-    ) public onlyIfItsYourToken(tokenId) {
+    ) public whenNotPaused onlyIfItsYourToken(tokenId) {
         Listing storage listing = listings[tokenIdsToListingIds[tokenId]];
         Product memory product = products[listing.productId];
 

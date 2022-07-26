@@ -38,6 +38,16 @@ contract AdminTests is Test {
         vm.prank(address(0x1));
         asset.setTreasury(address(0x1));
     }
+
+    function testPause() public {
+        asset.pause();
+        assert(asset.paused());
+    }
+
+    function testFailPauseIfNotPauseRole() public {
+        vm.prank(address(0x1));
+        asset.pause();
+    }
 }
 
 contract RedeemTests is Test {
