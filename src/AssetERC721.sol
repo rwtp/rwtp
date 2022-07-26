@@ -57,6 +57,17 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 newPrice,
         IERC20 newToken
     );
+    event SetListingSets(uint256 indexed listingId, uint256 newSets);
+    event SetListingPurchasePeriod(
+        uint256 indexed listingId,
+        uint256 newPurchasePeriodBegins,
+        uint256 newPurchasePeriodEnds
+    );
+    event SetListingRedemptionPeriod(
+        uint256 indexed listingId,
+        uint256 newRedemptionPeriodBegins,
+        uint256 newRedemptionPeriodEnds
+    );
     event SetListingShippingRate(
         uint256 indexed listingId,
         uint256 indexed shippingRateId,
@@ -180,6 +191,42 @@ contract AssetERC721 is ERC721, Ownable {
         listings[listingId].price = newPrice;
         listings[listingId].token = newToken;
         emit SetListingPriceAndToken(listingId, newPrice, newToken);
+    }
+
+    function setListingSets(uint256 listingId, uint256 newSets)
+        public
+        onlyListingOwner(listingId)
+    {
+        listings[listingId].sets = newSets;
+        emit SetListingSets(listingId, newSets);
+    }
+
+    function setListingPurchasePeriod(
+        uint256 listingId,
+        uint256 newPurchasePeriodBegins,
+        uint256 newPurchasePeriodEnds
+    ) public onlyListingOwner(listingId) {
+        listings[listingId].purchasePeriodBegins = newPurchasePeriodBegins;
+        listings[listingId].purchasePeriodEnds = newPurchasePeriodEnds;
+        emit SetListingPurchasePeriod(
+            listingId,
+            newPurchasePeriodBegins,
+            newPurchasePeriodEnds
+        );
+    }
+
+    function setListingRedemptionPeriod(
+        uint256 listingId,
+        uint256 newRedemptionPeriodBegins,
+        uint256 newRedemptionPeriodEnds
+    ) public onlyListingOwner(listingId) {
+        listings[listingId].redemptionPeriodBegins = newRedemptionPeriodBegins;
+        listings[listingId].redemptionPeriodEnds = newRedemptionPeriodEnds;
+        emit SetListingRedemptionPeriod(
+            listingId,
+            newRedemptionPeriodBegins,
+            newRedemptionPeriodEnds
+        );
     }
 
     function setShippingRatePrice(uint256 shippingRateId, uint256 price)
