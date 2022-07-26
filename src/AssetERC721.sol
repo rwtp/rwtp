@@ -5,14 +5,27 @@ import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Counters.sol';
+import '@openzeppelin/contracts/access/AccessControl.sol';
 
-contract AssetERC721 is ERC721, Ownable {
+contract AssetERC721 is ERC721, AccessControl {
     using Counters for Counters.Counter;
+
+    // Allowed to modify fees
+    bytes32 public constant SET_FEE_ROLE = keccak256('SET_FEE_ROLE');
+
+    // Allowed to modify the treasury
+    bytes32 public constant SET_TREASURY_ROLE = keccak256('SET_TREASURY_ROLE');
+
+    // Allowed to create new products, listings, etc.
+    bytes32 public constant SELLER_ROLE = keccak256('SELLER_ROLE');
 
     Counters.Counter private _tokenIdCounter;
     Counters.Counter private _listingIdCounter;
     Counters.Counter private _productIdCounter;
     Counters.Counter private _shippingIdCounter;
+
+    // The address fees are sent to.
+    address public treasury;
 
     // A mapping of productIds to Products
     mapping(uint256 => Product) public products;
@@ -47,6 +60,7 @@ contract AssetERC721 is ERC721, Ownable {
     event CreateShippingRate(uint256 indexed shippingRateId);
     event SetProductOwner(uint256 indexed productId, address indexed newOwner);
     event SetProductURI(uint256 indexed productId, string newURI);
+    event SetProductActive(uint256 indexed productId, bool newActive);
     event SetShippingRatePrice(
         uint256 indexed shippingRateId,
         uint256 newPrice
@@ -78,9 +92,14 @@ contract AssetERC721 is ERC721, Ownable {
         address indexed newOwner
     );
     event SetShippingRateURI(uint256 indexed shippingRateId, string newURI);
+    event SetTreasury(address indexed oldTreasury, address indexed newTreasury);
 
     constructor() ERC721('RWTP', 'rwtp') {
-        _transferOwnership(msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(SET_FEE_ROLE, msg.sender);
+        _grantRole(SET_TREASURY_ROLE, msg.sender);
+        _grantRole(SELLER_ROLE, msg.sender);
+        treasury = msg.sender;
     }
 
     // A "Product", like a jacket or a shirt.
@@ -90,6 +109,8 @@ contract AssetERC721 is ERC721, Ownable {
         string uri;
         // Owner of this product.
         address owner;
+        // If false, all purchases and redemptions will revert.
+        bool active;
     }
 
     // A "Listing" that's associated with a product.
@@ -159,9 +180,23 @@ contract AssetERC721 is ERC721, Ownable {
         _;
     }
 
+    function setTreasury(address newTreasury)
+        public
+        onlyRole(SET_TREASURY_ROLE)
+    {
+        require(newTreasury != address(0), 'Treasury cannot be 0');
+        treasury = newTreasury;
+    }
+
+    function setFee(uint256 newFee) public onlyRole(SET_FEE_ROLE) {
+        require(newFee >= ONE_MILLION, 'Fee cannot be more than 100%');
+        fee = newFee;
+    }
+
     function setProductURI(uint256 productId, string memory uri)
         public
         onlyProductOwner(productId)
+        onlyRole(SELLER_ROLE)
     {
         products[productId].uri = uri;
         emit SetProductURI(productId, uri);
@@ -170,14 +205,25 @@ contract AssetERC721 is ERC721, Ownable {
     function setProductOwner(uint256 productId, address newOwner)
         public
         onlyProductOwner(productId)
+        onlyRole(SELLER_ROLE)
     {
         products[productId].owner = newOwner;
         emit SetProductOwner(productId, newOwner);
     }
 
+    function setProductActive(uint256 productId, bool active)
+        public
+        onlyProductOwner(productId)
+        onlyRole(SELLER_ROLE)
+    {
+        products[productId].active = active;
+        emit SetProductActive(productId, active);
+    }
+
     function setListingURI(uint256 listingId, string memory uri)
         public
         onlyListingOwner(listingId)
+        onlyRole(SELLER_ROLE)
     {
         listings[listingId].uri = uri;
         emit SetProductURI(listingId, uri);
@@ -187,7 +233,7 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 listingId,
         uint256 newPrice,
         IERC20 newToken
-    ) public onlyListingOwner(listingId) {
+    ) public onlyListingOwner(listingId) onlyRole(SELLER_ROLE) {
         listings[listingId].price = newPrice;
         listings[listingId].token = newToken;
         emit SetListingPriceAndToken(listingId, newPrice, newToken);
@@ -196,6 +242,7 @@ contract AssetERC721 is ERC721, Ownable {
     function setListingSets(uint256 listingId, uint256 newSets)
         public
         onlyListingOwner(listingId)
+        onlyRole(SELLER_ROLE)
     {
         listings[listingId].sets = newSets;
         emit SetListingSets(listingId, newSets);
@@ -205,7 +252,7 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 listingId,
         uint256 newPurchasePeriodBegins,
         uint256 newPurchasePeriodEnds
-    ) public onlyListingOwner(listingId) {
+    ) public onlyListingOwner(listingId) onlyRole(SELLER_ROLE) {
         listings[listingId].purchasePeriodBegins = newPurchasePeriodBegins;
         listings[listingId].purchasePeriodEnds = newPurchasePeriodEnds;
         emit SetListingPurchasePeriod(
@@ -219,7 +266,7 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 listingId,
         uint256 newRedemptionPeriodBegins,
         uint256 newRedemptionPeriodEnds
-    ) public onlyListingOwner(listingId) {
+    ) public onlyListingOwner(listingId) onlyRole(SELLER_ROLE) {
         listings[listingId].redemptionPeriodBegins = newRedemptionPeriodBegins;
         listings[listingId].redemptionPeriodEnds = newRedemptionPeriodEnds;
         emit SetListingRedemptionPeriod(
@@ -232,6 +279,7 @@ contract AssetERC721 is ERC721, Ownable {
     function setShippingRatePrice(uint256 shippingRateId, uint256 price)
         public
         onlyShippingRateOwner(shippingRateId)
+        onlyRole(SELLER_ROLE)
     {
         shippingRates[shippingRateId].price = price;
         emit SetShippingRatePrice(shippingRateId, price);
@@ -240,6 +288,7 @@ contract AssetERC721 is ERC721, Ownable {
     function setShippingRateOwner(uint256 shippingRateId, address newOwner)
         public
         onlyShippingRateOwner(shippingRateId)
+        onlyRole(SELLER_ROLE)
     {
         shippingRates[shippingRateId].owner = newOwner;
         emit SetShippingRateOwner(shippingRateId, newOwner);
@@ -248,6 +297,7 @@ contract AssetERC721 is ERC721, Ownable {
     function setShippingRateURI(uint256 shippingRateId, string memory uri)
         public
         onlyShippingRateOwner(shippingRateId)
+        onlyRole(SELLER_ROLE)
     {
         shippingRates[shippingRateId].uri = uri;
         emit SetShippingRateURI(shippingRateId, uri);
@@ -257,17 +307,22 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 listingId,
         uint256 shippingRateId,
         bool accepted
-    ) public onlyListingOwner(listingId) {
+    ) public onlyListingOwner(listingId) onlyRole(SELLER_ROLE) {
         acceptedShippingRates[listingId][shippingRateId] = accepted;
 
         emit SetListingShippingRate(listingId, shippingRateId, accepted);
     }
 
     /// Creates a new product
-    function createProduct(string memory uri) public returns (uint256) {
+    function createProduct(string memory uri)
+        public
+        onlyRole(SELLER_ROLE)
+        returns (uint256)
+    {
         Product memory product;
         product.uri = uri;
         product.owner = msg.sender;
+        product.active = true;
 
         uint256 productId = _productIdCounter.current();
         _productIdCounter.increment();
@@ -279,6 +334,7 @@ contract AssetERC721 is ERC721, Ownable {
 
     function createShippingRate(uint256 price, string memory uri)
         public
+        onlyRole(SELLER_ROLE)
         returns (uint256)
     {
         ShippingRate memory shippingRate;
@@ -308,7 +364,12 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 redemptionPeriodBegins,
         uint256 redemptionPeriodEnds,
         uint256 defaultShippingRateId
-    ) public onlyProductOwner(productId) returns (uint256) {
+    )
+        public
+        onlyProductOwner(productId)
+        onlyRole(SELLER_ROLE)
+        returns (uint256)
+    {
         Listing memory listing;
         listing.productId = productId;
         listing.uri = uri;
@@ -353,9 +414,9 @@ contract AssetERC721 is ERC721, Ownable {
         tokenIdsToListingIds[tokenId] = listingId;
 
         // Transfer payment
-        uint256 toContractOwner = (listing.price * fee) / ONE_MILLION;
-        uint256 toProductOwner = listing.price - toContractOwner;
-        listing.token.transferFrom(msg.sender, owner(), toContractOwner);
+        uint256 toTreasury = (listing.price * fee) / ONE_MILLION;
+        uint256 toProductOwner = listing.price - toTreasury;
+        listing.token.transferFrom(msg.sender, treasury, toTreasury);
         listing.token.transferFrom(msg.sender, product.owner, toProductOwner);
 
         emit Purchase(tokenId, msg.sender);
@@ -388,9 +449,9 @@ contract AssetERC721 is ERC721, Ownable {
         uint256 shippingFee = shippingRates[shippingRateId].price;
         if (shippingFee > 0) {
             // Shipping fees are also subject to contract fee
-            uint256 toContractOwner = (shippingFee * fee) / ONE_MILLION;
-            uint256 toProductOwner = shippingFee - toContractOwner;
-            listing.token.transferFrom(msg.sender, owner(), toContractOwner);
+            uint256 toTreasury = (shippingFee * fee) / ONE_MILLION;
+            uint256 toProductOwner = shippingFee - toTreasury;
+            listing.token.transferFrom(msg.sender, treasury, toTreasury);
             listing.token.transferFrom(
                 msg.sender,
                 product.owner,
@@ -427,5 +488,14 @@ contract AssetERC721 is ERC721, Ownable {
 
     function _burn(uint256 tokenId) internal override(ERC721) {
         super._burn(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }

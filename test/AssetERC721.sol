@@ -22,6 +22,8 @@ contract RedeemTests is Test {
     uint256 SUPPLY = 100;
 
     function setUp() public {
+        asset.grantRole(asset.SELLER_ROLE(), seller);
+
         vm.prank(seller);
         productId = asset.createProduct('example.org');
 
@@ -93,6 +95,8 @@ contract PurchaseTests is Test {
     address seller = address(0x2234567890123456789012345678901234567891);
 
     function setUp() public {
+        asset.grantRole(asset.SELLER_ROLE(), seller);
+
         vm.prank(seller);
         productId = asset.createProduct('example.org');
     }
@@ -132,7 +136,7 @@ contract PurchaseTests is Test {
             'seller should have 99 tokens'
         );
         require(
-            mockToken.balanceOf(asset.owner()) == 1,
+            mockToken.balanceOf(asset.treasury()) == 1,
             'owner should have 1 token'
         );
         require(asset.balanceOf(buyer) == 1);
@@ -343,7 +347,9 @@ contract AssetTests is Test {
         uint256 productId = asset.createProduct('https://example.com');
         assert(productId == 0);
 
-        (string memory uri, address owner) = asset.products(productId);
+        (string memory uri, address owner, bool active) = asset.products(
+            productId
+        );
         assert(stringEq(uri, 'https://example.com'));
         assert(owner == address(this));
     }
@@ -353,7 +359,9 @@ contract AssetTests is Test {
         uint256 productId = asset.createProduct('https://example.com');
         asset.setProductURI(productId, 'https://new.example.com');
 
-        (string memory uri, address _owner) = asset.products(productId);
+        (string memory uri, address _owner, bool active) = asset.products(
+            productId
+        );
         assert(stringEq(uri, 'https://new.example.com'));
     }
 
@@ -372,7 +380,9 @@ contract AssetTests is Test {
         address newOwner = address(0x4234567890123456784012345678901234567821);
         asset.setProductOwner(productId, newOwner);
 
-        (string memory uri, address owner) = asset.products(productId);
+        (string memory uri, address owner, bool active) = asset.products(
+            productId
+        );
         assert(owner == newOwner);
     }
 
