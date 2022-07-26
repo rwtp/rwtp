@@ -92,6 +92,7 @@ contract AssetERC721 is ERC721, AccessControl {
         address indexed newOwner
     );
     event SetShippingRateURI(uint256 indexed shippingRateId, string newURI);
+    event SetFee(uint256 newFee);
     event SetTreasury(address indexed oldTreasury, address indexed newTreasury);
 
     constructor() ERC721('RWTP', 'rwtp') {
@@ -186,11 +187,13 @@ contract AssetERC721 is ERC721, AccessControl {
     {
         require(newTreasury != address(0), 'Treasury cannot be 0');
         treasury = newTreasury;
+        emit SetTreasury(treasury, newTreasury);
     }
 
     function setFee(uint256 newFee) public onlyRole(SET_FEE_ROLE) {
         require(newFee <= ONE_MILLION, 'Fee cannot be more than 100%');
         fee = newFee;
+        emit SetFee(newFee);
     }
 
     function setProductURI(uint256 productId, string memory uri)
