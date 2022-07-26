@@ -234,6 +234,66 @@ contract AssetTests is Test {
         require(stringEq(uri, 'US'), 'shipping rate uri is not US');
     }
 
+    function testSetShippingRatePrice() public {
+        AssetERC721 asset = new AssetERC721();
+        uint256 shippingRateId = asset.createShippingRate(100, 'US');
+        asset.setShippingRatePrice(shippingRateId, 200);
+        (string memory uri, uint256 price, address owner) = asset.shippingRates(
+            shippingRateId
+        );
+        require(price == 200, 'shipping rate price is not 200');
+    }
+
+    function testSetShippingRateOwner() public {
+        AssetERC721 asset = new AssetERC721();
+        uint256 shippingRateId = asset.createShippingRate(100, 'US');
+        asset.setShippingRateOwner(
+            shippingRateId,
+            address(0x1234567890123456789012345678901234567890)
+        );
+        (string memory uri, uint256 price, address owner) = asset.shippingRates(
+            shippingRateId
+        );
+        require(
+            owner == address(0x1234567890123456789012345678901234567890),
+            'shipping rate owner is not 0x1234567890123456789012345678901234567890'
+        );
+    }
+
+    function testSetShippingRateURI() public {
+        AssetERC721 asset = new AssetERC721();
+        uint256 shippingRateId = asset.createShippingRate(100, 'US');
+        asset.setShippingRateURI(shippingRateId, 'CA');
+        (string memory uri, uint256 price, address owner) = asset.shippingRates(
+            shippingRateId
+        );
+        require(stringEq(uri, 'CA'), 'shipping rate uri is not CA');
+    }
+
+    function testFailSetShippingRatePriceIfNotOwner() public {
+        AssetERC721 asset = new AssetERC721();
+        uint256 shippingRateId = asset.createShippingRate(100, 'US');
+
+        vm.prank(address(0x2));
+        asset.setShippingRatePrice(shippingRateId, 200);
+    }
+
+    function testFailSetShippingRateURIIfNotOwner() public {
+        AssetERC721 asset = new AssetERC721();
+        uint256 shippingRateId = asset.createShippingRate(100, 'US');
+
+        vm.prank(address(0x2));
+        asset.setShippingRateURI(shippingRateId, 'CA');
+    }
+
+    function testFailSetShippingRateOwnerIfNotOwner() public {
+        AssetERC721 asset = new AssetERC721();
+        uint256 shippingRateId = asset.createShippingRate(100, 'US');
+
+        vm.prank(address(0x2));
+        asset.setShippingRateOwner(shippingRateId, address(0x3));
+    }
+
     function testCreateListing() public {
         AssetERC721 asset = new AssetERC721();
         uint256 productId = asset.createProduct('https://example.com');

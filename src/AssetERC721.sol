@@ -47,6 +47,26 @@ contract AssetERC721 is ERC721, Ownable {
     event CreateShippingRate(uint256 indexed shippingRateId);
     event SetProductOwner(uint256 indexed productId, address indexed newOwner);
     event SetProductURI(uint256 indexed productId, string newURI);
+    event SetShippingRatePrice(
+        uint256 indexed shippingRateId,
+        uint256 newPrice
+    );
+    event SetListingURI(uint256 indexed listingId, string newURI);
+    event SetListingPriceAndToken(
+        uint256 indexed listingId,
+        uint256 newPrice,
+        IERC20 newToken
+    );
+    event SetListingShippingRate(
+        uint256 indexed listingId,
+        uint256 indexed shippingRateId,
+        bool newAccepted
+    );
+    event SetShippingRateOwner(
+        uint256 indexed shippingRateId,
+        address indexed newOwner
+    );
+    event SetShippingRateURI(uint256 indexed shippingRateId, string newURI);
 
     constructor() ERC721('RWTP', 'rwtp') {
         _transferOwnership(msg.sender);
@@ -102,6 +122,22 @@ contract AssetERC721 is ERC721, Ownable {
         _;
     }
 
+    modifier onlyShippingRateOwner(uint256 shippingRateId) {
+        require(
+            msg.sender == shippingRates[shippingRateId].owner,
+            'Not the shipping rate owner'
+        );
+        _;
+    }
+
+    modifier onlyListingOwner(uint256 listingId) {
+        require(
+            msg.sender == products[listings[listingId].productId].owner,
+            'Not the product owner'
+        );
+        _;
+    }
+
     modifier onlyIfTokenExists(uint256 tokenId) {
         require(tokenId != 0, 'Token does not exist');
         _;
@@ -126,6 +162,58 @@ contract AssetERC721 is ERC721, Ownable {
     {
         products[productId].owner = newOwner;
         emit SetProductOwner(productId, newOwner);
+    }
+
+    function setListingURI(uint256 listingId, string memory uri)
+        public
+        onlyListingOwner(listingId)
+    {
+        listings[listingId].uri = uri;
+        emit SetProductURI(listingId, uri);
+    }
+
+    function setListingPriceAndToken(
+        uint256 listingId,
+        uint256 newPrice,
+        IERC20 newToken
+    ) public onlyListingOwner(listingId) {
+        listings[listingId].price = newPrice;
+        listings[listingId].token = newToken;
+        emit SetListingPriceAndToken(listingId, newPrice, newToken);
+    }
+
+    function setShippingRatePrice(uint256 shippingRateId, uint256 price)
+        public
+        onlyShippingRateOwner(shippingRateId)
+    {
+        shippingRates[shippingRateId].price = price;
+        emit SetShippingRatePrice(shippingRateId, price);
+    }
+
+    function setShippingRateOwner(uint256 shippingRateId, address newOwner)
+        public
+        onlyShippingRateOwner(shippingRateId)
+    {
+        shippingRates[shippingRateId].owner = newOwner;
+        emit SetShippingRateOwner(shippingRateId, newOwner);
+    }
+
+    function setShippingRateURI(uint256 shippingRateId, string memory uri)
+        public
+        onlyShippingRateOwner(shippingRateId)
+    {
+        shippingRates[shippingRateId].uri = uri;
+        emit SetShippingRateURI(shippingRateId, uri);
+    }
+
+    function setListingShippingRate(
+        uint256 listingId,
+        uint256 shippingRateId,
+        bool accepted
+    ) public onlyListingOwner(listingId) {
+        acceptedShippingRates[listingId][shippingRateId] = accepted;
+
+        emit SetListingShippingRate(listingId, shippingRateId, accepted);
     }
 
     /// Creates a new product
