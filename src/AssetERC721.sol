@@ -157,7 +157,7 @@ contract AssetERC721 is ERC721, Ownable {
         require(
             listing.purchasePeriodBegins <= block.timestamp &&
                 block.timestamp <= listing.purchasePeriodEnds,
-            'Purchase period has not begun'
+            'Not within purchase period'
         );
         require(listing.sets > 0, 'No more sets remaining');
 

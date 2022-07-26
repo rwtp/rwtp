@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import 'forge-std/Test.sol';
 import '../src/AssetERC721.sol';
 import './ERC20Mock.sol';
-import 'forge-std/console.sol';
 
 function stringEq(string memory a, string memory b) view returns (bool) {
     return (keccak256(abi.encodePacked((a))) ==
@@ -62,6 +61,83 @@ contract PurchaseTests is Test {
             'owner should have 1 token'
         );
         require(asset.balanceOf(buyer) == 1);
+    }
+
+    function testFailPurchaseBeforePurchaseBegins() public {
+        vm.prank(seller);
+        uint256 listingId = asset.createListing(
+            productId,
+            'https://product.example.com',
+            100, // supply
+            100, // price
+            mockToken, // the token
+            1, // number of runs
+            block.timestamp + 3600, // purchase begins
+            block.timestamp + 3600, // purchase ends
+            block.timestamp + 3600 * 2,
+            block.timestamp + 3600 * 3
+        );
+
+        address buyer = address(0x1234567890123456789012345678901234567890);
+        mockToken.mint(buyer, 100);
+
+        vm.startPrank(buyer);
+        mockToken.approve(address(asset), 100);
+        uint256 tokenId = asset.purchase(listingId);
+        vm.stopPrank();
+    }
+
+    function testFailPurchaseAfterPurchaseEnds() public {
+        vm.prank(seller);
+        uint256 listingId = asset.createListing(
+            productId,
+            'https://product.example.com',
+            100, // supply
+            100, // price
+            mockToken, // the token
+            1, // number of runs
+            block.timestamp, // purchase begins
+            block.timestamp + 3600, // purchase ends
+            block.timestamp + 3600 * 2,
+            block.timestamp + 3600 * 3
+        );
+
+        vm.warp(block.timestamp + 3600 + 1);
+
+        address buyer = address(0x1234567890123456789012345678901234567890);
+        mockToken.mint(buyer, 100);
+
+        vm.startPrank(buyer);
+        mockToken.approve(address(asset), 100);
+        uint256 tokenId = asset.purchase(listingId);
+        vm.stopPrank();
+    }
+
+    function testFailPurchaseWithNoMoreSets() public {
+        vm.prank(seller);
+        uint256 listingId = asset.createListing(
+            productId,
+            'https://product.example.com',
+            100, // supply
+            100, // price
+            mockToken, // the token
+            1, // number of runs
+            block.timestamp, // purchase begins
+            block.timestamp + 3600, // purchase ends
+            block.timestamp + 3600 * 2,
+            block.timestamp + 3600 * 3
+        );
+
+        // Purchase once
+        address buyer = address(0x1234567890123456789012345678901234567890);
+        mockToken.mint(buyer, 200);
+        vm.startPrank(buyer);
+        mockToken.approve(address(asset), 100);
+        uint256 tokenId = asset.purchase(listingId);
+
+        mockToken.approve(address(asset), 100);
+        uint256 tokenId2 = asset.purchase(listingId);
+        vm.stopPrank();
     }
 }
 
