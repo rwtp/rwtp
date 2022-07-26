@@ -28,11 +28,7 @@ contract AssetERC721 is ERC721, Ownable {
     /// @dev The denominator of parts per million
     uint256 constant ONE_MILLION = 1000000;
 
-    event Purchase(
-        uint256 indexed tokenId,
-        address indexed user,
-        uint256 amount
-    );
+    event Purchase(uint256 indexed tokenId, address indexed buyer);
     event Redeem(
         uint256 indexed tokenId,
         address indexed user,
@@ -41,6 +37,8 @@ contract AssetERC721 is ERC721, Ownable {
     );
     event CreateProduct(uint256 indexed productId);
     event CreateListing(uint256 indexed listingId);
+    event SetProductOwner(uint256 indexed productId, address indexed newOwner);
+    event SetProductURI(uint256 indexed productId, string newURI);
 
     constructor() ERC721('RWTP', 'rwtp') {
         _transferOwnership(msg.sender);
@@ -87,11 +85,17 @@ contract AssetERC721 is ERC721, Ownable {
         _;
     }
 
+    modifier onlyIfTokenExists(uint256 tokenId) {
+        require(tokenId != 0, 'Token does not exist');
+        _;
+    }
+
     function setProductURI(uint256 productId, string memory uri)
         public
         onlyProductOwner(productId)
     {
         products[productId].uri = uri;
+        emit SetProductURI(productId, uri);
     }
 
     function setProductOwner(uint256 productId, address newOwner)
@@ -99,6 +103,7 @@ contract AssetERC721 is ERC721, Ownable {
         onlyProductOwner(productId)
     {
         products[productId].owner = newOwner;
+        emit SetProductOwner(productId, newOwner);
     }
 
     /// Creates a new product
@@ -174,25 +179,43 @@ contract AssetERC721 is ERC721, Ownable {
         listing.token.transferFrom(msg.sender, owner(), toContractOwner);
         listing.token.transferFrom(msg.sender, product.owner, toProductOwner);
 
+        emit Purchase(tokenId, msg.sender);
+
         return tokenId;
     }
 
-    // // Redeems a given amount of tokens
-    // function redeem(
-    //     uint256 tokenId,
-    //     uint256 amount,
-    //     string memory uri
-    // ) public {
-    //     require(amount > 0);
-    //     require(supplies[tokenId] >= amount);
-    //     supplies[tokenId] -= amount;
+    function redeem(
+        uint256 tokenId,
+        uint256 amount,
+        string memory uri
+    ) public {
+        Listing storage listing = listings[tokenIdsToListingIds[tokenId]];
 
-    //     if (supplies[tokenId] == 0) {
-    //         _burn(tokenId);
-    //     }
+        require(ownerOf(tokenId) == msg.sender, 'Not your token');
+        require(amount > 0, 'Amount must be greater than 0');
+        require(
+            listing.supply - amount >= 0,
+            'Not enough supply in this token'
+        );
 
-    //     emit Redeem(tokenId, msg.sender, amount, uri);
-    // }
+        listing.supply -= amount;
+        if (listing.supply == 0) {
+            _burn(tokenId);
+        }
+
+        emit Redeem(tokenId, msg.sender, amount, uri);
+    }
+
+    function exists(uint256 tokenId) public view returns (bool) {
+        return _exists(tokenId);
+    }
+
+    function supplyOf(uint256 tokenId) public view returns (uint256) {
+        if (!_exists(tokenId)) {
+            return 0;
+        }
+        return listings[tokenIdsToListingIds[tokenId]].supply;
+    }
 
     // Merges two assets together into a single asset
     // function merge(uint256 tokenIdFrom, uint256 tokenIdTo) public {

@@ -10,12 +10,86 @@ function stringEq(string memory a, string memory b) view returns (bool) {
         keccak256(abi.encodePacked((b))));
 }
 
-contract PurchaseTests is Test {
+contract RedeemTests is Test {
     ERC20Mock mockToken = new ERC20Mock('wETH', 'WETH', address(this), 0);
 
     AssetERC721 asset = new AssetERC721();
     uint256 productId;
+    uint256 listingId;
+    uint256 tokenId;
+    address seller = address(0x2234567890123456789012345678901234567891);
+    address buyer = address(0x1234567890123456789012345678901234567890);
+    uint256 SUPPLY = 100;
 
+    function setUp() public {
+        vm.prank(seller);
+        productId = asset.createProduct('example.org');
+
+        vm.prank(seller);
+        listingId = asset.createListing(
+            productId,
+            'https://product.example.com',
+            SUPPLY, // supply
+            100, // price
+            mockToken, // the token
+            1, // number of runs
+            block.timestamp, // purchase begins
+            block.timestamp + 3600, // purchase ends
+            block.timestamp + 3600 * 2,
+            block.timestamp + 3600 * 3
+        );
+
+        mockToken.mint(buyer, 100);
+
+        vm.startPrank(buyer);
+        mockToken.approve(address(asset), 100);
+        tokenId = asset.purchase(listingId);
+        vm.stopPrank();
+    }
+
+    function testFailRedeemIfNotYourToken() public {
+        vm.prank(address(0x1));
+        asset.redeem(tokenId, 1, 'https://redemption.example.com');
+    }
+
+    function testRedeem() public {
+        vm.prank(buyer);
+        asset.redeem(tokenId, 1, 'https://redemption.example.com');
+
+        uint256 supply = asset.supplyOf(tokenId);
+        require(supply == 99, 'supply is not 99');
+        require(asset.exists(tokenId), 'token does not exist');
+    }
+
+    function testFailRedeemIfNotEnoughSupply() public {
+        vm.prank(buyer);
+        asset.redeem(tokenId, 101, 'https://redemption.example.com');
+    }
+
+    function testRedeemBurnsToken() public {
+        vm.prank(buyer);
+        asset.redeem(tokenId, 100, 'https://redemption.example.com');
+
+        require(!asset.exists(tokenId), 'token still exists');
+    }
+
+    function testRedeemTwice() public {
+        vm.prank(buyer);
+        asset.redeem(tokenId, 1, 'https://redemption.example.com');
+        require(supply == 99, 'supply is not 99');
+        require(asset.exists(tokenId), 'token does not exist');
+
+        vm.prank(buyer);
+        asset.redeem(tokenId, 99, 'https://redemption.example.com');
+
+        require(!asset.exists(tokenId), 'token still exists');
+    }
+}
+
+contract PurchaseTests is Test {
+    ERC20Mock mockToken = new ERC20Mock('wETH', 'WETH', address(this), 0);
+    AssetERC721 asset = new AssetERC721();
+    uint256 productId;
     address seller = address(0x2234567890123456789012345678901234567891);
 
     function setUp() public {
