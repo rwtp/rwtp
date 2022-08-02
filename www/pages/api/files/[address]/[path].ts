@@ -1,6 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import dayjs from 'dayjs';
 
-function svg() {
+function svg(props: {
+  supply: number;
+  redeemDate: Date;
+  title: string;
+  image: string;
+}) {
+  const date = dayjs(props.redeemDate).format('YYYY-MM-DD');
+
   // An svg with a 5/4 ratio image, a title, a date underneath,
   // and a black square in the bottom right corner with a monospaced
   // font in white that displays a number.
@@ -29,29 +37,25 @@ function svg() {
     </style>
     
 
-    <image href="/ridge.png" x="0px" y="0px" height="480px" width="600px" />
+    <image href="${props.image}" x="0px" y="0px" height="480px" width="600px" />
       
 
     <!-- Left label -->
     <svg  width="480px" height="120px" x="0px" y="480px" >
     <rect fill="white"  width="100%" height="100%" />
-    <text class="title" x="24px" y="40%" dominant-baseline="middle" >Ridge Wallet, 3k, Green</text>
-    <text class="date" x="24px" y="65%" dominant-baseline="middle" >Ridge Wallet, 3k, Green</text>
+    <text class="title" x="24px" y="40%" dominant-baseline="middle" >${props.title}</text>
+    <text class="date" x="24px" y="65%" dominant-baseline="middle">Redeemable on ${date}</text>
     </svg>
 
     <!-- Square label -->
     <svg  width="120px" height="120px" x="480px" y="480px" >
     <rect fill="black"  width="100%" height="100%" />
-    <text  class="supply" text-anchor="middle"  x="50%" y="50%" dominant-baseline="middle" >1,000</text>
+    <text  class="supply" text-anchor="middle"  x="50%" y="50%" dominant-baseline="middle" >${props.supply}</text>
     </svg>
 
 
     <!-- border -->
     <rect fill="black"  width="600px" height="2px" x="0px" y="480px" />
-
-
-    
-
 
     <!-- outlines -->
     <rect fill="black"  width="600px" height="2px" x="0px" y="598px" />
@@ -68,7 +72,14 @@ export default async function handler(
   res: NextApiResponse<Response>
 ) {
   res.setHeader('Content-Type', 'image/svg+xml');
-  res.status(200).write(svg());
+  res.status(200).write(
+    svg({
+      supply: 1000,
+      redeemDate: dayjs('2021-12-31').toDate(),
+      title: 'Ridge Wallet',
+      image: '/ridge.png',
+    })
+  );
 
   res.end();
 }
